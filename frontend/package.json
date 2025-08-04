@@ -15,6 +15,10 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.12",
+    "@radix-ui/react-slot": "^1.2.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.536.0",
     "motion": "^12.23.12",
     "next": "15.4.5",
@@ -25,6 +29,7 @@
     "react-textarea-autosize": "^8.5.9",
     "remark-gfm": "^4.0.1",
     "simplex-noise": "^4.0.3",
+
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
