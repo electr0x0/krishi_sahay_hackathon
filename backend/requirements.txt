@@ -1,7 +1,36 @@
+# FastAPI & Core
 fastapi
 uvicorn[standard]
-langchain-google-genai
-langchain-core
 python-dotenv
 httpx
+pydantic[email]
+
+# Database
+sqlalchemy
+alembic
+
+# Authentication & Security
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+
+# AI & Language Models
+langchain-google-genai
+langchain-core
 langgraph
+
+# Translation & Text-to-Speech
+googletrans
+deep-translator
+gtts
+
+# Image Processing (for crop disease detection)
+pillow
+
+# Data Processing
+pandas
+numpy
+
+# Utilities
+aiofiles
+jinja2

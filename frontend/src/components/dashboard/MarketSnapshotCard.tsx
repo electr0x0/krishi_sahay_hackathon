@@ -1,153 +1,131 @@
 'use client';
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useState, useEffect } from "react";
-
-interface CropPrice {
-  name: string;
-  price: number;
-  unit: string;
-  change: number; // percentage change
-  trend: 'up' | 'down' | 'stable';
-}
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import { TrendingUp, TrendingDown, BarChart3, RefreshCw, Loader2 } from "lucide-react";
+import { useMarketPrices } from "@/hooks/useDashboardData";
 
 export default function MarketSnapshotCard() {
-  const [primaryCrop, setPrimaryCrop] = useState<CropPrice>({
-    name: 'আলু',
-    price: 45,
-    unit: 'কেজি',
-    change: +8.5,
-    trend: 'up'
-  });
+  const { marketPrices, loading, error, refetch } = useMarketPrices();
 
-  const [otherCrops, setOtherCrops] = useState<CropPrice[]>([
-    {
-      name: 'টমেটো',
-      price: 80,
-      unit: 'কেজি',
-      change: -5.2,
-      trend: 'down'
-    },
-    {
-      name: 'বেগুন',
-      price: 35,
-      unit: 'কেজি',
-      change: +2.1,
-      trend: 'up'
-    }
-  ]);
-
-  const getTrendIcon = (trend: CropPrice['trend']) => {
-    switch (trend) {
-      case 'up': return '📈';
-      case 'down': return '📉';
-      case 'stable': return '📊';
-    }
+  const getTrendIcon = (trend: string) => {
+    return trend === 'up' ? (
+      <TrendingUp className="w-4 h-4 text-green-600" />
+    ) : trend === 'down' ? (
+      <TrendingDown className="w-4 h-4 text-red-600" />
+    ) : (
+      <BarChart3 className="w-4 h-4 text-gray-600" />
+    );
   };
 
-  const getTrendColor = (trend: CropPrice['trend']) => {
+  const getTrendColor = (trend: string) => {
     switch (trend) {
-      case 'up': return 'text-green-600';
-      case 'down': return 'text-red-600';
-      case 'stable': return 'text-gray-600';
+      case 'up': return 'text-green-600 bg-green-50';
+      case 'down': return 'text-red-600 bg-red-50';
+      default: return 'text-gray-600 bg-gray-50';
     }
-  };
-
-  const formatChange = (change: number) => {
-    const sign = change > 0 ? '+' : '';
-    return `${sign}${change.toFixed(1)}%`;
   };
 
   return (
-    <Card className="shadow-lg hover:shadow-xl transition-all duration-300">
+    <Card className="h-full bg-white/70 backdrop-blur-sm shadow-lg border-l-4 border-l-blue-500 hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="pb-3">
-        <h2 className="text-lg font-bold text-gray-900 flex items-center">
-          📊 বাজার দর
-        </h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">বাজার দর</h3>
+              <p className="text-sm text-gray-500">আজকের দাম</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={refetch}
+              disabled={loading}
+              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+            <Badge variant="outline" className="text-xs">
+              Live
+            </Badge>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Primary Crop - Featured */}
-        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-900">আপনার প্রধান ফসল</h3>
-            <span className="text-2xl">{getTrendIcon(primaryCrop.trend)}</span>
+      
+      <CardContent className="pt-0">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
           </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-baseline justify-between">
-              <span className="text-lg font-medium text-gray-700">
-                {primaryCrop.name}
-              </span>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-gray-900">
-                  ৳{primaryCrop.price}
+        ) : error ? (
+          <div className="text-center py-8 text-red-600">
+            <p>বাজার দর লোড করতে সমস্যা হয়েছে</p>
+          </div>
+        ) : marketPrices.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <p>কোনো বাজার দর পাওয়া যায়নি</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {marketPrices.slice(0, 6).map((price, index) => (
+              <motion.div
+                key={price.item}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="p-3 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-200"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="text-sm font-semibold text-gray-900">
+                        {price.item}
+                      </h4>
+                      <div className="flex items-center space-x-2">
+                        {getTrendIcon(price.trend)}
+                        <span className={`text-xs px-2 py-1 rounded-full ${getTrendColor(price.trend)}`}>
+                          {price.change_percentage > 0 ? '+' : ''}{price.change_percentage.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-lg font-bold text-gray-900">
+                          ৳{price.price}
+                        </span>
+                        <span className="text-xs text-gray-500 ml-1">
+                          /{price.unit}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-600">{price.market}</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(price.date).toLocaleDateString('bn-BD')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-sm text-gray-600">
-                  প্রতি {primaryCrop.unit}
-                </div>
-              </div>
-            </div>
+              </motion.div>
+            ))}
             
-            <div className="flex items-center justify-between">
-              <span className={`text-sm font-medium ${getTrendColor(primaryCrop.trend)}`}>
-                {formatChange(primaryCrop.change)}
-              </span>
-              <span className="text-xs text-gray-500">
-                গত সপ্তাহের তুলনায়
-              </span>
-            </div>
+            {marketPrices.length > 6 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-4 text-center"
+              >
+                <button className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center justify-center w-full py-2 rounded-lg hover:bg-blue-50 transition-colors">
+                  আরো দাম দেখুন
+                  <BarChart3 className="w-4 h-4 ml-1" />
+                </button>
+              </motion.div>
+            )}
           </div>
-
-          {/* AI Recommendation */}
-          <div className="mt-3 p-2 bg-white/70 rounded-lg">
-            <p className="text-sm text-gray-700">
-              <span className="font-medium">AI পরামর্শ:</span> {
-                primaryCrop.trend === 'up' 
-                  ? 'এখন বিক্রির জন্য ভালো সময়। দাম বাড়ছে।'
-                  : primaryCrop.trend === 'down'
-                  ? 'আরো কিছুদিন অপেক্ষা করুন। দাম কমছে।'
-                  : 'দাম স্থির। যেকোনো সময় বিক্রি করতে পারেন।'
-              }
-            </p>
-          </div>
-        </div>
-
-        {/* Other Crops */}
-        <div className="space-y-3">
-          <h4 className="font-medium text-gray-900">অন্যান্য ফসলের দর</h4>
-          {otherCrops.map((crop, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <span className="text-lg">{getTrendIcon(crop.trend)}</span>
-                <span className="font-medium text-gray-700">{crop.name}</span>
-              </div>
-              <div className="text-right">
-                <div className="font-bold text-gray-900">
-                  ৳{crop.price}/{crop.unit}
-                </div>
-                <div className={`text-xs ${getTrendColor(crop.trend)}`}>
-                  {formatChange(crop.change)}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Quick Action */}
-        <button 
-          className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200"
-          onClick={() => {/* Navigate to market page */}}
-        >
-          সব দর দেখুন 📱
-        </button>
-
-        {/* Last Updated */}
-        <p className="text-xs text-gray-500 text-center">
-          সর্বশেষ আপডেট: {new Date().toLocaleTimeString('bn-BD', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          })}
-        </p>
+        )}
       </CardContent>
     </Card>
   );

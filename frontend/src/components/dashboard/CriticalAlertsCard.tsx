@@ -1,131 +1,182 @@
 'use client';
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useState, useEffect } from "react";
-
-interface Alert {
-  id: string;
-  type: 'urgent' | 'warning' | 'info';
-  title: string;
-  message: string;
-  timestamp: Date;
-  actionRequired: boolean;
-}
+import { Badge } from "@/components/ui/badge";
+import { motion, AnimatePresence } from "framer-motion";
+import { AlertTriangle, Cloud, Bug, TrendingUp, Clock, ChevronRight, X, Loader2, Wifi } from "lucide-react";
+import { useCriticalAlerts } from "@/hooks/useDashboardData";
 
 export default function CriticalAlertsCard() {
-  const [alerts, setAlerts] = useState<Alert[]>([
-    {
-      id: '1',
-      type: 'urgent',
-      title: 'পোকামাকড়ের আক্রমণ',
-      message: '⚠️ সতর্কতা: আপনার এলাকায় মাজরা পোকার আক্রমণ দেখা গেছে। করণীয় জানতে এখানে ট্যাপ করুন।',
-      timestamp: new Date(),
-      actionRequired: true
-    },
-    {
-      id: '2',
-      type: 'warning',
-      title: 'আবহাওয়া সতর্কতা',
-      message: '🌧️ এই বিকেলে প্রবল বৃষ্টির সম্ভাবনা। সার বা কীটনাশক প্রয়োগ থেকে বিরত থাকুন।',
-      timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-      actionRequired: false
-    }
-  ]);
+  const { alerts, loading, error, dismissAlert } = useCriticalAlerts();
 
-  const getAlertStyles = (type: Alert['type']) => {
+  const getAlertIcon = (type: string) => {
     switch (type) {
-      case 'urgent':
-        return {
-          border: 'border-l-4 border-red-500',
-          bg: 'bg-gradient-to-r from-red-50 to-red-100',
-          icon: '🚨',
-          textColor: 'text-red-800'
-        };
-      case 'warning':
-        return {
-          border: 'border-l-4 border-yellow-500',
-          bg: 'bg-gradient-to-r from-yellow-50 to-yellow-100',
-          icon: '⚠️',
-          textColor: 'text-yellow-800'
-        };
-      case 'info':
-        return {
-          border: 'border-l-4 border-blue-500',
-          bg: 'bg-gradient-to-r from-blue-50 to-blue-100',
-          icon: 'ℹ️',
-          textColor: 'text-blue-800'
-        };
+      case 'pest': 
+        return <Bug className="w-4 h-4 text-white" />;
+      case 'weather': 
+        return <Cloud className="w-4 h-4 text-white" />;
+      case 'market': 
+        return <TrendingUp className="w-4 h-4 text-white" />;
+      case 'sensor':
+        return <Wifi className="w-4 h-4 text-white" />;
+      default: 
+        return <AlertTriangle className="w-4 h-4 text-white" />;
     }
   };
 
-  const formatTimeAgo = (timestamp: Date) => {
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return 'bg-red-500';
+      case 'high': return 'bg-red-400';
+      case 'medium': return 'bg-orange-400';
+      case 'low': return 'bg-yellow-400';
+      default: return 'bg-gray-400';
+    }
+  };
+
+  const getSeverityBadgeVariant = (severity: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (severity) {
+      case 'critical': return 'destructive';
+      case 'high': return 'destructive';
+      case 'medium': return 'default';
+      case 'low': return 'secondary';
+      default: return 'default';
+    }
+  };
+
+  const getTypeLabel = (severity: string): string => {
+    switch (severity) {
+      case 'critical': return 'জরুরি';
+      case 'high': return 'উচ্চ';
+      case 'medium': return 'মাঝারি';
+      case 'low': return 'কম';
+      default: return 'সাধারণ';
+    }
+  };
+
+  const formatTimeAgo = (timestamp: Date): string => {
     const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
+    const diffInMinutes = Math.floor((now.getTime() - timestamp.getTime()) / (1000 * 60));
     
-    if (diffMins < 1) return 'এখনই';
-    if (diffMins < 60) return `${diffMins} মিনিট আগে`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours} ঘন্টা আগে`;
-    return `${Math.floor(diffHours / 24)} দিন আগে`;
+    if (diffInMinutes < 1) return 'এখনই';
+    if (diffInMinutes < 60) return `${diffInMinutes} মিনিট আগে`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} ঘন্টা আগে`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} দিন আগে`;
   };
 
   return (
-    <Card className="shadow-lg hover:shadow-xl transition-all duration-300">
+    <Card className="h-full bg-white/70 backdrop-blur-sm shadow-lg border-l-4 border-l-red-500 hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center">
-            🚨 জরুরি সতর্কতা
-          </h2>
-          <span className="text-sm text-gray-500">
-            {alerts.length} টি সতর্কতা
-          </span>
+          <div className="flex items-center space-x-2">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">জরুরি সতর্কতা</h3>
+              <p className="text-sm text-gray-500">গুরুত্বপূর্ণ বিজ্ঞপ্তি</p>
+            </div>
+          </div>
+          <Badge variant="outline" className="text-xs">
+            {loading ? 'লোড হচ্ছে...' : `${alerts.length} টি`}
+          </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {alerts.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <div className="text-4xl mb-2">✅</div>
-            <p>কোনো জরুরি সতর্কতা নেই</p>
-          </div>
-        ) : (
-          alerts.map((alert) => {
-            const styles = getAlertStyles(alert.type);
-            return (
-              <div
-                key={alert.id}
-                className={`${styles.border} ${styles.bg} p-4 rounded-lg cursor-pointer hover:shadow-md transition-all duration-200 transform hover:-translate-y-1`}
-                onClick={() => {
-                  // Handle alert click - could navigate to details or open modal
-                  console.log('Alert clicked:', alert.id);
-                }}
-              >
-                <div className="flex items-start space-x-3">
-                  <div className="text-2xl flex-shrink-0">
-                    {styles.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className={`font-semibold ${styles.textColor} mb-1`}>
-                      {alert.title}
-                    </h3>
-                    <p className={`text-sm ${styles.textColor} leading-relaxed`}>
-                      {alert.message}
-                    </p>
-                    <div className="flex items-center justify-between mt-3">
-                      <span className="text-xs text-gray-600">
-                        {formatTimeAgo(alert.timestamp)}
-                      </span>
-                      {alert.actionRequired && (
-                        <span className="text-xs bg-red-600 text-white px-2 py-1 rounded-full">
-                          ব্যবস্থা নিন
-                        </span>
-                      )}
+      
+      <CardContent className="pt-0">
+        <AnimatePresence>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-8 text-red-600">
+              <p>সতর্কতা লোড করতে সমস্যা হয়েছে</p>
+            </div>
+          ) : alerts.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center justify-center py-12 text-center"
+            >
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <AlertTriangle className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">সব ঠিক আছে!</h3>
+              <p className="text-gray-500 text-sm">এই মুহূর্তে কোনো জরুরি সতর্কতা নেই</p>
+            </motion.div>
+          ) : (
+            <div className="space-y-3">
+              {alerts.slice(0, 5).map((alert) => (
+                <motion.div
+                  key={alert.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3 }}
+                  className="group"
+                >
+                  <div className="p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 hover:border-red-200 hover:shadow-md transition-all duration-200">
+                    <div className="flex items-start space-x-3">
+                      <div className={`p-2 rounded-lg ${getSeverityColor(alert.severity)} flex-shrink-0`}>
+                        {getAlertIcon(alert.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="text-sm font-semibold text-gray-900 truncate">
+                            {alert.title}
+                          </h4>
+                          <Badge variant={getSeverityBadgeVariant(alert.severity)}>
+                            {getTypeLabel(alert.severity)}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-gray-600 leading-relaxed mb-2">
+                          {alert.message}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <span className="text-xs text-gray-500 flex items-center">
+                              <Clock className="w-3 h-3 mr-1" />
+                              {formatTimeAgo(new Date(alert.timestamp))}
+                            </span>
+                          </div>
+                          {alert.action_required && (
+                            <button className="text-xs text-green-600 hover:text-green-800 font-medium flex items-center transition-colors">
+                              ব্যবস্থা নিন
+                              <ChevronRight className="w-3 h-3 ml-1" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => dismissAlert(alert.id)}
+                        className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                </div>
-              </div>
-            );
-          })
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </AnimatePresence>
+
+        {alerts.length > 5 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-4 text-center"
+          >
+            <button className="text-sm text-green-600 hover:text-green-800 font-medium flex items-center justify-center w-full py-2 rounded-lg hover:bg-green-50 transition-colors">
+              আরো {alerts.length - 5} টি সতর্কতা দেখুন
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </button>
+          </motion.div>
         )}
       </CardContent>
     </Card>
