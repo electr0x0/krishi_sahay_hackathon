@@ -1,16 +1,10 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono, Noto_Sans_Bengali } from "next/font/google";
+'use client';
+
+import { Noto_Sans_Bengali } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { AuthProvider } from "@/contexts/AuthContext.jsx";
+import Header from "@/components/Header";
+import { usePathname } from "next/navigation";
 
 const notoSansBengali = Noto_Sans_Bengali({
   variable: "--font-noto-bengali",
@@ -18,23 +12,25 @@ const notoSansBengali = Noto_Sans_Bengali({
   weight: ["300", "400", "500", "600", "700", "800", "900"],
 });
 
-export const metadata: Metadata = {
-  title: "কৃষি সহায় | KrishiSahay - আপনার ফসলের ডিজিটাল বন্ধু",
-  description: "AI-এর শক্তিতে পান আবহাওয়ার পূর্বাভাস, পোকার আক্রমণ থেকে সুরক্ষা, এবং ফসলের সেরা দাম। বাংলাদেশের কৃষকদের জন্য স্মার্ট কৃষি সমাধান।",
-  keywords: "কৃষি, কৃষক, AI, স্মার্ট কৃষি, বাংলাদেশ, ফসল, সেচ, পোকামাকড়, বাজার দর",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const isDashboard = pathname.startsWith('/dashboard');
+
   return (
     <html lang="bn">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${notoSansBengali.variable} antialiased font-sans`}
+        className={`${notoSansBengali.variable} antialiased font-sans`}
       >
-        {children}
+        <AuthProvider>
+          {!isDashboard && <Header />}
+          <main className={!isDashboard ? "pt-16" : ""}>
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );
