@@ -16,10 +16,9 @@ import {
   CheckCircle,
   ChevronLeft,
   ChevronRight,
-  Seed,
+  Wheat,
   Leaf,
-  TreePine,
-  Wheat
+  TreePine
 } from "lucide-react";
 
 interface CropActivity {
@@ -146,13 +145,13 @@ export default function CropManagementCard() {
   const getCropIcon = (cropName: string) => {
     if (cropName.includes('ধান') || cropName.toLowerCase().includes('rice')) return Wheat;
     if (cropName.includes('টমেটো') || cropName.toLowerCase().includes('tomato')) return Sprout;
-    if (cropName.includes('আলু') || cropName.toLowerCase().includes('potato')) return Seed;
+    if (cropName.includes('আলু') || cropName.toLowerCase().includes('potato')) return Wheat;
     return Leaf;
   };
 
   const getActivityIcon = (type: CropActivity['type']) => {
     switch (type) {
-      case 'planting': return Seed;
+      case 'planting': return Wheat;
       case 'watering': return Droplets;
       case 'fertilizing': return TreePine;
       case 'spraying': return Bug;
