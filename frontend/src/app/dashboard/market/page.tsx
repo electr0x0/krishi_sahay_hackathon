@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { HoverEffect } from '@/components/ui/card-hover-effect';
 
 interface UserPrice {
   id: string;
@@ -54,6 +55,76 @@ export default function MarketPage() {
   const [aiRecommendations, setAiRecommendations] = useState<{[key: string]: any}>({});
 
   const { marketPrices, loading, error, refetch } = useAllMarketPrices(selectedCategory, selectedDistrict);
+
+  // Transform market prices for hover effect
+  const transformPricesForHoverEffect = (prices: MarketPriceDisplay[]) => {
+    return prices.map((price) => {
+      return {
+        title: price.item,
+        description: (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-2xl font-bold text-primary">
+                ৳{price.price}
+                <span className="text-sm font-normal text-muted-foreground ml-1">
+                  /{price.unit}
+                </span>
+              </span>
+              <Badge
+                variant="outline"
+                className={`gap-1 ${getCategoryBadgeColor(price.category || 'other')}`}
+              >
+                {price.category === 'grain' ? 'খাদ্যশস্য' :
+                 price.category === 'vegetable' ? 'সবজি' :
+                 price.category === 'fruit' ? 'ফল' :
+                 price.category === 'spice' ? 'মসলা' : 'অন্যান্য'}
+              </Badge>
+            </div>
+            
+            <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border w-fit ${getTrendColor(price.trend)}`}>
+              {getTrendIcon(price.trend)}
+              <span className="font-medium">
+                {(price.change_percentage || 0) > 0 ? '+' : ''}
+                {(price.change_percentage || 0).toFixed(1)}%
+              </span>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">বাজার:</span>
+                <span className="font-medium">{price.market}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">তারিখ:</span>
+                <span className="font-medium">
+                  {new Date(price.date).toLocaleDateString('bn-BD')}
+                </span>
+              </div>
+            </div>
+
+            {/* AI Insights */}
+            {aiRecommendations[price.item] && (
+              <div className="mt-3 p-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                <div className="flex items-center gap-1 mb-1">
+                  <BrainIcon className="w-3 h-3 text-blue-600" />
+                  <span className="text-xs font-medium text-blue-700">AI পূর্বাভাস</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  আগামী সপ্তাহে দাম {Math.random() > 0.5 ? 'বৃদ্ধি' : 'হ্রাস'} পেতে পারে
+                </div>
+              </div>
+            )}
+          </div>
+        ),
+        onClick: () => {
+          // Optional: Handle click events, could open a modal with more details
+          console.log('Clicked on:', price.item);
+        }
+      };
+    });
+  };
 
   // Enhanced filter logic
   useEffect(() => {
@@ -429,85 +500,13 @@ export default function MarketPage() {
           </Card>
         )}
 
-        {/* Market Prices Grid */}
+        {/* Market Prices Grid with Hover Effect */}
         {!showMyPrices && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredPrices.map((price, index) => (
-              <motion.div
-                key={`${price.item}-${index}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Card className="hover:shadow-md transition-all duration-200 h-full">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{price.item}</CardTitle>
-                      <Badge
-                        variant="outline"
-                        className={`gap-1 ${getCategoryBadgeColor(price.category || 'other')}`}
-                      >
-                        {price.category === 'grain' ? 'খাদ্যশস্য' :
-                         price.category === 'vegetable' ? 'সবজি' :
-                         price.category === 'fruit' ? 'ফল' :
-                         price.category === 'spice' ? 'মসলা' : 'অন্যান্য'}
-                      </Badge>
-                    </div>
-                    
-                    <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border w-fit ${getTrendColor(price.trend)}`}>
-                      {getTrendIcon(price.trend)}
-                      <span className="font-medium">
-                        {(price.change_percentage || 0) > 0 ? '+' : ''}
-                        {(price.change_percentage || 0).toFixed(1)}%
-                      </span>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent>
-                    <div className="space-y-3">
-                      {/* Price */}
-                      <div>
-                        <div className="text-2xl font-bold">
-                          ৳{price.price}
-                          <span className="text-sm font-normal text-muted-foreground ml-1">
-                            /{price.unit}
-                          </span>
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      {/* Market Info */}
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">বাজার:</span>
-                          <span className="font-medium">{price.market}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">তারিখ:</span>
-                          <span className="font-medium">
-                            {new Date(price.date).toLocaleDateString('bn-BD')}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* AI Insights */}
-                      {aiRecommendations[price.item] && (
-                        <div className="mt-3 p-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-                          <div className="flex items-center gap-1 mb-1">
-                            <BrainIcon className="w-3 h-3 text-blue-600" />
-                            <span className="text-xs font-medium text-blue-700">AI পূর্বাভাস</span>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            আগামী সপ্তাহে দাম {Math.random() > 0.5 ? 'বৃদ্ধি' : 'হ্রাস'} পেতে পারে
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+          <div className="relative">
+            <HoverEffect 
+              items={transformPricesForHoverEffect(filteredPrices)}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 py-6"
+            />
           </div>
         )}
 
