@@ -215,6 +215,8 @@ export default function MarketPage() {
         return <ArrowUpIcon className="w-4 h-4 text-green-600" />;
       case 'down':
         return <ArrowDownIcon className="w-4 h-4 text-red-600" />;
+      case 'stable':
+        return <TrendingUpIcon className="w-4 h-4 text-gray-600" />;
       default:
         return <TrendingUpIcon className="w-4 h-4 text-muted-foreground" />;
     }
@@ -226,6 +228,8 @@ export default function MarketPage() {
         return 'text-green-700 bg-green-50 border-green-200';
       case 'down':
         return 'text-red-700 bg-red-50 border-red-200';
+      case 'stable':
+        return 'text-gray-700 bg-gray-50 border-gray-200';
       default:
         return 'text-muted-foreground bg-muted border-border';
     }

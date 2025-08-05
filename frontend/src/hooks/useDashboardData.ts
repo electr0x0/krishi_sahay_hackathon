@@ -280,36 +280,9 @@ export const useMarketPrices = () => {
           }));
           setMarketPrices(transformedData);
         } else {
-          // Fallback dummy data
-          setMarketPrices([
-            {
-              item: 'ধান',
-              price: 32,
-              unit: 'কেজি',
-              market: 'শ্যামবাজার',
-              date: new Date().toISOString(),
-              trend: 'up',
-              change_percentage: 5.2
-            },
-            {
-              item: 'আলু',
-              price: 28,
-              unit: 'কেজি',
-              market: 'কারওয়ান বাজার',
-              date: new Date().toISOString(),
-              trend: 'down',
-              change_percentage: -2.1
-            },
-            {
-              item: 'পেঁয়াজ',
-              price: 55,
-              unit: 'কেজি',
-              market: 'নিউ মার্কেট',
-              date: new Date().toISOString(),
-              trend: 'up',
-              change_percentage: 8.5
-            }
-          ]);
+          // If no data available, show error instead of fallback
+          setError('কোন বাজার দরের তথ্য পাওয়া যায়নি। পরে আবার চেষ্টা করুন।');
+          setMarketPrices([]);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch market prices');
@@ -363,129 +336,9 @@ export const useAllMarketPrices = (category?: string, district?: string) => {
         setMarketPrices(transformedData);
         setError(null);
       } else {
-        // Fallback dummy data with categories
-        setMarketPrices([
-          {
-            item: 'ধান',
-            price: 32,
-            unit: 'কেজি',
-            market: 'শ্যামবাজার',
-            date: new Date().toISOString(),
-            trend: 'up',
-            change_percentage: 5.2,
-            category: 'grain'
-          },
-          {
-            item: 'আলু',
-            price: 28,
-            unit: 'কেজি',
-            market: 'কারওয়ান বাজার',
-            date: new Date().toISOString(),
-            trend: 'down',
-            change_percentage: -2.1,
-            category: 'vegetable'
-          },
-          {
-            item: 'পেঁয়াজ',
-            price: 55,
-            unit: 'কেজি',
-            market: 'নিউ মার্কেট',
-            date: new Date().toISOString(),
-            trend: 'up',
-            change_percentage: 8.5,
-            category: 'vegetable'
-          },
-          {
-            item: 'চাল',
-            price: 60,
-            unit: 'কেজি',
-            market: 'শ্যামবাজার',
-            date: new Date().toISOString(),
-            trend: 'up',
-            change_percentage: 3.2,
-            category: 'grain'
-          },
-          {
-            item: 'ডাল (মুগ)',
-            price: 120,
-            unit: 'কেজি',
-            market: 'কারওয়ান বাজার',
-            date: new Date().toISOString(),
-            trend: 'down',
-            change_percentage: -1.5,
-            category: 'grain'
-          },
-          {
-            item: 'রসুন',
-            price: 180,
-            unit: 'কেজি',
-            market: 'নিউ মার্কেট',
-            date: new Date().toISOString(),
-            trend: 'up',
-            change_percentage: 12.3,
-            category: 'spice'
-          },
-          {
-            item: 'টমেটো',
-            price: 40,
-            unit: 'কেজি',
-            market: 'কাঁচা বাজার',
-            date: new Date().toISOString(),
-            trend: 'stable',
-            change_percentage: 0.5,
-            category: 'vegetable'
-          },
-          {
-            item: 'গাজর',
-            price: 35,
-            unit: 'কেজি',
-            market: 'শ্যামবাজার',
-            date: new Date().toISOString(),
-            trend: 'down',
-            change_percentage: -4.2,
-            category: 'vegetable'
-          },
-          {
-            item: 'বেগুন',
-            price: 25,
-            unit: 'কেজি',
-            market: 'কারওয়ান বাজার',
-            date: new Date().toISOString(),
-            trend: 'up',
-            change_percentage: 2.8,
-            category: 'vegetable'
-          },
-          {
-            item: 'শসা',
-            price: 30,
-            unit: 'কেজি',
-            market: 'নিউ মার্কেট',
-            date: new Date().toISOString(),
-            trend: 'stable',
-            change_percentage: -0.3,
-            category: 'vegetable'
-          },
-          {
-            item: 'কলা',
-            price: 45,
-            unit: 'ডজন',
-            market: 'ফল বাজার',
-            date: new Date().toISOString(),
-            trend: 'up',
-            change_percentage: 6.7,
-            category: 'fruit'
-          },
-          {
-            item: 'আম',
-            price: 80,
-            unit: 'কেজি',
-            market: 'ফল বাজার',
-            date: new Date().toISOString(),
-            trend: 'down',
-            change_percentage: -8.1,
-            category: 'fruit'
-          }
-        ]);
+        // If no data available, show error
+        setError('কোন বাজার দরের তথ্য পাওয়া যায়নি। পরে আবার চেষ্টা করুন।');
+        setMarketPrices([]);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch market prices');

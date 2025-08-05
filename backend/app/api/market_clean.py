@@ -6,7 +6,6 @@ import random
 import json
 import httpx
 import re
-from typing import Dict, Any
 
 from app.database import get_db
 from app.auth.dependencies import get_current_active_user
@@ -14,6 +13,146 @@ from app.models.user import User
 from app.models.market import MarketPrice, MarketAlert
 from app.schemas.market import MarketPrice as MarketPriceSchema, MarketPriceCreate, MarketAlert as MarketAlertSchema
 from app.tools.pricing_tool import get_item_price, get_price_trend
+
+# IMPORTANT: These market endpoints are for WEB UI only - NOT for chat tools or AI agents
+# Do not expose these endpoints to automated systems or chat interfaces
+EXCLUDE_FROM_CHAT_TOOLS = True
+
+def get_comprehensive_chaldal_data():
+    """Fetch comprehensive market data from Chaldal API"""
+    
+    # List of agricultural products to fetch
+    agricultural_products = [
+        {"bn": "ধান", "en": "rice", "category": "grain"},
+        {"bn": "আলু", "en": "potato", "category": "vegetable"},
+        {"bn": "পেঁয়াজ", "en": "onion", "category": "spice"},
+        {"bn": "চাল", "en": "rice", "category": "grain"},
+        {"bn": "টমেটো", "en": "tomato", "category": "vegetable"},
+        {"bn": "বেগুন", "en": "eggplant", "category": "vegetable"},
+        {"bn": "গাজর", "en": "carrot", "category": "vegetable"},
+        {"bn": "শসা", "en": "cucumber", "category": "vegetable"},
+        {"bn": "রসুন", "en": "garlic", "category": "spice"},
+        {"bn": "মরিচ", "en": "chili", "category": "spice"},
+        {"bn": "আদা", "en": "ginger", "category": "spice"},
+        {"bn": "কলা", "en": "banana", "category": "fruit"},
+        {"bn": "আম", "en": "mango", "category": "fruit"},
+        {"bn": "লেবু", "en": "lemon", "category": "fruit"},
+        {"bn": "পেঁপে", "en": "papaya", "category": "fruit"},
+        {"bn": "ডাল", "en": "lentil", "category": "grain"},
+        {"bn": "কাঁচা মরিচ", "en": "green chili", "category": "vegetable"},
+        {"bn": "পালং শাক", "en": "spinach", "category": "vegetable"},
+        {"bn": "ধনিয়া", "en": "cilantro", "category": "spice"}
+    ]
+    
+    url = "https://catalog.chaldal.com/searchPersonalized"
+    headers = {
+        "accept": "application/json",
+        "accept-language": "en-US,en;q=0.9,fr;q=0.8,zh-CN;q=0.7,zh;q=0.6",
+        "cache-control": "no-cache",
+        "content-type": "application/json",
+        "priority": "u=1, i",
+        "sec-ch-ua": '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-site",
+        "cookie": "sbcV2=%7B%22MetropolitanAreaId%22%3A1%2C%22PvIdToQtyStoreIdLastSeqRecType%22%3A%7B%7D%7D",
+        "Referer": "https://chaldal.com/",
+    }
+    
+    market_names = ["কারওয়ান বাজার", "শ্যামবাজার", "নিউ মার্কেট", "কাঁচা বাজার", "মৌলভীবাজার", "রায়ের বাজার"]
+    comprehensive_prices = []
+    
+    for idx, product in enumerate(agricultural_products):
+        try:
+            body = {
+                "apiKey": "e964fc2d51064efa97e94db7c64bf3d044279d4ed0ad4bdd9dce89fecc9156f0",
+                "storeId": 1,
+                "warehouseId": 8,
+                "pageSize": 3,
+                "currentPageIndex": 0,
+                "metropolitanAreaId": 1,
+                "query": product["en"],
+                "productVariantId": -1,
+                "bundleId": {"case":"None"},
+                "canSeeOutOfStock": "true",
+                "filters": [],
+                "maxOutOfStockCount": {"case":"Some","fields":[5]},
+                "shouldShowAlternateProductsForAllOutOfStock": {"case":"Some","fields":["true"]},
+                "customerGuid": {"case":"None"},
+                "deliveryAreaId": {"case":"None"},
+                "shouldShowCategoryBasedRecommendations": {"case":"None"}
+            }
+
+            with httpx.Client() as client:
+                response = client.post(url, headers=headers, json=body, timeout=10)
+                response.raise_for_status()
+                data = response.json()
+                
+                hits = data.get("hits", [])
+                if hits:
+                    # Take the first relevant product
+                    item = hits[0]
+                    
+                    # Extract price and unit information
+                    price = float(item.get('price', 0))
+                    unit_text = item.get('unit', '').lower()
+                    
+                    # Calculate per kg price if the unit contains weight information
+                    per_kg_price = price
+                    if 'kg' in unit_text:
+                        # Extract number from unit (e.g., "5 kg" -> 5, "10kg" -> 10)
+                        weight_match = re.search(r'(\d+(?:\.\d+)?)\s*kg', unit_text)
+                        if weight_match:
+                            weight = float(weight_match.group(1))
+                            if weight > 0:
+                                per_kg_price = price / weight
+                    elif 'gm' in unit_text or 'gram' in unit_text:
+                        # Convert grams to kg
+                        weight_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:gm|gram)', unit_text)
+                        if weight_match:
+                            weight_grams = float(weight_match.group(1))
+                            if weight_grams > 0:
+                                per_kg_price = price / (weight_grams / 1000)
+                    
+                    # Generate mock trend data
+                    trends = ["up", "down", "stable"]
+                    trend = random.choice(trends)
+                    change_percentage = round(random.uniform(-15, 15), 1)
+                    
+                    # Choose random market name
+                    market_name = random.choice(market_names)
+                    
+                    price_data = {
+                        "id": idx + 1,
+                        "product_name_bn": product["bn"],
+                        "product_name_en": product["en"].title(),
+                        "category": product["category"],
+                        "unit": "kg",
+                        "market_name": market_name,
+                        "district": "ঢাকা",
+                        "division": "ঢাকা",
+                        "market_type": "retail",
+                        "current_price": round(per_kg_price, 2),
+                        "previous_price": round(per_kg_price * (1 - change_percentage/100), 2),
+                        "price_change": round(per_kg_price * change_percentage/100, 2),
+                        "price_change_percentage": change_percentage,
+                        "trend": trend,
+                        "data_source": "chaldal",
+                        "reliability_score": 0.9,
+                        "price_date": datetime.now(),
+                        "created_at": datetime.now()
+                    }
+                    
+                    comprehensive_prices.append(price_data)
+                    
+        except Exception as e:
+            # If Chaldal API fails for a product, continue with others
+            print(f"Failed to fetch {product['bn']}: {str(e)}")
+            continue
+    
+    return comprehensive_prices
 
 # AI Price Recommendation System (Mock implementation)
 class AIPricingService:
@@ -74,7 +213,7 @@ class AIPricingService:
             price = base_price * (1 + variation * (i + 1) * 0.1)
             
             forecast.append({
-                "date": (datetime.now().date() + datetime.timedelta(days=i+1)).isoformat(),
+                "date": (datetime.now().date() + timedelta(days=i+1)).isoformat(),
                 "predicted_price": round(price, 2),
                 "confidence": round(random.uniform(60, 85), 1),
                 "trend": "up" if variation > 0 else "down" if variation < 0 else "stable"
@@ -92,7 +231,7 @@ def get_market_prices(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Get market prices for agricultural products"""
+    """Get market prices for agricultural products - WEB UI ONLY - NOT FOR CHAT TOOLS"""
     
     query = db.query(MarketPrice)
     
@@ -118,11 +257,10 @@ def get_market_prices(
         except Exception as e:
             print(f"Failed to fetch from Chaldal: {str(e)}")
         
-        # Fallback to sample data only if Chaldal completely fails
+        # Fallback to empty if Chaldal completely fails
         return []
     
     return prices
-
 
 @router.get("/market/prices/{item_name}")
 def get_item_market_price(
@@ -130,7 +268,7 @@ def get_item_market_price(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Get current market price for a specific item using external APIs"""
+    """Get current market price for a specific item - WEB UI ONLY - NOT FOR CHAT TOOLS"""
     
     try:
         price_data = get_item_price(item_name)
@@ -243,7 +381,7 @@ def get_ai_price_recommendation(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Get AI-powered price recommendation for a product"""
+    """Get AI-powered price recommendation - MANUAL USE ONLY - NOT FOR AUTOMATED TOOLS"""
     
     if current_price <= 0:
         raise HTTPException(status_code=400, detail="Price must be greater than 0")
@@ -300,7 +438,7 @@ def get_market_insights(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Get AI-powered market insights and trends"""
+    """Get AI-powered market insights - DASHBOARD ONLY - NOT FOR CHAT SYSTEM"""
     
     # Mock AI insights - in production, this would analyze real market data
     insights = {
@@ -417,176 +555,58 @@ def compare_with_market(
         "generated_at": datetime.now().isoformat()
     }
 
-# Function to get real data from Chaldal for multiple products
-def get_comprehensive_chaldal_data() -> List[Dict[str, Any]]:
-    """
-    Fetch comprehensive market data from Chaldal for multiple agricultural products
-    """
-    
-    # List of agricultural products to fetch from Chaldal
-    agricultural_products = [
-        {"bn": "ধান", "en": "rice", "category": "grain"},
-        {"bn": "আলু", "en": "potato", "category": "vegetable"},
-        {"bn": "পেঁয়াজ", "en": "onion", "category": "spice"},
-        {"bn": "চাল", "en": "rice", "category": "grain"},
-        {"bn": "টমেটো", "en": "tomato", "category": "vegetable"},
-        {"bn": "বেগুন", "en": "eggplant", "category": "vegetable"},
-        {"bn": "গাজর", "en": "carrot", "category": "vegetable"},
-        {"bn": "শসা", "en": "cucumber", "category": "vegetable"},
-        {"bn": "রসুন", "en": "garlic", "category": "spice"},
-        {"bn": "মরিচ", "en": "chili", "category": "spice"},
-        {"bn": "আদা", "en": "ginger", "category": "spice"},
-        {"bn": "কলা", "en": "banana", "category": "fruit"},
-        {"bn": "আম", "en": "mango", "category": "fruit"},
-        {"bn": "লেবু", "en": "lemon", "category": "fruit"},
-        {"bn": "পেঁপে", "en": "papaya", "category": "fruit"},
-        {"bn": "ডাল", "en": "lentil", "category": "grain"},
-        {"bn": "কাঁচা মরিচ", "en": "green chili", "category": "vegetable"},
-        {"bn": "পালং শাক", "en": "spinach", "category": "vegetable"},
-        {"bn": "ধনিয়া", "en": "cilantro", "category": "spice"}
-    ]
-    
-    url = "https://catalog.chaldal.com/searchPersonalized"
-    headers = {
-        "accept": "application/json",
-        "accept-language": "en-US,en;q=0.9,fr;q=0.8,zh-CN;q=0.7,zh;q=0.6",
-        "cache-control": "no-cache",
-        "content-type": "application/json",
-        "priority": "u=1, i",
-        "sec-ch-ua": '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-site",
-        "cookie": "sbcV2=%7B%22MetropolitanAreaId%22%3A1%2C%22PvIdToQtyStoreIdLastSeqRecType%22%3A%7B%7D%7D",
-        "Referer": "https://chaldal.com/",
-    }
-    
-    market_names = ["কারওয়ান বাজার", "শ্যামবাজার", "নিউ মার্কেট", "কাঁচা বাজার", "মৌলভীবাজার", "রায়ের বাজার"]
-    comprehensive_prices = []
-    
-    for idx, product in enumerate(agricultural_products):
-        try:
-            body = {
-                "apiKey": "e964fc2d51064efa97e94db7c64bf3d044279d4ed0ad4bdd9dce89fecc9156f0",
-                "storeId": 1,
-                "warehouseId": 8,
-                "pageSize": 3,
-                "currentPageIndex": 0,
-                "metropolitanAreaId": 1,
-                "query": product["en"],
-                "productVariantId": -1,
-                "bundleId": {"case":"None"},
-                "canSeeOutOfStock": "true",
-                "filters": [],
-                "maxOutOfStockCount": {"case":"Some","fields":[5]},
-                "shouldShowAlternateProductsForAllOutOfStock": {"case":"Some","fields":["true"]},
-                "customerGuid": {"case":"None"},
-                "deliveryAreaId": {"case":"None"},
-                "shouldShowCategoryBasedRecommendations": {"case":"None"}
-            }
-
-            with httpx.Client() as client:
-                response = client.post(url, headers=headers, json=body, timeout=10)
-                response.raise_for_status()
-                data = response.json()
-                
-                hits = data.get("hits", [])
-                if hits:
-                    # Take the first relevant product
-                    item = hits[0]
-                    
-                    # Extract price and unit information
-                    price = float(item.get('price', 0))
-                    unit_text = item.get('unit', '').lower()
-                    
-                    # Calculate per kg price using improved logic
-                    per_kg_price = price
-                    if 'kg' in unit_text:
-                        # Extract number from unit (e.g., "5 kg" -> 5, "10kg" -> 10, "1 kg" -> 1)
-                        weight_match = re.search(r'(\d+(?:\.\d+)?)\s*kg', unit_text)
-                        if weight_match:
-                            weight = float(weight_match.group(1))
-                            if weight > 0:
-                                per_kg_price = price / weight
-                    elif any(unit in unit_text for unit in ['gm', 'gram', 'g ']):
-                        # Convert grams to kg (e.g., "500 gm" -> 0.5 kg)
-                        weight_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:gm|gram|g\b)', unit_text)
-                        if weight_match:
-                            weight_grams = float(weight_match.group(1))
-                            if weight_grams > 0:
-                                weight_kg = weight_grams / 1000
-                                per_kg_price = price / weight_kg
-                    elif any(unit in unit_text for unit in ['pcs', 'piece', 'pc']):
-                        # Handle piece pricing - assume reasonable conversion for agricultural products
-                        piece_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:pcs|piece|pc)', unit_text)
-                        if piece_match:
-                            pieces = float(piece_match.group(1))
-                            if pieces > 0:
-                                per_kg_price = price / pieces
-                    
-                    # Generate mock trend data
-                    trends = ["up", "down", "stable"]
-                    trend = random.choice(trends)
-                    change_percentage = round(random.uniform(-15, 15), 1)
-                    
-                    # Choose random market name
-                    market_name = random.choice(market_names)
-                    
-                    price_data = {
-                        "id": idx + 1,
-                        "product_name_bn": product["bn"],
-                        "product_name_en": product["en"].title(),
-                        "category": product["category"],
-                        "unit": "kg",
-                        "market_name": market_name,
-                        "district": "ঢাকা",
-                        "division": "ঢাকা",
-                        "market_type": "retail",
-                        "current_price": round(per_kg_price, 2),
-                        "previous_price": round(per_kg_price * (1 - change_percentage/100), 2),
-                        "price_change": round(per_kg_price * change_percentage/100, 2),
-                        "price_change_percentage": change_percentage,
-                        "trend": trend,
-                        "data_source": "chaldal",
-                        "reliability_score": 0.9,
-                        "price_date": datetime.now(),
-                        "created_at": datetime.now()
-                    }
-                    
-                    comprehensive_prices.append(price_data)
-                    
-        except Exception as e:
-            # If Chaldal API fails for a product, continue with others
-            print(f"Failed to fetch {product['bn']}: {str(e)}")
-            continue
-    
-    return comprehensive_prices
-
-@router.get("/market/prices/public", response_model=List[Dict[str, Any]])
-def get_market_prices_public(
-    category: Optional[str] = Query(None, description="Product category filter"),
-    district: Optional[str] = Query(None, description="District filter"),
-    limit: int = Query(50, description="Maximum number of results")
+@router.delete("/market/prices/{price_id}")
+def delete_market_price(
+    price_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
 ):
-    """Get market prices for agricultural products (public endpoint for testing)"""
+    """Delete a market price entry (admin only - not for chat tools)"""
     
-    try:
-        # Always fetch real data from Chaldal
-        chaldal_data = get_comprehensive_chaldal_data()
-        if chaldal_data:
-            # Filter by category if specified
-            if category and category.lower() != 'all':
-                chaldal_data = [item for item in chaldal_data if item.get('category') == category.lower()]
-            
-            # Filter by district if specified (though Chaldal data is mostly Dhaka)
-            if district and district.lower() != 'all':
-                chaldal_data = [item for item in chaldal_data if item.get('district') == district]
-            
-            return chaldal_data[:limit]
-        else:
-            return []
-    except Exception as e:
-        print(f"Failed to fetch from Chaldal: {str(e)}")
-        return []
+    # Check if the price entry exists
+    price_entry = db.query(MarketPrice).filter(MarketPrice.id == price_id).first()
+    
+    if not price_entry:
+        raise HTTPException(status_code=404, detail="Market price entry not found")
+    
+    # In production, add admin role check here
+    # if not current_user.is_admin:
+    #     raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Delete the entry
+    db.delete(price_entry)
+    db.commit()
+    
+    return {"message": f"Market price entry {price_id} deleted successfully", "deleted_id": price_id}
+
+@router.put("/market/prices/{price_id}")
+def update_market_price(
+    price_id: int,
+    price_data: MarketPriceCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Update a market price entry (admin only - not for chat tools)"""
+    
+    # Check if the price entry exists
+    price_entry = db.query(MarketPrice).filter(MarketPrice.id == price_id).first()
+    
+    if not price_entry:
+        raise HTTPException(status_code=404, detail="Market price entry not found")
+    
+    # Update the entry
+    price_entry.product_name_bn = price_data.product_name_bn
+    price_entry.product_name_en = price_data.product_name_en
+    price_entry.category = price_data.category
+    price_entry.unit = price_data.unit
+    price_entry.market_name = price_data.market_name
+    price_entry.district = price_data.district
+    price_entry.division = price_data.division
+    price_entry.market_type = price_data.market_type
+    price_entry.current_price = price_data.current_price
+    price_entry.price_date = price_data.price_date
+    
+    db.commit()
+    db.refresh(price_entry)
+    
+    return price_entry
