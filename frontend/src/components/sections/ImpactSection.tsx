@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect, useRef } from "react";
-import { motion, useInView, useMotionValue, useSpring } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { 
   TrendingUp, 
   DollarSign, 
@@ -10,11 +10,8 @@ import {
   Users,
   Award,
   Globe,
-  Target,
-  Briefcase,
-  Leaf,
-  ArrowUp,
-  CheckCircle
+  CheckCircle,
+  ArrowUp
 } from "lucide-react";
 
 // Animated Counter Component
@@ -427,13 +424,14 @@ export default function ImpactSection() {
                   {language === 'bn' ? 'আজই শুরু করুন' : 'Start Today'}
                 </motion.button>
                 
-                <motion.button 
-                  className="border-2 border-green-500 text-green-600 hover:bg-green-50 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300"
+                <motion.a
+                  href="/impact"
+                  className="border-2 border-green-500 text-green-600 hover:bg-green-50 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 inline-flex items-center justify-center"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  {language === 'bn' ? 'আরও জানুন' : 'Learn More'}
-                </motion.button>
+                  {language === 'bn' ? 'বিস্তারিত প্রভাব দেখুন' : 'View Detailed Impact'}
+                </motion.a>
               </motion.div>
             </CardContent>
           </Card>
