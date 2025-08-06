@@ -85,7 +85,7 @@ export const HoverEffect = ({
   }[]
   className?: string
 }) => {
-  let [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null)
+  const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null)
 
   return (
     <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4", className)}>
@@ -218,5 +218,129 @@ export const Spotlight = ({
         </filter>
       </defs>
     </svg>
+  )
+}
+
+export const FloatingCard = ({
+  children,
+  className,
+  delay = 0,
+}: {
+  children: React.ReactNode
+  className?: string
+  delay?: number
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay }}
+      viewport={{ once: true }}
+      whileHover={{ y: -5 }}
+      className={cn(
+        "bg-white rounded-2xl border border-slate-200 hover:border-green-300 hover:shadow-xl transition-all duration-300 overflow-hidden",
+        className
+      )}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+export const GradientText = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) => {
+  return (
+    <span
+      className={cn(
+        "bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent font-bold",
+        className
+      )}
+    >
+      {children}
+    </span>
+  )
+}
+
+export const AnimatedCounter = ({
+  value,
+  suffix = "",
+  duration = 2,
+  className,
+}: {
+  value: number
+  suffix?: string
+  duration?: number
+  className?: string
+}) => {
+  const [count, setCount] = React.useState(0)
+  const [isInView, setIsInView] = React.useState(false)
+
+  React.useEffect(() => {
+    if (isInView) {
+      let start = 0
+      const end = value
+      const increment = end / (duration * 60)
+
+      const timer = setInterval(() => {
+        start += increment
+        if (start >= end) {
+          setCount(end)
+          clearInterval(timer)
+        } else {
+          setCount(Math.floor(start))
+        }
+      }, 1000 / 60)
+
+      return () => clearInterval(timer)
+    }
+  }, [isInView, value, duration])
+
+  return (
+    <motion.span
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      onViewportEnter={() => setIsInView(true)}
+      className={cn("font-bold", className)}
+    >
+      {count.toLocaleString()}
+      {suffix}
+    </motion.span>
+  )
+}
+
+export const FeatureCard = ({
+  icon: Icon,
+  title,
+  description,
+  className,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  description: string
+  className?: string
+}) => {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      className={cn(
+        "group relative bg-white rounded-xl p-6 border border-slate-200 hover:border-green-300 transition-all duration-300 hover:shadow-lg",
+        className
+      )}
+    >
+      <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors duration-300">
+        <Icon className="w-6 h-6 text-green-600" />
+      </div>
+      <h3 className="text-lg font-semibold text-slate-800 mb-2 group-hover:text-green-700 transition-colors duration-300">
+        {title}
+      </h3>
+      <p className="text-slate-600 text-sm leading-relaxed">
+        {description}
+      </p>
+    </motion.div>
   )
 }
