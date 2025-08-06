@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { User, LogOut, Settings, Menu, X, Sprout, ChevronDown, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext.jsx";
 import AuthModal from "@/components/auth/AuthModal.js";
+import MobileNavigation from "@/components/navigation/MobileNavigation";
 
 // Interactive Button Component
 const InteractiveHoverButton = ({ text, href, onClick, variant = "primary" }: {
@@ -37,7 +38,8 @@ const InteractiveHoverButton = ({ text, href, onClick, variant = "primary" }: {
 // User Profile Dropdown Component
 const UserProfile = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
+  const authContext = useAuth() as { user: { full_name?: string; email?: string } | null; isAuthenticated: boolean; logout?: () => void };
+  const { user, isAuthenticated } = authContext;
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
@@ -47,7 +49,14 @@ const UserProfile = () => {
   };
 
   const handleLogout = () => {
-    logout();
+    try {
+      // Use the logout function from context
+      if (authContext.logout && typeof authContext.logout === 'function') {
+        authContext.logout();
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
     setIsDropdownOpen(false);
   };
 
@@ -72,17 +81,20 @@ const UserProfile = () => {
     );
   }
 
+  // Cast user to appropriate type to avoid TypeScript issues
+  const userInfo = user as { full_name?: string; email?: string };
+
   return (
     <div className="relative">
       <button
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         className="flex items-center space-x-2 p-2 rounded-full hover:bg-black/10 transition-colors duration-200"
-        title={user.full_name}
+        title={userInfo?.full_name || "User"}
       >
         <div className="w-8 h-8 bg-green-100/90 rounded-full flex items-center justify-center">
           <User className="w-4 h-4 text-green-600" />
         </div>
-        <span className="hidden md:block text-sm font-medium">{user.full_name.split(' ')[0]}</span>
+        <span className="hidden md:block text-sm font-medium">{userInfo?.full_name?.split(' ')[0] || 'User'}</span>
         <ChevronDown className="w-4 h-4 text-gray-700" />
       </button>
 
@@ -93,8 +105,8 @@ const UserProfile = () => {
           className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
         >
           <div className="px-4 py-2 border-b border-gray-100">
-            <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
-            <p className="text-xs text-gray-500">{user.email}</p>
+            <p className="text-sm font-medium text-gray-900">{userInfo?.full_name || 'User'}</p>
+            <p className="text-xs text-gray-500">{userInfo?.email || ''}</p>
           </div>
           
           <Link href="/dashboard" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition-colors">
@@ -128,8 +140,8 @@ const Header = () => {
 
   const navigationItems = [
     { href: "/", label: "হোম" },
-    { href: "/#services", label: "সেবা" },
-    { href: "/#how-it-works", label: "কীভাবে কাজ করে" },
+    { href: "/services", label: "সেবা" },
+    { href: "/how-it-works", label: "কীভাবে কাজ করে" },
     { href: "/#impact", label: "প্রভাব" },
     ...(isAuthenticated ? [
       { href: "/chat", label: "চ্যাট" },
@@ -247,6 +259,9 @@ const Header = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Mobile Navigation */}
+      <MobileNavigation />
     </motion.header>
   );
 };

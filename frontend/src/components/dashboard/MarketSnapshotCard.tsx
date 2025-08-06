@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, BarChart3, RefreshCw, Loader2 } from "lucide-react";
 import { useMarketPrices } from "@/hooks/useDashboardData";
+import { useRouter } from "next/navigation";
 
 export default function MarketSnapshotCard() {
   const { marketPrices, loading, error, refetch } = useMarketPrices();
+  const router = useRouter();
 
   const getTrendIcon = (trend: string) => {
     return trend === 'up' ? (
@@ -44,7 +46,7 @@ export default function MarketSnapshotCard() {
             <button
               onClick={refetch}
               disabled={loading}
-              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -87,7 +89,7 @@ export default function MarketSnapshotCard() {
                       <div className="flex items-center space-x-2">
                         {getTrendIcon(price.trend)}
                         <span className={`text-xs px-2 py-1 rounded-full ${getTrendColor(price.trend)}`}>
-                          {price.change_percentage > 0 ? '+' : ''}{price.change_percentage.toFixed(1)}%
+                          {(price.change_percentage || 0) > 0 ? '+' : ''}{(price.change_percentage || 0).toFixed(1)}%
                         </span>
                       </div>
                     </div>
@@ -118,7 +120,10 @@ export default function MarketSnapshotCard() {
                 animate={{ opacity: 1 }}
                 className="mt-4 text-center"
               >
-                <button className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center justify-center w-full py-2 rounded-lg hover:bg-blue-50 transition-colors">
+                <button 
+                  onClick={() => router.push('/dashboard/market')}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center justify-center w-full py-2 rounded-lg hover:bg-blue-50 transition-colors"
+                >
                   আরো দাম দেখুন
                   <BarChart3 className="w-4 h-4 ml-1" />
                 </button>

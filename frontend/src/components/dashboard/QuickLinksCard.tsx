@@ -15,7 +15,7 @@ export default function QuickLinksCard() {
   const links: QuickLink[] = [
     {
       title: 'বাজার',
-      href: '/market',
+      href: '/dashboard/market',
       icon: '🏪',
       description: 'ফসল কিনুন-বিক্রি করুন',
       color: 'from-blue-500 to-cyan-500'
