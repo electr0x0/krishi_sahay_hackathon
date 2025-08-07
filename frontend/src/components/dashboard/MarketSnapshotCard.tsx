@@ -76,7 +76,7 @@ export default function MarketSnapshotCard() {
           </div>
         ) : (
           <div className="space-y-3">
-            {marketPrices.slice(0, 6).map((price, index) => (
+            {marketPrices.slice(0, 4).map((price, index) => (
               <motion.div
                 key={price.item}
                 initial={{ opacity: 0, y: 20 }}
