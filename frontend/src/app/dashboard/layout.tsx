@@ -1,5 +1,4 @@
 import Sidebar from '@/components/dashboard/Sidebar';
-import { Pointer } from '@/components/magicui/pointer';
 
 export default function DashboardLayout({
   children,
@@ -11,7 +10,6 @@ export default function DashboardLayout({
       <Sidebar />
       <main className="flex-1 overflow-y-auto p-4">
         {children}
-         <Pointer className="fill-green-500" />
       </main>
     </div>
   );

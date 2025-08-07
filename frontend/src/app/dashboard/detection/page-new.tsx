@@ -24,14 +24,10 @@ const DetectionPage = () => {
 
   // Auth headers helper
   const getAuthHeaders = () => {
-    const token = Cookies.get('auth_token');
-    const headers: HeadersInit = {};
-    
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-    
-    return headers;
+    const token = Cookies.get('access_token');
+    return {
+      'Authorization': `Bearer ${token}`,
+    };
   };
 
   const modeConfig = {
@@ -60,6 +56,8 @@ const DetectionPage = () => {
       component: DetectionHistory
     }
   };
+
+  const CurrentComponent = modeConfig[detectionMode].component;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-6">
@@ -151,29 +149,10 @@ const DetectionPage = () => {
           variants={cardVariants}
           transition={{ delay: 0.2 }}
         >
-          {detectionMode === 'image' && (
-            <ImageDetection
-              confidenceThreshold={confidenceThreshold}
-              getAuthHeaders={getAuthHeaders}
-            />
-          )}
-          {detectionMode === 'video' && (
-            <VideoDetection
-              confidenceThreshold={confidenceThreshold}
-              getAuthHeaders={getAuthHeaders}
-            />
-          )}
-          {detectionMode === 'camera' && (
-            <CameraDetection
-              confidenceThreshold={confidenceThreshold}
-              getAuthHeaders={getAuthHeaders}
-            />
-          )}
-          {detectionMode === 'history' && (
-            <DetectionHistory
-              getAuthHeaders={getAuthHeaders}
-            />
-          )}
+          <CurrentComponent
+            confidenceThreshold={confidenceThreshold}
+            getAuthHeaders={getAuthHeaders}
+          />
         </motion.div>
       </div>
     </div>
