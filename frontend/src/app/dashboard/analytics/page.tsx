@@ -14,6 +14,7 @@ import { BackgroundGradient, HoverEffect, Spotlight } from "@/components/ui/acet
 import { realTimeAnalytics, type RealTimeData } from "@/lib/real-time-analytics"
 import api from "@/lib/api"
 import { motion, AnimatePresence } from "framer-motion"
+import { useAuth } from '@/contexts/AuthContext.jsx'
 import {
   ArrowLeft,
   TrendingUp,
@@ -48,6 +49,160 @@ import {
   Leaf,
   Minus,
 } from "lucide-react"
+
+// Real-time Weather Card Component
+function RealTimeWeatherCard() {
+  const { user } = useAuth();
+  const [currentWeather, setCurrentWeather] = useState<any>(null);
+  const [forecast, setForecast] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const getWeatherIcon = (condition: string) => {
+    switch (condition.toLowerCase()) {
+      case 'sunny':
+      case 'clear':
+        return Sun;
+      case 'clouds':
+      case 'cloudy':
+        return CloudRain;
+      case 'rain':
+      case 'drizzle':
+        return CloudRain;
+      default:
+        return Sun;
+    }
+  };
+
+  useEffect(() => {
+    const fetchWeatherData = async () => {
+      if (!user) return;
+
+      const location = user && typeof user === 'object' && 'district' in user 
+        ? (user as { district?: string }).district || 'Dhaka'
+        : 'Dhaka';
+
+      try {
+        setIsLoading(true);
+        const [current, forecastData] = await Promise.all([
+          api.getWeatherData(location),
+          api.getWeatherForecast(location, 5)
+        ]);
+        
+        setCurrentWeather(current);
+        setForecast(forecastData);
+        setError(null);
+      } catch (err) {
+        setError("আবহাওয়ার তথ্য আনতে ব্যর্থ হয়েছে।");
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchWeatherData();
+  }, [user]);
+
+  if (isLoading) {
+    return (
+      <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
+        <CardContent className="p-6 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+          <span className="ml-2">আবহাওয়ার তথ্য লোড হচ্ছে...</span>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !currentWeather || !forecast) {
+    return (
+      <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
+        <CardContent className="p-6 flex items-center justify-center text-red-500">
+          <AlertTriangle className="h-5 w-5 mr-2" />
+          {error || "আবহাওয়ার তথ্য পাওয়া যায়নি।"}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const { weather, main } = currentWeather;
+  const conditionText = weather[0].description;
+
+  // Process forecast data
+  const dailyForecasts = forecast.list.reduce((acc: any, item: any) => {
+    const date = new Date(item.dt * 1000).toLocaleDateString('bn-BD', { weekday: 'long' });
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(item);
+    return acc;
+  }, {});
+
+  const processedForecast = Object.entries(dailyForecasts).slice(0, 3).map(([day, items]: any) => {
+    const high = Math.max(...items.map((i: any) => i.main.temp_max));
+    const low = Math.min(...items.map((i: any) => i.main.temp_min));
+    const condition = items[Math.floor(items.length / 2)].weather[0].main;
+    return { day, high, low, condition };
+  });
+
+  return (
+    <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
+      <CardHeader>
+        <CardTitle className="flex items-center text-slate-900">
+          <Sun className="h-5 w-5 mr-2 text-yellow-600" />
+          আবহাওয়া (রিয়েল-টাইম)
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-2xl font-bold text-slate-900">
+              {Math.round(main.temp)}°C
+            </p>
+            <p className="text-sm text-slate-600 capitalize">
+              {conditionText}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-slate-600">আর্দ্রতা</p>
+            <p className="text-lg font-bold text-slate-900">
+              {main.humidity}%
+            </p>
+          </div>
+        </div>
+        
+        <Separator className="bg-slate-200" />
+        
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-slate-700">আগামী দিনের পূর্বাভাস</p>
+          {processedForecast.map((day, index) => {
+            const WeatherIcon = getWeatherIcon(day.condition);
+            return (
+              <motion.div 
+                key={index} 
+                className="flex justify-between items-center p-2 bg-slate-50 rounded"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <div className="flex items-center space-x-2">
+                  <WeatherIcon className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm text-slate-700">{day.day}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-slate-900">{Math.round(day.high)}°C</span>
+                  <Badge variant="outline" className="text-xs border-slate-300 text-slate-700">
+                    {day.condition}
+                  </Badge>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState("overview")
@@ -298,56 +453,8 @@ export default function AnalyticsPage() {
                 </CardContent>
               </Card>
 
-              {/* Weather Overview */}
-              <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center text-slate-900">
-                    <Sun className="h-5 w-5 mr-2 text-yellow-600" />
-                    আবহাওয়া
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-2xl font-bold text-slate-900">
-                        {realTimeData.weatherData.current.temperature}°C
-                      </p>
-                      <p className="text-sm text-slate-600">
-                        {realTimeData.weatherData.current.condition}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-slate-600">আর্দ্রতা</p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {realTimeData.weatherData.current.humidity}%
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <Separator className="bg-slate-200" />
-                  
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-slate-700">আগামী দিনের পূর্বাভাস</p>
-                    {realTimeData.weatherData.forecast.slice(0, 3).map((day, index) => (
-                      <motion.div 
-                        key={index} 
-                        className="flex justify-between items-center p-2 bg-slate-50 rounded"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <span className="text-sm text-slate-700">{day.date}</span>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-slate-900">{day.high}°C</span>
-                          <Badge variant="outline" className="text-xs border-slate-300 text-slate-700">
-                            {day.condition}
-                          </Badge>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Weather Overview - Real Data */}
+              <RealTimeWeatherCard />
 
               {/* AI Insights */}
               <div className="lg:col-span-2">
