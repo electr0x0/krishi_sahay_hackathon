@@ -96,7 +96,7 @@ class ApiService {
 
     const data = await this.request('/api/auth/login', {
       method: 'POST',
-      body: formData, // FormData will automatically set the right Content-Type
+      body: formData, 
     });
 
     if (data.access_token) {
@@ -104,6 +104,18 @@ class ApiService {
     }
 
     return data;
+  }
+
+  
+  saveFarmData = async (data) => {
+    return this.request('/api/form-data/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  getFarmData = async () => {
+    return this.request('/api/form-data/');
   }
 
   getCurrentUser = async () => {

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, BarChart2, Bell, MessageSquare, Settings, LifeBuoy, User, LogOut, Home } from 'lucide-react';
+import { LayoutDashboard, BarChart2, Bell, MessageSquare, Settings, LifeBuoy, User, LogOut, Home, ClipboardPlus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -56,6 +56,7 @@ const Sidebar = () => {
     { href: '/dashboard/chat', label: 'চ্যাট', icon: MessageSquare },
     { href: '/dashboard/profile', label: 'প্রোফাইল', icon: User },
     { href: '/dashboard/settings', label: 'সেটিংস', icon: Settings },
+    { href: '/dashboard/report', label: 'কৃষি রিপোর্ট', icon: ClipboardPlus },
   ];
 
   const bottomNavItems = [
