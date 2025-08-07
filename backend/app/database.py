@@ -30,6 +30,9 @@ def create_tables():
     from app.models.user import User
     from app.models.chat import ChatSession, ChatMessage
     from app.models.weather import WeatherCache
+    from app.models.sensor import SensorConfig, SensorData
+    from app.models.farm import Farm
+    from app.models.market import MarketPrice
     from app.models.detection import DetectionHistory
     Base.metadata.create_all(bind=engine)
 
