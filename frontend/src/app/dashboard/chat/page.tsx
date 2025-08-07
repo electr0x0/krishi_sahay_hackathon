@@ -11,21 +11,20 @@ import {
   MicOff, 
   Volume2, 
   VolumeX, 
-  Bot, 
-  User as UserIcon, 
-  Loader2, 
+  User, 
   Plus,
   MessageCircle,
   Trash2,
-  Star,
-  StarOff,
   Clock,
   Smartphone,
-  Cpu
+  Cpu,
+  Leaf,
+  Sparkles,
+  Brain,
+  RotateCw
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import api from '@/lib/api.js';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 // Import highlight.js styles for code syntax highlighting
@@ -61,8 +60,7 @@ const MarkdownComponents = {
   ),
   
   // Custom code styling
-  code: ({ node, inline, className, children, ...props }) => {
-    const match = /language-(\w+)/.exec(className || '');
+  code: ({ inline, className, children, ...props }) => {
     return !inline ? (
       <pre className="bg-gray-800 text-gray-100 p-3 rounded-lg mb-2 overflow-x-auto text-xs">
         <code className={className} {...props}>
@@ -263,23 +261,33 @@ const ToolOutputDisplay = ({ toolOutputs, toolCalls, language }) => {
     if (!hasOutputs && !hasCalls) return null;
     
     return (
-      <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-        <div className="text-xs text-blue-600 font-medium mb-2 flex items-center">
-          <Cpu className="w-3 h-3 mr-1" />
-          {language === 'bn' ? 'AI টুল ব্যবহার করেছে' : 'AI used tools'}
+      <div className="mt-3 p-4 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl border border-gray-200 w-1/2 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center">
+            <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-purple-600 rounded-lg flex items-center justify-center mr-2">
+              <Cpu className="w-3 h-3 text-white" />
+            </div>
+            <span className="text-sm font-semibold text-gray-800">
+              {language === 'bn' ? 'AI টুলস' : 'AI Tools'}
+            </span>
+          </div>
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
         </div>
         
         {/* Show tool calls if available */}
         {hasCalls && (
-          <div className="mb-2">
-            <div className="text-xs font-medium text-blue-700 mb-1">
-              {language === 'bn' ? 'ব্যবহৃত টুলসমূহ:' : 'Tools Used:'}
-            </div>
-            <div className="flex flex-wrap gap-1">
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-2">
               {calls.map((call, index) => (
-                <span key={index} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                  {call.name?.replace(/_/g, ' ') || 'Unknown Tool'}
-                </span>
+                <div 
+                  key={index} 
+                  className="inline-flex items-center px-3 py-1.5 bg-white rounded-full border border-gray-200 shadow-sm"
+                >
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <span className="text-xs font-medium text-gray-700">
+                    {call.name?.replace(/_/g, ' ') || 'Unknown Tool'}
+                  </span>
+                </div>
               ))}
             </div>
           </div>
@@ -287,89 +295,114 @@ const ToolOutputDisplay = ({ toolOutputs, toolCalls, language }) => {
         
         {/* Show tool outputs if available */}
         {hasOutputs && Object.entries(outputs).map(([tool, data], index) => (
-          <div key={index} className="mb-2 last:mb-0">
-            <div className="text-xs font-medium text-blue-700 mb-1 capitalize">
-              📊 {tool.replace(/_/g, ' ')}
+          <div key={index} className="mb-4 last:mb-0">
+            <div className="text-sm font-semibold text-gray-800 mb-3 flex items-center capitalize">
+              <div className="w-5 h-5 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg flex items-center justify-center mr-2">
+                <span className="text-xs text-white">🔧</span>
+              </div>
+              {tool.replace(/_/g, ' ')}
             </div>
             
             {/* Weather data display */}
             {(tool.includes('weather') || tool.includes('current_weather')) && data && typeof data === 'object' && (
-              <div className="text-xs text-gray-600 bg-white p-2 rounded">
+              <div className="bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
                 {data.main && (
-                  <>
-                    🌡️ {Math.round(data.main.temp)}°C 
-                    {data.main.feels_like && ` (অনুভব ${Math.round(data.main.feels_like)}°C)`}
-                    | 💧 {data.main.humidity}%
-                    {data.wind && ` | 💨 ${data.wind.speed} m/s`}
-                    {data.name && ` | 📍 ${data.name}`}
-                  </>
-                )}
-                {data.weather && data.weather[0] && (
-                  <div className="mt-1">☁️ {data.weather[0].description}</div>
-                )}
-              </div>
-            )}
-            
-            {/* Weather forecast display */}
-            {(tool.includes('forecast') || tool.includes('weather_forecast')) && data && data.list && (
-              <div className="text-xs text-gray-600 bg-white p-2 rounded">
-                <div className="font-medium mb-1">পরবর্তী ৩ দিনের পূর্বাভাস:</div>
-                {data.list.slice(0, 3).map((item, i) => (
-                  <div key={i} className="mb-1">
-                    📅 {new Date(item.dt * 1000).toLocaleDateString('bn-BD')} - 
-                    🌡️ {Math.round(item.main.temp)}°C | 
-                    ☁️ {item.weather[0]?.description}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center justify-between p-2 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg">
+                      <div className="flex items-center">
+                        <span className="text-lg mr-2">🌡️</span>
+                        <span className="text-sm font-medium text-gray-700">Temperature</span>
+                      </div>
+                      <span className="text-lg font-bold text-blue-600">{Math.round(data.main.temp)}°C</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50 to-cyan-100 rounded-lg">
+                      <div className="flex items-center">
+                        <span className="text-lg mr-2">💧</span>
+                        <span className="text-sm font-medium text-gray-700">Humidity</span>
+                      </div>
+                      <span className="text-lg font-bold text-cyan-600">{data.main.humidity}%</span>
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
             )}
             
             {/* Market price display */}
             {(tool.includes('price') || tool.includes('item_price')) && (
-              <div className="text-xs text-gray-600 bg-white p-2 rounded space-y-1">
+              <div className="bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
                 {Array.isArray(data) ? (
-                  data.slice(0, 3).map((item, i) => (
-                    <div key={i}>💰 {item.item || item.name}: ৳{item.price} {item.unit && `per ${item.unit}`}</div>
-                  ))
+                  <div className="space-y-2">
+                    {data.slice(0, 3).map((item, i) => (
+                      <div key={i} className="flex items-center justify-between p-1 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+                        <div className="flex items-center">
+                          <span className="text-sm mr-2">💰</span>
+                          <span className="font-medium text-gray-800 text-sm">{item.item || item.name}</span>
+                        </div>
+                        <span className="text-sm font-bold text-green-600">৳{item.price}</span>
+                      </div>
+                    ))}
+                  </div>
                 ) : data && typeof data === 'object' && data.price ? (
-                  <div>💰 {data.item || 'Item'}: ৳{data.price} {data.unit && `per ${data.unit}`}</div>
+                  <div className="flex items-center justify-between p-1 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+                    <div className="flex items-center">
+                      <span className="text-sm mr-2">💰</span>
+                      <span className="font-medium text-gray-800 text-sm">{data.item || 'পণ্য'}</span>
+                    </div>
+                    <span className="text-sm font-bold text-green-600">৳{data.price}</span>
+                  </div>
                 ) : (
-                  <div>💰 {language === 'bn' ? 'দাম তথ্য পাওয়া গেছে' : 'Price information retrieved'}</div>
+                  <div className="p-1 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg text-center">
+                    <div className="flex items-center justify-center">
+                      <span className="text-sm mr-2">💰</span>
+                      <span className="text-sm text-green-600 font-medium">Price information retrieved</span>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
             
             {/* Crop/Disease diagnosis display */}
             {tool.includes('crop') && data && (
-              <div className="text-xs text-gray-600 bg-white p-2 rounded">
+              <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
                 {typeof data === 'object' ? (
-                  <div>
-                    {data.disease && <div>🦠 রোগ: {data.disease}</div>}
-                    {data.treatment && <div>💊 চিকিৎসা: {data.treatment}</div>}
-                    {data.prevention && <div>🛡️ প্রতিরোধ: {data.prevention}</div>}
+                  <div className="space-y-3">
+                    {data.disease && (
+                      <div className="p-3 bg-gradient-to-r from-red-50 to-rose-50 rounded-lg">
+                        <div className="flex items-center">
+                          <span className="text-lg mr-2">🦠</span>
+                          <span className="font-medium text-gray-800">Disease: {data.disease}</span>
+                        </div>
+                      </div>
+                    )}
+                    {data.treatment && (
+                      <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                        <div className="flex items-center">
+                          <span className="text-lg mr-2">💊</span>
+                          <span className="font-medium text-gray-800">Treatment: {data.treatment}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div>🌱 {String(data).substring(0, 100)}</div>
+                  <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+                    <div className="flex items-center">
+                      <span className="text-lg mr-2">🌱</span>
+                      <span className="text-gray-700">{String(data).substring(0, 100)}</span>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
             
             {/* Generic data display for other tools */}
             {!tool.includes('weather') && !tool.includes('price') && !tool.includes('crop') && !tool.includes('forecast') && (
-              <div className="text-xs text-gray-600 bg-white p-2 rounded">
-                {typeof data === 'object' ? (
-                  <div>
-                    {Object.keys(data).length > 0 ? (
-                      Object.entries(data).slice(0, 3).map(([key, value], i) => (
-                        <div key={i}>{key}: {String(value).substring(0, 50)}</div>
-                      ))
-                    ) : (
-                      'ডেটা প্রাপ্ত'
-                    )}
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="p-3 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg text-center">
+                  <div className="flex items-center justify-center">
+                    <span className="text-lg mr-2">✅</span>
+                    <span className="text-gray-700 font-medium">Data retrieved successfully</span>
                   </div>
-                ) : (
-                  <div>{String(data).substring(0, 100)}</div>
-                )}
+                </div>
               </div>
             )}
           </div>
@@ -377,8 +410,15 @@ const ToolOutputDisplay = ({ toolOutputs, toolCalls, language }) => {
         
         {/* If no outputs but we have calls, show a generic message */}
         {!hasOutputs && hasCalls && (
-          <div className="text-xs text-gray-500 italic">
-            {language === 'bn' ? 'টুল ব্যবহার করা হয়েছে কিন্তু আউটপুট প্রদর্শনযোগ্য নয়' : 'Tools were used but output is not displayable'}
+          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="text-center text-gray-600">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-2">
+                <Cpu className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-medium">
+                {language === 'bn' ? 'AI টুলস ব্যবহার করা হয়েছে' : 'AI Tools executed successfully'}
+              </span>
+            </div>
           </div>
         )}
       </div>
@@ -386,19 +426,28 @@ const ToolOutputDisplay = ({ toolOutputs, toolCalls, language }) => {
   } catch (error) {
     console.error('Error parsing tool data:', error);
     return (
-      <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-600">
-        <Cpu className="w-3 h-3 inline mr-1" />
-        {language === 'bn' ? 'AI টুল ব্যবহার করেছে' : 'AI used tools'}
+      <div className="mt-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 w-1/2 shadow-sm">
+        <div className="flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center mr-3">
+            <Cpu className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-blue-700 font-medium">
+            {language === 'bn' ? 'AI টুল ব্যবহার করা হয়েছে' : 'AI Tools used successfully'}
+          </span>
+        </div>
       </div>
     );
   }
 };
 
 const ChatInterface = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false); // New state for typing effect
+  const [typingMessage, setTypingMessage] = useState(''); // Current typing message content
+  const [typingMessageId, setTypingMessageId] = useState(null); // ID of message being typed
   const [currentSession, setCurrentSession] = useState(null);
   const [chatSessions, setChatSessions] = useState([]);
   const [showSidebar, setShowSidebar] = useState(false);
@@ -431,7 +480,7 @@ const ChatInterface = () => {
     if (isAuthenticated) {
       loadChatSessions();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated]); // loadChatSessions is defined within this component, so it's safe to exclude
 
   // Load chat sessions
   const loadChatSessions = async () => {
@@ -498,9 +547,45 @@ const ChatInterface = () => {
     }
   };
 
+  // Function to create typing effect for AI responses
+  const typeMessage = async (messageContent, messageId) => {
+    setIsTyping(true);
+    setTypingMessageId(messageId);
+    setTypingMessage('');
+    
+    const words = messageContent.split(' ');
+    let currentText = '';
+    
+    for (let i = 0; i < words.length; i++) {
+      currentText += (i > 0 ? ' ' : '') + words[i];
+      setTypingMessage(currentText);
+      
+      // Fast typing speed - 50ms per word
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    
+    // Small pause before completing the message
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    setIsTyping(false);
+    setTypingMessage('');
+    setTypingMessageId(null);
+  };
+
   const sendMessage = async (messageText, isVoice = false) => {
     if (!messageText.trim() || !currentSession) return;
 
+    // Create user message object and add it immediately
+    const userMessage = {
+      message_id: Date.now().toString(),
+      role: 'user',
+      content: messageText,
+      message_type: isVoice ? 'voice' : 'text',
+      timestamp: new Date().toISOString()
+    };
+
+    // Add user message immediately to show it in chat
+    setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setInputText('');
 
@@ -513,8 +598,33 @@ const ChatInterface = () => {
         voice_duration: isVoice ? 2.0 : undefined
       });
 
-      // Add both messages to the display
-      setMessages(prev => [...prev, response.user_message, response.ai_message]);
+      setIsLoading(false);
+
+      // Add user message first (without AI response yet)
+      setMessages(prev => {
+        const withoutTemp = prev.filter(msg => msg.message_id !== userMessage.message_id);
+        return [...withoutTemp, response.user_message];
+      });
+
+      // Start typing effect for AI response
+      const aiMessageWithTyping = {
+        ...response.ai_message,
+        isTyping: true
+      };
+      
+      setMessages(prev => [...prev, aiMessageWithTyping]);
+
+      // Start the typing animation
+      await typeMessage(response.ai_message.content, response.ai_message.message_id);
+
+      // Replace with final message
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.message_id === response.ai_message.message_id 
+            ? { ...response.ai_message, isTyping: false }
+            : msg
+        )
+      );
       
       // Speak AI response if it's a voice message
       if (isVoice && response.ai_message.content) {
@@ -524,6 +634,8 @@ const ChatInterface = () => {
       }
     } catch (error) {
       console.error('Failed to send message:', error);
+      // Remove the temporary user message on error
+      setMessages(prev => prev.filter(msg => msg.message_id !== userMessage.message_id));
     } finally {
       setIsLoading(false);
     }
@@ -560,18 +672,23 @@ const ChatInterface = () => {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex">
+    <div className="h-screen border-2 rounded-3xl bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-green-200/30 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-emerald-200/30 rounded-full blur-3xl"></div>
+      </div>
       {/* Sidebar */}
-      <div className={`${showSidebar ? 'w-80' : 'w-16'} bg-white border-r border-gray-200 transition-all duration-300 flex-shrink-0`}>
+      <div className={`${showSidebar ? 'w-80' : 'w-16'} bg-white/80 backdrop-blur-md border-r border-gray-100 transition-all duration-300 flex-shrink-0 shadow-sm relative z-10`}>
         <div className="p-4">
           <Button
             onClick={() => setShowSidebar(!showSidebar)}
             variant="ghost"
             size="sm"
-            className="w-full justify-start"
+            className="w-full justify-start hover:bg-green-50 text-green-700"
           >
             <MessageCircle className="h-4 w-4" />
-            {showSidebar && <span className="ml-2">চ্যাট সেশন</span>}
+            {showSidebar && <span className="ml-2 font-medium">চ্যাট সেশন</span>}
           </Button>
         </div>
 
@@ -579,7 +696,7 @@ const ChatInterface = () => {
           <div className="px-4 pb-4">
             <Button
               onClick={createNewSession}
-              className="w-full mb-4 bg-green-500 hover:bg-green-600"
+              className="w-full mb-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all duration-200"
               size="sm"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -590,19 +707,22 @@ const ChatInterface = () => {
               {chatSessions.map((session) => (
                 <div
                   key={session.session_id}
-                  className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                  className={`group p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${
                     currentSession?.session_id === session.session_id
-                      ? 'bg-green-50 border-green-200'
-                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-sm'
+                      : 'bg-gray-50/50 border-gray-200 hover:bg-white hover:border-gray-300'
                   }`}
                   onClick={() => selectSession(session)}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-gray-900 truncate">
-                        {session.title}
-                      </h4>
-                      <div className="flex items-center text-xs text-gray-500 mt-1">
+                      <div className="flex items-center mb-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                        <h4 className="text-sm font-medium text-gray-900 truncate">
+                          {session.title}
+                        </h4>
+                      </div>
+                      <div className="flex items-center text-xs text-gray-500">
                         <Clock className="h-3 w-3 mr-1" />
                         {new Date(session.last_activity).toLocaleDateString('bn-BD')}
                       </div>
@@ -614,7 +734,7 @@ const ChatInterface = () => {
                       }}
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100"
+                      className="h-8 w-8 p-0 text-red-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-200"
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -627,65 +747,136 @@ const ChatInterface = () => {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col relative z-10">
         {/* Chat Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white shadow-sm p-6 border-b border-gray-200"
+          className="bg-white/80 backdrop-blur-md shadow-sm p-4 border-b border-gray-100"
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
-                <Bot className="w-6 h-6 text-white" />
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                  <Leaf className="w-5 h-5 text-white" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">কৃষি সহায়</h1>
-                <p className="text-sm text-gray-500">আপনার কৃষি বিশেষজ্ঞ</p>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  কৃষি সহায়
+                </h1>
+                <p className="text-xs text-gray-500 flex items-center">
+                  <Brain className="w-3 h-3 mr-1" />
+                  স্মার্ট কৃষি বিশেষজ্ঞ
+                </p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               {/* TTS Status/Stop Button */}
               {(isSpeaking || isTTSLoading) && (
                 <Button
                   onClick={stopSpeaking}
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="text-orange-600 hover:text-orange-700"
+                  className="text-green-600 hover:bg-green-50 p-2"
                 >
                   {isTTSLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <RotateCw className="w-4 h-4 animate-spin" />
                   ) : (
                     <VolumeX className="w-4 h-4" />
                   )}
                 </Button>
               )}
               
-              {/* Backend TTS Indicator */}
-              <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded" title="gTTS সেবা ব্যবহার করা হচ্ছে">
-                🤖 gTTS
-              </span>
+              {/* AI Status Indicator */}
+              <div className="flex items-center space-x-2 px-3 py-1 bg-green-50 rounded-full border border-green-200">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-green-700 font-medium">অনলাইন</span>
+              </div>
             </div>
           </div>
         </motion.div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="w-full max-w-4xl mx-auto space-y-4">
             {messages.length === 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-center py-12"
+                className="text-center py-16 px-8"
               >
-                <Bot className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h2 className="text-xl font-semibold text-gray-700 mb-2">
-                  আস্সালামু আলাইকুম!
-                </h2>
-                <p className="text-gray-500">
-                  আমি আপনার কৃষি বিষয়ক যেকোনো প্রশ্নের উত্তর দিতে পারি
+                <div className="relative mb-8">
+                  <div className="w-24 h-24 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-500 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-2xl shadow-green-500/25">
+                    <Leaf className="w-12 h-12 text-white" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-gradient-to-r from-emerald-400 to-green-400 rounded-full animate-pulse"></div>
+                </div>
+                
+                <h1 className="text-4xl font-bold mb-4">
+                  <span className="bg-gradient-to-r from-gray-800 via-gray-900 to-black bg-clip-text text-transparent">
+                    Welcome to 
+                  </span>
+                  <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    কৃষি সহায়
+                  </span>
+                </h1>
+                
+                <p className="text-gray-600 text-lg mb-12 max-w-2xl mx-auto leading-relaxed">
+                  Get started by asking a question about farming and agriculture. Chat can do the rest. Not sure where to start?
                 </p>
+                
+                <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
+                  <motion.div 
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-2xl border border-orange-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10"
+                    onClick={() => setInputText("ধানের রোগ সম্পর্কে জানতে চাই")}
+                  >
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl flex items-center justify-center mb-4">
+                      <span className="text-2xl">🌾</span>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Crop diseases</h3>
+                    <p className="text-sm text-gray-600">Learn about rice and other crop diseases</p>
+                  </motion.div>
+                  
+                  <motion.div 
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-2xl border border-blue-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
+                    onClick={() => setInputText("আজকের আবহাওয়া কেমন?")}
+                  >
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl flex items-center justify-center mb-4">
+                      <span className="text-2xl">🌤️</span>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Weather info</h3>
+                    <p className="text-sm text-gray-600">Get current weather and forecasts</p>
+                  </motion.div>
+                  
+                  <motion.div 
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-2xl border border-green-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-green-500/10"
+                    onClick={() => setInputText("সবজির দাম জানতে চাই")}
+                  >
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-500 rounded-xl flex items-center justify-center mb-4">
+                      <span className="text-2xl">💰</span>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Market prices</h3>
+                    <p className="text-sm text-gray-600">Check current vegetable and crop prices</p>
+                  </motion.div>
+                  
+                  <motion.div 
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-2xl border border-purple-200 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10"
+                    onClick={() => setInputText("স্মার্ট কৃষি প্রযুক্তি সম্পর্কে জানতে চাই")}
+                  >
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl flex items-center justify-center mb-4">
+                      <Brain className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Smart farming</h3>
+                    <p className="text-sm text-gray-600">Learn about modern agricultural technology</p>
+                  </motion.div>
+                </div>
               </motion.div>
             )}
 
@@ -697,76 +888,117 @@ const ChatInterface = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
                 >
-                  <div className={`flex items-start space-x-3 max-w-[80%] ${
-                    message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                  <div className={`flex items-start max-w-[80%] ${
+                    message.role === 'user' ? 'flex-row-reverse space-x-reverse space-x-3' : 'space-x-3'
                   }`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    {/* Avatar */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md flex-shrink-0 ${
                       message.role === 'user' 
-                        ? 'bg-green-500' 
-                        : 'bg-gradient-to-br from-blue-500 to-purple-600'
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
+                        : 'bg-gradient-to-br from-green-100 to-emerald-50 border border-green-200'
                     }`}>
                       {message.role === 'user' ? (
-                        <UserIcon className="w-4 h-4 text-white" />
+                        <User className="w-4 h-4 text-white" />
                       ) : (
-                        <Bot className="w-4 h-4 text-white" />
+                        <Leaf className="w-4 h-4 text-green-600" />
                       )}
                     </div>
                     
-                    <div className={`p-4 rounded-2xl ${
-                      message.role === 'user'
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-100 text-gray-900'
+                    {/* Message Content */}
+                    <div className={`relative group ${
+                      message.role === 'user' ? 'text-right' : 'text-left'
                     }`}>
-                      {message.role === 'user' ? (
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                      ) : (
-                        <div className="text-sm leading-relaxed prose prose-sm max-w-none">
-                          <ReactMarkdown
-                            components={MarkdownComponents}
-                            remarkPlugins={[remarkGfm]}
-                            rehypePlugins={[rehypeHighlight]}
-                          >
-                            {message.content}
-                          </ReactMarkdown>
-                        </div>
-                      )}
+                      <div className={`px-3 py-2 rounded-2xl shadow-sm transition-all duration-200 ${
+                        message.role === 'user'
+                          ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-br-sm'
+                          : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm hover:shadow-md'
+                      }`}>
+                        {message.role === 'user' ? (
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                        ) : (
+                          <>
+                            <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-green">
+                              {message.isTyping && isTyping && typingMessageId === message.message_id ? (
+                                // Show typing effect
+                                <div className="space-y-2">
+                                  <ReactMarkdown
+                                    components={MarkdownComponents}
+                                    remarkPlugins={[remarkGfm]}
+                                    rehypePlugins={[rehypeHighlight]}
+                                  >
+                                    {typingMessage}
+                                  </ReactMarkdown>
+                                  <div className="inline-flex items-center space-x-1">
+                                    <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></div>
+                                    <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                    <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                                  </div>
+                                </div>
+                              ) : (
+                                // Show complete message
+                                <ReactMarkdown
+                                  components={MarkdownComponents}
+                                  remarkPlugins={[remarkGfm]}
+                                  rehypePlugins={[rehypeHighlight]}
+                                >
+                                  {message.content}
+                                </ReactMarkdown>
+                              )}
+                            </div>
+                          </>
+                        )}
+                        
+                        {message.message_type === 'voice' && (
+                          <div className="flex items-center mt-2 text-xs opacity-70">
+                            <div className="flex items-center bg-black/10 rounded-full px-2 py-1">
+                              <Smartphone className="w-3 h-3 mr-1" />
+                              <span>ভয়েস</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       
-                      {message.message_type === 'voice' && (
-                        <div className="flex items-center mt-2 text-xs opacity-75">
-                          <Smartphone className="w-3 h-3 mr-1" />
-                          ভয়েস মেসেজ
-                        </div>
-                      )}
-                      
+                      {/* Message actions for AI responses */}
                       {message.role === 'assistant' && (
-                        <>
-                          <div className="flex items-center mt-2 space-x-2">
-                            <Button
-                              onClick={() => speak(message.content)}
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 p-1 text-gray-500 hover:text-gray-700"
-                              disabled={isSpeaking}
-                            >
-                              <Volume2 className="w-4 h-4" />
-                            </Button>
-                            
-                            {message.processing_time && (
-                              <span className="text-xs text-gray-500">
-                                {message.processing_time.toFixed(1)}s
-                              </span>
-                            )}
+                        <div className="mt-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                onClick={() => speak(message.content)}
+                                disabled={isSpeaking || isTTSLoading}
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-xs text-gray-500 hover:text-green-600 hover:bg-green-50"
+                              >
+                                {isTTSLoading ? (
+                                  <RotateCw className="w-3 h-3 animate-spin" />
+                                ) : isSpeaking ? (
+                                  <VolumeX className="w-3 h-3" />
+                                ) : (
+                                  <Volume2 className="w-3 h-3" />
+                                )}
+                              </Button>
+                              
+                              {message.processing_time && (
+                                <div className="flex items-center text-xs text-gray-400">
+                                  <Clock className="w-3 h-3 mr-1" />
+                                  {message.processing_time.toFixed(1)}s
+                                </div>
+                              )}
+                            </div>
                           </div>
                           
-                          {/* Tool outputs display */}
-                          <ToolOutputDisplay 
-                            toolOutputs={message.tool_outputs}
-                            toolCalls={message.tool_calls}
-                            language={language}
-                          />
-                        </>
+                          {/* Tool outputs display - only show after typing is complete */}
+                          {!(message.isTyping && isTyping && typingMessageId === message.message_id) && (
+                            <ToolOutputDisplay 
+                              toolOutputs={message.tool_outputs}
+                              toolCalls={message.tool_calls}
+                              language={language}
+                            />
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -776,18 +1008,86 @@ const ChatInterface = () => {
 
             {isLoading && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex justify-start"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex justify-start mb-6"
               >
                 <div className="flex items-start space-x-3 max-w-[80%]">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 bg-gradient-to-br from-green-100 to-emerald-50 border border-green-200 rounded-full flex items-center justify-center shadow-md">
+                    <Leaf className="w-4 h-4 text-green-600" />
                   </div>
-                  <div className="bg-gray-100 p-4 rounded-2xl">
+                  <div className="bg-white border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-sm shadow-sm min-w-[120px]">
                     <div className="flex items-center space-x-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
-                      <span className="text-sm text-gray-500">চিন্তা করছি...</span>
+                      {/* Modern typing indicator */}
+                      <div className="flex space-x-1">
+                        <motion.div 
+                          className="w-2 h-2 bg-green-500 rounded-full"
+                          animate={{ 
+                            scale: [1, 1.2, 1],
+                            opacity: [0.5, 1, 0.5]
+                          }}
+                          transition={{ 
+                            duration: 1.5, 
+                            repeat: Infinity,
+                            delay: 0
+                          }}
+                        />
+                        <motion.div 
+                          className="w-2 h-2 bg-green-500 rounded-full"
+                          animate={{ 
+                            scale: [1, 1.2, 1],
+                            opacity: [0.5, 1, 0.5]
+                          }}
+                          transition={{ 
+                            duration: 1.5, 
+                            repeat: Infinity,
+                            delay: 0.2
+                          }}
+                        />
+                        <motion.div 
+                          className="w-2 h-2 bg-green-500 rounded-full"
+                          animate={{ 
+                            scale: [1, 1.2, 1],
+                            opacity: [0.5, 1, 0.5]
+                          }}
+                          transition={{ 
+                            duration: 1.5, 
+                            repeat: Infinity,
+                            delay: 0.4
+                          }}
+                        />
+                      </div>
+                      
+                      {/* AI thinking text with shimmer effect */}
+                      <motion.span 
+                        className="text-sm text-gray-600 font-medium"
+                        animate={{ 
+                          opacity: [0.7, 1, 0.7]
+                        }}
+                        transition={{ 
+                          duration: 2, 
+                          repeat: Infinity 
+                        }}
+                      >
+                        AI চিন্তা করছে...
+                      </motion.span>
+                    </div>
+                    
+                    {/* Cool progress bar */}
+                    <div className="mt-2">
+                      <div className="w-full bg-gray-200 rounded-full h-1">
+                        <motion.div 
+                          className="bg-gradient-to-r from-green-500 to-emerald-600 h-1 rounded-full"
+                          animate={{ 
+                            width: ["0%", "70%", "100%", "0%"]
+                          }}
+                          transition={{ 
+                            duration: 3, 
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -801,41 +1101,65 @@ const ChatInterface = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white shadow-lg p-6 border-t border-gray-200"
+          className="bg-white/90 backdrop-blur-md shadow-xl p-4 border-t border-gray-100"
         >
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-end space-x-4">
-              <div className="flex-1">
-                <textarea
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="আপনার প্রশ্ন লিখুন..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                  rows={2}
-                  disabled={isLoading}
-                />
-              </div>
-              
-              <div className="flex space-x-2">
-                <Button
-                  onClick={handleVoiceMessage}
-                  disabled={isLoading}
-                  variant={isListening ? "destructive" : "outline"}
-                  size="lg"
-                  className={isListening ? "animate-pulse" : ""}
-                >
-                  {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                </Button>
+          <div className="w-full max-w-4xl mx-auto">
+            <div className="relative">
+              <div className="flex items-end space-x-3 bg-gray-50/80 p-3 rounded-xl border border-gray-200">
+                <div className="flex-1 relative">
+                  <textarea
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="আপনার প্রশ্ন লিখুন..."
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none transition-all duration-200 shadow-sm text-sm"
+                    rows={2}
+                    disabled={isLoading}
+                  />
+                  {inputText.length > 0 && (
+                    <div className="absolute bottom-3 right-3 text-xs text-gray-400 bg-white/80 px-2 py-1 rounded">
+                      {inputText.length} অক্ষর
+                    </div>
+                  )}
+                </div>
                 
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!inputText.trim() || isLoading}
-                  size="lg"
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                >
-                  <Send className="w-5 h-5" />
-                </Button>
+                <div className="flex space-x-3">
+                  <Button
+                    onClick={handleVoiceMessage}
+                    disabled={isLoading}
+                    variant={isListening ? "default" : "outline"}
+                    size="lg"
+                    className={`relative rounded-full ${isListening ? 
+                      "bg-red-500 hover:bg-red-600 text-white animate-pulse" : 
+                      "border-green-200 text-green-600 hover:bg-green-50"
+                    }`}
+                  >
+                    {isListening ? (
+                      <MicOff className="w-5 h-5" />
+                    ) : (
+                      <Mic className="w-5 h-5" />
+                    )}
+                    {isListening && (
+                      <span className="absolute -top-2 -right-2 w-3 h-3 bg-red-400 rounded-full animate-ping"></span>
+                    )}
+                  </Button>
+                  
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!inputText.trim() || isLoading}
+                    size="lg"
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200 relative overflow-hidden"
+                  >
+                    {isLoading ? (
+                      <RotateCw className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5" />
+                        <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
