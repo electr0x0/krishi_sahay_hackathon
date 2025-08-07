@@ -32,7 +32,7 @@ export default function TechnologyShowcase() {
       features: [
         { bn: 'বাংলা ভয়েস কমান্ড', en: 'Bangla Voice Commands' },
         { bn: 'স্মার্ট সুপারিশ', en: 'Smart Recommendations' },
-        { bn: '২৤/৭ সহায়তা', en: '24/7 Support' },
+        { bn: '২৪/৭ সহায়তা', en: '24/7 Support' },
         { bn: 'রোগ নির্ণয়', en: 'Disease Detection' }
       ],
       color: 'from-blue-500 to-purple-500'
@@ -139,12 +139,12 @@ export default function TechnologyShowcase() {
           </div>
           
           <motion.h2 
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6"
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-8"
             variants={itemVariants}
           >
-            {language === 'bn' ? 'আধুনিক প্রযুক্তি' : 'Modern Technology'}
+           <div > {language === 'bn' ? 'আধুনিক প্রযুক্তি' : 'Modern Technology'}</div>
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-blue-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-blue-500  ">
               {language === 'bn' ? 'কৃষিতে বিপ্লব' : 'Agricultural Revolution'}
             </span>
           </motion.h2>
@@ -298,17 +298,17 @@ export default function TechnologyShowcase() {
         >
           {[
             { 
-              number: '99%', 
+              number: '৯৯%', 
               label: { bn: 'নির্ভুলতা', en: 'Accuracy' },
               icon: '🎯'
             },
             { 
-              number: '50%', 
+              number: '৫০%', 
               label: { bn: 'খরচ সাশ্রয়', en: 'Cost Reduction' },
               icon: '💰'
             },
             { 
-              number: '24/7', 
+              number: '২৪/৭', 
               label: { bn: 'সেবা', en: 'Service' },
               icon: '🚀'
             }
