@@ -26,6 +26,10 @@ gtts
 
 # Image Processing (for crop disease detection)
 pillow
+opencv-python
+ultralytics
+torch
+torchvision
 
 # Data Processing
 pandas
