@@ -4,3 +4,5 @@ backend/venv/
 __pycache__/
 .pytest_cache/
 .vscode/
+
+backend/krishi_sahay.db
