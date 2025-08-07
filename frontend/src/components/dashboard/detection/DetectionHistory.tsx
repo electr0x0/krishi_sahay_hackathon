@@ -72,10 +72,19 @@ const DetectionHistory = () => {
 
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {
-      case 'severe': return 'bg-red-100 text-red-800 border-red-200';
-      case 'moderate': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'mild': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default: return 'bg-green-100 text-green-800 border-green-200';
+      case 'severe':
+      case 'গুরুতর': 
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'moderate':
+      case 'মাঝারি': 
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'mild':
+      case 'হালকা': 
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low':
+      case 'কম':
+      default: 
+        return 'bg-green-100 text-green-800 border-green-200';
     }
   };
 
@@ -84,7 +93,12 @@ const DetectionHistory = () => {
       case 'severe': return 'গুরুতর';
       case 'moderate': return 'মাঝারি';
       case 'mild': return 'হালকা';
-      default: return 'কম';
+      case 'low': return 'কম';
+      case 'গুরুতর': return 'গুরুতর';
+      case 'মাঝারি': return 'মাঝারি';
+      case 'হালকা': return 'হালকা';
+      case 'কম': return 'কম';
+      default: return severity || 'কম';
     }
   };
 
@@ -232,21 +246,21 @@ const DetectionHistory = () => {
                             {/* Images */}
                             {selectedDetection.success && (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {selectedDetection.original_image_path && (
+                                {selectedDetection.original_image_url && (
                                   <div>
                                     <h4 className="font-medium mb-2">মূল ছবি</h4>
                                     <img
-                                      src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${selectedDetection.original_image_path}`}
+                                      src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${selectedDetection.original_image_url}`}
                                       alt="Original"
                                       className="w-full rounded-lg shadow-md"
                                     />
                                   </div>
                                 )}
-                                {selectedDetection.processed_image_path && (
+                                {selectedDetection.processed_image_url && (
                                   <div>
                                     <h4 className="font-medium mb-2">প্রক্রিয়াকৃত ছবি</h4>
                                     <img
-                                      src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${selectedDetection.processed_image_path}`}
+                                      src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${selectedDetection.processed_image_url}`}
                                       alt="Processed"
                                       className="w-full rounded-lg shadow-md"
                                     />
@@ -283,10 +297,10 @@ const DetectionHistory = () => {
                       </DialogContent>
                     </Dialog>
 
-                    {item.success && item.processed_image_path && (
+                    {item.success && item.processed_image_url && (
                       <Button variant="outline" size="sm" asChild>
                         <a
-                          href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.processed_image_path}`}
+                          href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${item.processed_image_url}`}
                           download
                         >
                           <Download className="h-4 w-4" />
