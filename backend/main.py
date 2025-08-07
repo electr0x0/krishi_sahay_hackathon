@@ -7,7 +7,12 @@ import os
 
 from app.core.config import APP_NAME, APP_VERSION, DEBUG, ALLOWED_ORIGINS
 from app.database import create_tables
+
+from app.api import agent, auth, chat, community, iot, market, tts, user, weather
+from app.api import store as store_api
+
 from app.api import agent, auth, chat, iot, market, tts, user, weather, detection
+
 
 # Create FastAPI app
 app = FastAPI(
@@ -38,9 +43,12 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(agent.router, prefix="/api/agent", tags=["AI Agent"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
+
+app.include_router(community.router, prefix="/api/community", tags=["Community"])
 app.include_router(detection.router, prefix="/api/detection", tags=["Plant Disease Detection"])
 app.include_router(iot.router, prefix="/api/iot", tags=["IoT Sensors"])
 app.include_router(market.router, prefix="/api", tags=["Market"])
+app.include_router(store_api.router, prefix="/api/store", tags=["Store"])
 app.include_router(tts.router, prefix="/api", tags=["Text-to-Speech"])
 app.include_router(user.router, prefix="/api", tags=["Users"])
 app.include_router(weather.router, prefix="/api", tags=["Weather"])
@@ -79,12 +87,14 @@ async def read_root():
             "Bengali Text-to-Speech (gTTS)",
             "Market Price Data",
             "Weather Information",
-            "Crop Management"
+            "Crop Management",
+            "Shomprodai Community System"
         ],
         "endpoints": {
             "authentication": "/api/auth",
             "ai_agent": "/api/agent", 
             "chat": "/api/chat",
+            "community": "/api/community",
             "iot_sensors": "/api/iot",
             "text_to_speech": "/api/tts",
             "documentation": "/docs",
