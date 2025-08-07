@@ -1,10 +1,13 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, WebSocket, WebSocketDisconnect
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 import cv2
 import numpy as np
 import base64
 import os
 import uuid
+import json
+import asyncio
 from datetime import datetime
 from typing import List, Optional
 
@@ -13,6 +16,7 @@ from app.models.detection import DetectionHistory
 from app.models.user import User
 from app.schemas.detection import DetectionRequest, DetectionResponse, DetectionHistoryResponse, DetectionHistoryItem
 from app.services.detection_service import PlantDiseaseDetector
+from app.services.video_detection_service import VideoPlantDiseaseDetector
 from app.auth.dependencies import get_current_active_user
 
 router = APIRouter()
@@ -244,3 +248,198 @@ async def delete_detection(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting detection: {str(e)}")
+
+@router.post("/detect-video")
+async def detect_plant_disease_video(
+    file: UploadFile = File(...),
+    confidence_threshold: Optional[float] = Form(0.25),
+    frame_skip: Optional[int] = Form(5),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Process a video file for plant disease detection.
+    Returns streaming response with progress updates.
+    """
+    try:
+        # Validate file type
+        if not file.content_type or not file.content_type.startswith('video/'):
+            raise HTTPException(status_code=400, detail="Please upload a valid video file")
+        
+        # Initialize video detector
+        detector = VideoPlantDiseaseDetector(
+            model_path=MODEL_PATH,
+            conf_threshold=confidence_threshold
+        )
+        
+        # Create directories
+        upload_dir = "uploads/videos/detection"
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Generate unique filenames
+        file_id = str(uuid.uuid4())
+        input_filename = f"input_{file_id}_{file.filename}"
+        # Force .mp4 extension for output to ensure browser compatibility
+        base_name = os.path.splitext(file.filename)[0]
+        output_filename = f"processed_{file_id}_{base_name}.mp4"
+        
+        input_path = os.path.join(upload_dir, input_filename)
+        output_path = os.path.join(upload_dir, output_filename)
+        
+        # Save uploaded video
+        file_content = await file.read()
+        with open(input_path, "wb") as f:
+            f.write(file_content)
+        
+        async def generate_progress():
+            try:
+                for progress_update in detector.process_video_file(input_path, output_path, frame_skip):
+                    yield f"data: {json.dumps(progress_update)}\n\n"
+                    await asyncio.sleep(0.1)  # Allow other tasks to run
+            except Exception as e:
+                error_update = {"status": "error", "error": str(e)}
+                yield f"data: {json.dumps(error_update)}\n\n"
+        
+        return StreamingResponse(
+            generate_progress(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing video: {str(e)}")
+
+@router.post("/detect-camera-frame")
+async def detect_camera_frame(
+    file: UploadFile = File(...),
+    confidence_threshold: Optional[float] = Form(0.25),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Process a single camera frame for plant disease detection.
+    """
+    try:
+        # Validate file type
+        if not file.content_type or not file.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="Please upload a valid image file")
+        
+        # Initialize video detector for frame processing
+        detector = VideoPlantDiseaseDetector(
+            model_path=MODEL_PATH,
+            conf_threshold=confidence_threshold
+        )
+        
+        # Read file content
+        file_content = await file.read()
+        
+        # Process frame
+        processed_bytes, detections = detector.process_frame_from_bytes(file_content)
+        
+        # Convert processed image to base64 for response
+        processed_b64 = base64.b64encode(processed_bytes).decode('utf-8')
+        
+        # Create directories for saving (optional)
+        upload_dir = "uploads/images/camera"
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Save to database (optional - for camera snapshots)
+        file_id = str(uuid.uuid4())
+        original_filename = f"camera_{file_id}_{file.filename}"
+        processed_filename = f"processed_camera_{file_id}_{file.filename}"
+        
+        original_path = os.path.join(upload_dir, original_filename)
+        processed_path = os.path.join(upload_dir, processed_filename)
+        
+        # Save files
+        with open(original_path, "wb") as f:
+            f.write(file_content)
+        with open(processed_path, "wb") as f:
+            f.write(processed_bytes)
+        
+        # Save to database
+        detection_history = DetectionHistory(
+            user_id=current_user.id,
+            original_image_path=original_path,
+            processed_image_path=processed_path,
+            detections=detections,
+            detection_count=len(detections),
+            processing_time=0.0,  # Real-time, so minimal time
+            confidence_threshold=confidence_threshold,
+            success=True
+        )
+        
+        db.add(detection_history)
+        db.commit()
+        db.refresh(detection_history)
+        
+        return {
+            "success": True,
+            "message": "Camera frame processed successfully",
+            "detection_id": detection_history.id,
+            "detections": detections,
+            "detection_count": len(detections),
+            "processed_image_b64": processed_b64,
+            "original_image_url": f"/uploads/images/camera/{original_filename}",
+            "processed_image_url": f"/uploads/images/camera/{processed_filename}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing camera frame: {str(e)}")
+
+@router.websocket("/stream-camera")
+async def websocket_camera_stream(
+    websocket: WebSocket,
+    confidence_threshold: float = 0.25,
+    camera_index: int = 0
+):
+    """
+    WebSocket endpoint for real-time camera stream with disease detection.
+    """
+    await websocket.accept()
+    
+    try:
+        # Initialize video detector
+        detector = VideoPlantDiseaseDetector(
+            model_path=MODEL_PATH,
+            conf_threshold=confidence_threshold
+        )
+        
+        # Start real-time processing
+        for stream_update in detector.process_realtime_stream(camera_index):
+            if stream_update["status"] == "detection":
+                # Convert frame bytes to base64 for transmission
+                frame_b64 = base64.b64encode(stream_update["frame_data"]).decode('utf-8')
+                stream_update["frame_b64"] = frame_b64
+                del stream_update["frame_data"]  # Remove binary data
+            
+            await websocket.send_text(json.dumps(stream_update))
+            
+            # Check for client disconnect
+            try:
+                message = await asyncio.wait_for(websocket.receive_text(), timeout=0.01)
+                if message == "stop":
+                    detector.stop_stream()
+                    break
+            except asyncio.TimeoutError:
+                pass  # No message received, continue
+            except WebSocketDisconnect:
+                detector.stop_stream()
+                break
+                
+    except WebSocketDisconnect:
+        detector.stop_stream()
+    except Exception as e:
+        await websocket.send_text(json.dumps({
+            "status": "error",
+            "error": str(e)
+        }))
+    finally:
+        await websocket.close()

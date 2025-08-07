@@ -4,6 +4,7 @@ uvicorn[standard]
 python-dotenv
 httpx
 pydantic[email]
+websockets
 
 # Database
 sqlalchemy
