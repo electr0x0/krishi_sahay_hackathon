@@ -15,7 +15,9 @@ from app.tools import (
     get_current_weather, get_weather_forecast, get_weather_alerts,
     diagnose_crop_disease, get_crop_calendar, get_fertilizer_recommendation,
     get_latest_sensor_data, get_sensor_history, get_sensor_alerts
-)
+    get_user_detection_history, get_detection_insights)
+
+from app.tools.detection_tool import _get_user_detection_history_impl, _get_detection_insights_impl
 from app.prompts.system_prompts import get_system_prompt, get_context_prompt
 from app.services.translation_service import translation_service
 
@@ -48,6 +50,8 @@ class EnhancedAgentService:
             get_latest_sensor_data,
             get_sensor_history,
             get_sensor_alerts
+            get_user_detection_history,
+            get_detection_insights
         ]
         
         self.llm_with_tools = self.llm.bind_tools(self.tools)
@@ -152,12 +156,77 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
             
             return {"messages": [response]}
         
-        tool_node = ToolNode(self.tools)
+        def custom_tool_node(state: AgentState):
+            """Custom tool execution that provides user context to detection tools"""
+            messages = state.get("messages", [])
+            user_context = state.get("user_context", {})
+            user_id = user_context.get("user_id")
+            
+            # Find the last AI message with tool calls
+            last_message = messages[-1] if messages else None
+            if not last_message or not hasattr(last_message, 'tool_calls') or not last_message.tool_calls:
+                return {"messages": []}
+            
+            # Check if any tool calls are detection tools that need user context
+            has_detection_tools = any(
+                tool_call["name"] in ["get_user_detection_history", "get_detection_insights"] 
+                for tool_call in last_message.tool_calls
+            )
+            
+            if has_detection_tools and user_id:
+                # Handle detection tools manually with user context
+                tool_results = []
+                
+                for tool_call in last_message.tool_calls:
+                    tool_name = tool_call["name"]
+                    tool_args = tool_call.get("args", {})
+                    
+                    try:
+                        if tool_name == "get_user_detection_history":
+                            limit = tool_args.get("limit", 5)
+                            result = _get_user_detection_history_impl(user_id, limit)
+                        elif tool_name == "get_detection_insights":
+                            result = _get_detection_insights_impl(user_id)
+                        else:
+                            # For non-detection tools, still need to execute them manually
+                            # Find the tool function and execute it
+                            tool_func = None
+                            for tool in self.tools:
+                                if tool.name == tool_name:
+                                    tool_func = tool
+                                    break
+                            
+                            if tool_func:
+                                result = tool_func.invoke(tool_args)
+                            else:
+                                result = f"Tool {tool_name} not found"
+                        
+                        from langchain_core.messages import ToolMessage
+                        tool_message = ToolMessage(
+                            content=result,
+                            tool_call_id=tool_call["id"]
+                        )
+                        tool_results.append(tool_message)
+                        
+                    except Exception as e:
+                        # Handle tool execution errors
+                        from langchain_core.messages import ToolMessage
+                        error_message = ToolMessage(
+                            content=f"Error executing {tool_name}: {str(e)}",
+                            tool_call_id=tool_call["id"]
+                        )
+                        tool_results.append(error_message)
+                
+                return {"messages": tool_results}
+            else:
+                # Use standard tool execution for non-detection tools
+                tool_node = ToolNode(self.tools)
+                return tool_node.invoke(state)
         
         # Create graph
         graph = StateGraph(AgentState)
         graph.add_node("agent", agent_node)
-        graph.add_node("tools", tool_node)
+        graph.add_node("tools", custom_tool_node)
         graph.set_entry_point("agent")
         
         # Conditional edges

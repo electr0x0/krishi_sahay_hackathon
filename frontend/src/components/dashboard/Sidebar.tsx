@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, BarChart2, Bell, MessageSquare, Settings, LifeBuoy, User, LogOut, Home } from 'lucide-react';
+import { LayoutDashboard, BarChart2, Bell, MessageSquare, Settings, LifeBuoy, User, LogOut, Home, Camera, Mic } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -51,9 +51,11 @@ const Sidebar = () => {
 
   const navItems = [
     { href: '/dashboard', label: 'ড্যাশবোর্ড', icon: LayoutDashboard },
+    { href: '/dashboard/detection', label: 'রোগ শনাক্তকরণ', icon: Camera },
     { href: '/dashboard/analytics', label: 'বিশ্লেষণ', icon: BarChart2 },
     { href: '/dashboard/notifications', label: 'নোটিফিকেশন', icon: Bell },
     { href: '/dashboard/chat', label: 'চ্যাট', icon: MessageSquare },
+    { href: '/dashboard/voice-chat', label: 'AI এর সাথে কথা বলুন', icon: Mic },
     { href: '/dashboard/profile', label: 'প্রোফাইল', icon: User },
     { href: '/dashboard/settings', label: 'সেটিংস', icon: Settings },
   ];

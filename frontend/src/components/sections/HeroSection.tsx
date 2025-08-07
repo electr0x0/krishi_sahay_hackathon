@@ -111,7 +111,7 @@ export default function HeroSection() {
           
           {/* Language Toggle */}
           <motion.div 
-            className="mb-8 flex justify-center"
+            className="mb-8 mt-4 flex justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}

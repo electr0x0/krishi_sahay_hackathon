@@ -7,7 +7,7 @@ import os
 
 from app.core.config import APP_NAME, APP_VERSION, DEBUG, ALLOWED_ORIGINS
 from app.database import create_tables
-from app.api import agent, auth, chat, iot, market, tts, user, weather
+from app.api import agent, auth, chat, iot, market, tts, user, weather, detection
 
 # Create FastAPI app
 app = FastAPI(
@@ -28,6 +28,7 @@ app.add_middleware(
 
 # Create upload directories
 os.makedirs("uploads/images", exist_ok=True)
+os.makedirs("uploads/images/detection", exist_ok=True)
 os.makedirs("uploads/documents", exist_ok=True)
 
 # Mount static files
@@ -37,6 +38,7 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(agent.router, prefix="/api/agent", tags=["AI Agent"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
+app.include_router(detection.router, prefix="/api/detection", tags=["Plant Disease Detection"])
 app.include_router(iot.router, prefix="/api/iot", tags=["IoT Sensors"])
 app.include_router(market.router, prefix="/api", tags=["Market"])
 app.include_router(tts.router, prefix="/api", tags=["Text-to-Speech"])
