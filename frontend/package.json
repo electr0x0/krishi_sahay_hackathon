@@ -39,9 +39,11 @@
     "react-leaflet": "^5.0.0",
     "react-markdown": "^10.1.0",
     "react-textarea-autosize": "^8.5.9",
+    "recharts": "^3.1.2",
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.1",
     "simplex-noise": "^4.0.3",
+    "swr": "^2.3.4",
     "tailwind-merge": "^3.3.1",
     "zod": "^3.23.8"
   },

@@ -14,8 +14,9 @@ from app.tools import (
     get_item_price, get_price_trend,
     get_current_weather, get_weather_forecast, get_weather_alerts,
     diagnose_crop_disease, get_crop_calendar, get_fertilizer_recommendation,
-    get_user_detection_history, get_detection_insights
-)
+    get_latest_sensor_data, get_sensor_history, get_sensor_alerts
+    get_user_detection_history, get_detection_insights)
+
 from app.tools.detection_tool import _get_user_detection_history_impl, _get_detection_insights_impl
 from app.prompts.system_prompts import get_system_prompt, get_context_prompt
 from app.services.translation_service import translation_service
@@ -46,6 +47,9 @@ class EnhancedAgentService:
             diagnose_crop_disease,
             get_crop_calendar,
             get_fertilizer_recommendation,
+            get_latest_sensor_data,
+            get_sensor_history,
+            get_sensor_alerts
             get_user_detection_history,
             get_detection_insights
         ]

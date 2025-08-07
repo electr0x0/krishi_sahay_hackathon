@@ -50,6 +50,11 @@ async def startup_event():
     """Initialize database and other startup tasks"""
     try:
         create_tables()
+        
+        # Initialize default sensor configuration
+        from init_default_sensor import create_default_sensor_config
+        create_default_sensor_config()
+        
         print(f"✅ {APP_NAME} v{APP_VERSION} started successfully!")
         print(f"🗄️  Database initialized")
         print(f"🔗 API available at: http://localhost:8000")
