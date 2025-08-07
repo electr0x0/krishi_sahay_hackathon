@@ -141,6 +141,7 @@ const Header = () => {
   const navigationItems = [
     { href: "/", label: "হোম" },
     { href: "/services", label: "সেবা" },
+    { href: "/store", label: "বাজার" },
     { href: "/how-it-works", label: "কীভাবে কাজ করে" },
     { href: "/impact", label: "প্রভাব" },
     ...(isAuthenticated ? [

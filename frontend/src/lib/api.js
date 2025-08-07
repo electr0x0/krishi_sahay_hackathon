@@ -1,6 +1,6 @@
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 class ApiService {
   constructor() {
@@ -9,21 +9,21 @@ class ApiService {
 
   // Get auth token from cookies
   getToken = () => {
-    return Cookies.get('auth_token');
-  }
+    return Cookies.get("auth_token");
+  };
   // Set auth token in cookies
   setToken = (token) => {
-    Cookies.set('auth_token', token, { 
+    Cookies.set("auth_token", token, {
       expires: 30,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
     });
-  }
+  };
 
   // Remove auth token
   removeToken = () => {
-    Cookies.remove('auth_token');
-  }
+    Cookies.remove("auth_token");
+  };
 
   // Generic API request method
   request = async (endpoint, options = {}) => {
@@ -34,7 +34,7 @@ class ApiService {
 
     // Only set Content-Type if not FormData (let browser set it for FormData)
     if (!(options.body instanceof FormData)) {
-      defaultHeaders['Content-Type'] = 'application/json';
+      defaultHeaders["Content-Type"] = "application/json";
     }
 
     if (token) {
@@ -51,10 +51,14 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
-        throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}`);
+        const errorData = await response
+          .json()
+          .catch(() => ({ detail: "Unknown error" }));
+        throw new Error(
+          errorData.detail || errorData.message || `HTTP ${response.status}`
+        );
       }
 
       return await response.json();
@@ -62,23 +66,23 @@ class ApiService {
       console.error(`API Error [${endpoint}]:`, error);
       throw error;
     }
-  }
+  };
 
   // Authentication APIs
   register = async (userData) => {
-    const data = await this.request('/api/auth/register', {
-      method: 'POST',
+    const data = await this.request("/api/auth/register", {
+      method: "POST",
       body: JSON.stringify({
         full_name: userData.full_name,
         email: userData.email,
-        phone: userData.phone_number || userData.phone || '',
+        phone: userData.phone_number || userData.phone || "",
         password: userData.password,
         confirm_password: userData.confirmPassword || userData.confirm_password,
         division: userData.division,
         district: userData.district,
         upazila: userData.upazila,
         location: userData.location,
-        farming_experience: userData.farming_experience
+        farming_experience: userData.farming_experience,
       }),
     });
 
@@ -87,15 +91,15 @@ class ApiService {
     }
 
     return data;
-  }
+  };
 
   login = async (credentials) => {
     const formData = new FormData();
-    formData.append('username', credentials.email || credentials.username);
-    formData.append('password', credentials.password);
+    formData.append("username", credentials.email || credentials.username);
+    formData.append("password", credentials.password);
 
-    const data = await this.request('/api/auth/login', {
-      method: 'POST',
+    const data = await this.request("/api/auth/login", {
+      method: "POST",
       body: formData, // FormData will automatically set the right Content-Type
     });
 
@@ -104,150 +108,150 @@ class ApiService {
     }
 
     return data;
-  }
+  };
 
   getCurrentUser = async () => {
-    return this.request('/api/auth/me');
-  }
+    return this.request("/api/auth/me");
+  };
 
   getProfile = async () => {
-    return this.request('/api/users/me');
-  }
+    return this.request("/api/users/me");
+  };
 
   updateProfile = async (profileData) => {
-    return this.request('/api/users/me', {
-      method: 'PUT',
+    return this.request("/api/users/me", {
+      method: "PUT",
       body: JSON.stringify(profileData),
     });
-  }
+  };
 
   logout = async () => {
     this.removeToken();
     // Optional: call backend logout if it exists
     try {
-      await this.request('/api/auth/logout', { method: 'POST' });
+      await this.request("/api/auth/logout", { method: "POST" });
     } catch (error) {
       // Ignore logout API errors
-      console.log('Logout API call failed (ignored):', error.message);
+      console.log("Logout API call failed (ignored):", error.message);
     }
-  }
+  };
 
   // Chat APIs
   createChatSession = async (data = {}) => {
-    return this.request('/api/chat/sessions', {
-      method: 'POST',
+    return this.request("/api/chat/sessions", {
+      method: "POST",
       body: JSON.stringify({
-        title: data.title || 'নতুন কথোপকথন',
-        language: data.language || 'bn'
+        title: data.title || "নতুন কথোপকথন",
+        language: data.language || "bn",
       }),
     });
-  }
+  };
 
   getChatSessions = async () => {
-    return this.request('/api/chat/sessions');
-  }
+    return this.request("/api/chat/sessions");
+  };
 
   getChatSession = async (sessionId) => {
     return this.request(`/api/chat/sessions/${sessionId}`);
-  }
+  };
 
   sendMessage = async (sessionId, message) => {
     return this.request(`/api/chat/sessions/${sessionId}/messages`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({
         content: message.content,
-        language: message.language || 'bn',
-        message_type: message.message_type || 'text',
+        language: message.language || "bn",
+        message_type: message.message_type || "text",
         voice_confidence: message.voice_confidence,
-        voice_duration: message.voice_duration
+        voice_duration: message.voice_duration,
       }),
     });
-  }
+  };
 
   sendVoiceMessage = async (sessionId, message) => {
     return this.request(`/api/chat/sessions/${sessionId}/voice`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({
         content: message.content,
-        language: message.language || 'bn',
-        message_type: 'voice',
+        language: message.language || "bn",
+        message_type: "voice",
         voice_confidence: message.voice_confidence || 0.9,
-        voice_duration: message.voice_duration || 2.0
+        voice_duration: message.voice_duration || 2.0,
       }),
     });
-  }
+  };
 
   getChatHistory = async (sessionId) => {
     return this.request(`/api/chat/sessions/${sessionId}/messages`);
-  }
+  };
 
   // Dashboard APIs
   getDashboardStats = async () => {
-    return this.request('/api/dashboard/stats');
-  }
+    return this.request("/api/dashboard/stats");
+  };
 
   getCriticalAlerts = async () => {
-    return this.request('/api/dashboard/alerts');
-  }
+    return this.request("/api/dashboard/alerts");
+  };
 
   // IoT Sensor APIs
   getSensorData = async () => {
-    return this.request('/api/iot/sensors/data');
-  }
+    return this.request("/api/iot/sensors/data");
+  };
 
   getSensorDataByType = async (sensorType) => {
     return this.request(`/api/iot/sensors/type/${sensorType}`);
-  }
+  };
 
   sendSensorData = async (data) => {
-    return this.request('/api/iot/sensors/data', {
-      method: 'POST',
+    return this.request("/api/iot/sensors/data", {
+      method: "POST",
       body: JSON.stringify(data),
     });
-  }
+  };
 
   // Weather APIs
   getWeatherData = async (location) => {
-    const params = location ? `?location=${encodeURIComponent(location)}` : '';
+    const params = location ? `?location=${encodeURIComponent(location)}` : "";
     return this.request(`/api/weather/current${params}`);
-  }
+  };
 
   getWeatherForecast = async (location, days = 3) => {
     const params = `?location=${encodeURIComponent(location)}&days=${days}`;
     return this.request(`/api/weather/forecast${params}`);
-  }
+  };
 
   getWeatherAlerts = async (location) => {
-    const params = location ? `?location=${encodeURIComponent(location)}` : '';
+    const params = location ? `?location=${encodeURIComponent(location)}` : "";
     return this.request(`/api/weather/alerts${params}`);
-  }
+  };
 
-  // Market APIs  
+  // Market APIs
   getMarketPrices = async () => {
-    return this.request('/api/market/prices');
-  }
+    return this.request("/api/market/prices");
+  };
 
   getItemPrice = async (item) => {
     return this.request(`/api/market/prices/${encodeURIComponent(item)}`);
-  }
+  };
 
   // AI Agent API
   askAgent = async (query, context = {}) => {
-    return this.request('/api/agent/ask', {
-      method: 'POST',
+    return this.request("/api/agent/ask", {
+      method: "POST",
       body: JSON.stringify({
         query,
         session_id: context.session_id,
-        language: context.language || 'bn',
-        user_context: context.user_context || {}
+        language: context.language || "bn",
+        user_context: context.user_context || {},
       }),
     });
-  }
+  };
 
   // Helper method to check if user is authenticated
   isAuthenticated = () => {
     return !!this.getToken();
-  }
+  };
 
   // Helper method for handling API errors with fallback data
   safeRequest = async (endpoint, options = {}, fallbackData = null) => {
@@ -257,7 +261,7 @@ class ApiService {
       console.warn(`API call failed, using fallback data:`, error.message);
       return fallbackData;
     }
-  }
+  };
 
   // TTS API - returns audio blob
   synthesizeSpeech = async (text, language = null, slow = false) => {
@@ -265,7 +269,7 @@ class ApiService {
     const token = this.getToken();
 
     const headers = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
 
     if (token) {
@@ -274,18 +278,22 @@ class ApiService {
 
     try {
       const response = await fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers,
         body: JSON.stringify({
           text,
           language: language || undefined, // Send undefined instead of null
-          slow
+          slow,
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
-        throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}`);
+        const errorData = await response
+          .json()
+          .catch(() => ({ detail: "Unknown error" }));
+        throw new Error(
+          errorData.detail || errorData.message || `HTTP ${response.status}`
+        );
       }
 
       // Return the response object for blob handling
@@ -294,7 +302,244 @@ class ApiService {
       console.error(`TTS API Error:`, error);
       throw error;
     }
-  }
+  };
+
+  // Community APIs
+  // Get communities with optional filtering
+  getCommunities = async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append("page", params.page);
+    if (params.size) queryParams.append("size", params.size);
+    if (params.search) queryParams.append("search", params.search);
+    if (params.location) queryParams.append("location", params.location);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/api/community/${queryString ? `?${queryString}` : ""}`;
+    return this.request(endpoint);
+  };
+
+  // Get nearby communities
+  getNearbyCommunities = async (maxDistance = 50) => {
+    return this.request(`/api/community/nearby?max_distance=${maxDistance}`);
+  };
+
+  // Get specific community
+  getCommunity = async (communityId) => {
+    return this.request(`/api/community/${communityId}`);
+  };
+
+  // Get user's joined community
+  getUserCommunity = async () => {
+    return this.request("/api/community/user/joined");
+  };
+
+  // Join a community
+  joinCommunity = async (communityId) => {
+    return this.request("/api/community/join", {
+      method: "POST",
+      body: JSON.stringify({ community_id: communityId }),
+    });
+  };
+
+  // Leave current community
+  leaveCommunity = async () => {
+    return this.request("/api/community/leave", {
+      method: "POST",
+    });
+  };
+
+  // Create a new community
+  createCommunity = async (communityData) => {
+    return this.request("/api/community/", {
+      method: "POST",
+      body: JSON.stringify(communityData),
+    });
+  };
+
+  // Help Request APIs
+  // Get help requests with filtering
+  getHelpRequests = async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.community_id)
+      queryParams.append("community_id", params.community_id);
+    if (params.category) queryParams.append("category", params.category);
+    if (params.urgency) queryParams.append("urgency", params.urgency);
+    if (params.status) queryParams.append("status", params.status);
+    if (params.page) queryParams.append("page", params.page);
+    if (params.size) queryParams.append("size", params.size);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/api/community/help-requests${
+      queryString ? `?${queryString}` : ""
+    }`;
+    return this.request(endpoint);
+  };
+
+  // Create help request
+  createHelpRequest = async (helpRequestData) => {
+    return this.request("/api/community/help-requests", {
+      method: "POST",
+      body: JSON.stringify(helpRequestData),
+    });
+  };
+
+  // Accept help request
+  acceptHelpRequest = async (helpRequestId) => {
+    return this.request(
+      `/api/community/help-requests/${helpRequestId}/accept`,
+      {
+        method: "POST",
+      }
+    );
+  };
+
+  // Event APIs
+  // Get events with filtering
+  getEvents = async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.community_id)
+      queryParams.append("community_id", params.community_id);
+    if (params.event_type) queryParams.append("event_type", params.event_type);
+    if (params.page) queryParams.append("page", params.page);
+    if (params.size) queryParams.append("size", params.size);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/api/community/events${
+      queryString ? `?${queryString}` : ""
+    }`;
+    return this.request(endpoint);
+  };
+
+  // Create event
+  createEvent = async (eventData) => {
+    return this.request("/api/community/events", {
+      method: "POST",
+      body: JSON.stringify(eventData),
+    });
+  };
+
+  // Join event
+  joinEvent = async (eventId) => {
+    return this.request(`/api/community/events/${eventId}/join`, {
+      method: "POST",
+    });
+  };
+
+  // Community Chat
+  getCommunityChat = async (communityId, page = 1, size = 20) => {
+    return this.request(
+      `/api/community/${communityId}/chat?page=${page}&size=${size}`
+    );
+  };
+
+  sendCommunityMessage = async (communityId, messageData) => {
+    return this.request(`/api/community/${communityId}/chat`, {
+      method: "POST",
+      body: JSON.stringify(messageData),
+    });
+  };
+
+  // Help Request Actions
+  acceptHelpRequest = async (communityId, messageId) => {
+    return this.request(
+      `/api/community/${communityId}/help/${messageId}/accept`,
+      {
+        method: "POST",
+      }
+    );
+  };
+
+  completeHelpRequest = async (communityId, messageId) => {
+    return this.request(
+      `/api/community/${communityId}/help/${messageId}/complete`,
+      {
+        method: "POST",
+      }
+    );
+  };
+
+  // Event Actions
+  payForEvent = async (communityId, messageId) => {
+    return this.request(
+      `/api/community/${communityId}/event/${messageId}/pay`,
+      {
+        method: "POST",
+      }
+    );
+  };
+
+  // ===== Store (New E-commerce) =====
+  // Public listings
+  getStoreListings = async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/api/store/listings${query ? `?${query}` : ""}`);
+  };
+
+  // Public: create order (no auth)
+  createStoreOrder = async (orderData) => {
+    return this.request(`/api/store/orders`, {
+      method: "POST",
+      body: JSON.stringify(orderData),
+    });
+  };
+
+  // Public: track orders by phone (and optional order id)
+  trackStoreOrders = async (phone, orderId = null) => {
+    const query = new URLSearchParams({
+      phone,
+      ...(orderId ? { order_id: orderId } : {}),
+    }).toString();
+    return this.request(`/api/store/orders/track?${query}`);
+  };
+
+  // Farmer: upload product image
+  uploadProductImage = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.request(`/api/store/products/upload-image`, {
+      method: "POST",
+      body: formData,
+    });
+  };
+
+  // Farmer: products
+  createStoreProduct = async (data) => {
+    return this.request(`/api/store/products`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  };
+
+  // Farmer: listings
+  createStoreListing = async (data) => {
+    return this.request(`/api/store/listings`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  };
+
+  updateStoreListing = async (listingId, data) => {
+    return this.request(`/api/store/listings/${listingId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  };
+
+  // Farmer: orders
+  getFarmerStoreOrders = async () => {
+    return this.request(`/api/store/orders`);
+  };
+
+  updateStoreOrderStatus = async (orderId, statusValue) => {
+    return this.request(
+      `/api/store/orders/${orderId}/status?status_value=${encodeURIComponent(
+        statusValue
+      )}`,
+      {
+        method: "POST",
+      }
+    );
+  };
 }
 
 // Create singleton instance
