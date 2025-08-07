@@ -9,6 +9,7 @@ import QuickLinksCard from "@/components/dashboard/QuickLinksCard";
 import SmartWeatherCard from "@/components/dashboard/SmartWeatherCard";
 import CropManagementCard from "@/components/dashboard/CropManagementCard";
 import VoiceAssistantButton from "@/components/dashboard/VoiceAssistantButton";
+import { Pointer } from "@/components/magicui/pointer";
 
 const LoadingCard = ({ height = "h-32" }: { height?: string }) => (
   <div className={`${height} bg-white/50 backdrop-blur-sm rounded-2xl shadow-sm animate-pulse border border-gray-100`}>
@@ -155,6 +156,7 @@ export default function Dashboard() {
         </div>
       </motion.div>
       <VoiceAssistantButton />
+       <Pointer className="fill-green-500" />
     </div>
   );
 }

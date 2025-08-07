@@ -154,6 +154,7 @@ const Sidebar = () => {
           </div>
         )}
       </div>
+      
     </motion.div>
   );
 };
