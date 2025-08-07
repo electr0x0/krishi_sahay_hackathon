@@ -13,7 +13,8 @@ from app.core.config import GOOGLE_API_KEY
 from app.tools import (
     get_item_price, get_price_trend,
     get_current_weather, get_weather_forecast, get_weather_alerts,
-    diagnose_crop_disease, get_crop_calendar, get_fertilizer_recommendation
+    diagnose_crop_disease, get_crop_calendar, get_fertilizer_recommendation,
+    get_latest_sensor_data, get_sensor_history, get_sensor_alerts
 )
 from app.prompts.system_prompts import get_system_prompt, get_context_prompt
 from app.services.translation_service import translation_service
@@ -43,7 +44,10 @@ class EnhancedAgentService:
             get_weather_alerts,
             diagnose_crop_disease,
             get_crop_calendar,
-            get_fertilizer_recommendation
+            get_fertilizer_recommendation,
+            get_latest_sensor_data,
+            get_sensor_history,
+            get_sensor_alerts
         ]
         
         self.llm_with_tools = self.llm.bind_tools(self.tools)
