@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "next-themes";
 import { 
   Cloud, 
   Sun, 
@@ -17,7 +18,8 @@ import {
   AlertTriangle,
   CheckCircle,
   Calendar,
-  Clock
+  Clock,
+  MapPin
 } from "lucide-react";
 import api from '@/lib/api.js';
 import { useAuth } from '@/contexts/AuthContext.jsx';
@@ -47,6 +49,7 @@ const generateFarmingAdvice = (current: any, forecast: any) => {
 
 export default function SmartWeatherCard() {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [currentWeather, setCurrentWeather] = useState<any>(null);
   const [forecast, setForecast] = useState<any>(null);
   const [farmingAdvice, setFarmingAdvice] = useState<any>(null);
@@ -160,46 +163,50 @@ export default function SmartWeatherCard() {
   });
 
   return (
-    <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden">
-      <CardHeader className="pb-4">
+    <Card className="relative bg-gradient-to-br from-blue-50 via-white to-cyan-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+      
+      <CardHeader className="pb-3 pt-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-500 rounded-lg">
-              <Cloud className="w-6 h-6 text-white" />
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 bg-blue-500 rounded-lg">
+              <Cloud className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-800">
+              <h3 className="text-base font-bold text-gray-800">
                 {language === 'bn' ? 'আবহাওয়া ও কৃষি পরামর্শ' : 'Weather & Farm Advice'}
               </h3>
-              <p className="text-sm text-gray-600">
-                {currentWeather.name}, বাংলাদেশ
-              </p>
+              <div className="flex items-center space-x-1">
+                <MapPin className="w-3 h-3 text-gray-500" />
+                <p className="text-xs text-gray-600">
+                  {currentWeather.name}, বাংলাদেশ
+                </p>
+              </div>
             </div>
           </div>
           <button
             onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
-            className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded text-xs font-medium"
+            className="text-gray-500 hover:text-gray-700 transition-colors p-1.5 rounded-md text-xs font-medium bg-white/60 hover:bg-white/80"
           >
             {language === 'bn' ? 'EN' : 'বাং'}
           </button>
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0">
-        <div className="flex space-x-1 mb-6 bg-white/80 p-1 rounded-lg">
+      <CardContent className="pt-0 px-4 pb-4">
+        <div className="flex space-x-1 mb-4 bg-white/60 p-1 rounded-lg border">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setSelectedTab(tab.id as any)}
-                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+                className={`flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-all duration-200 flex items-center justify-center space-x-1 ${
                   selectedTab === tab.id
                     ? 'bg-blue-500 text-white shadow-md'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-3 h-3" />
                 <span>{tab.label}</span>
               </button>
             );

@@ -302,6 +302,7 @@ class ApiService {
       console.error(`TTS API Error:`, error);
       throw error;
     }
+
   };
 
   // Community APIs
@@ -540,6 +541,76 @@ class ApiService {
       }
     );
   };
+  }
+
+  // Detection API methods
+  detectPlantDisease = async (imageFile, confidenceThreshold = 0.25) => {
+    try {
+      // Convert image file to base64
+      const base64String = await this.fileToBase64(imageFile);
+      
+      const payload = {
+        file_name: imageFile.name,
+        file_content: base64String,
+        confidence_threshold: confidenceThreshold
+      };
+
+      return await this.request('/api/detection/detect', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      console.error('Detection Error:', error);
+      throw error;
+    }
+  }
+
+  getDetectionHistory = async (skip = 0, limit = 20) => {
+    try {
+      return await this.request(`/api/detection/history?skip=${skip}&limit=${limit}`, {
+        method: 'GET',
+      });
+    } catch (error) {
+      console.error('Detection History Error:', error);
+      throw error;
+    }
+  }
+
+  getDetectionById = async (detectionId) => {
+    try {
+      return await this.request(`/api/detection/history/${detectionId}`, {
+        method: 'GET',
+      });
+    } catch (error) {
+      console.error('Get Detection Error:', error);
+      throw error;
+    }
+  }
+
+  deleteDetection = async (detectionId) => {
+    try {
+      return await this.request(`/api/detection/history/${detectionId}`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('Delete Detection Error:', error);
+      throw error;
+    }
+  }
+
+  // Helper method to convert file to base64
+  fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        // Remove the data:image/jpeg;base64, part
+        const base64String = reader.result.split(',')[1];
+        resolve(base64String);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
 }
 
 // Create singleton instance

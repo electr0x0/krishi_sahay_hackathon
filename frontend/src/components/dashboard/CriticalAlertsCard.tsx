@@ -12,15 +12,15 @@ export default function CriticalAlertsCard() {
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'pest': 
-        return <Bug className="w-4 h-4 text-white" />;
+        return <Bug className="w-3 h-3 text-white" />;
       case 'weather': 
-        return <Cloud className="w-4 h-4 text-white" />;
+        return <Cloud className="w-3 h-3 text-white" />;
       case 'market': 
-        return <TrendingUp className="w-4 h-4 text-white" />;
+        return <TrendingUp className="w-3 h-3 text-white" />;
       case 'sensor':
-        return <Wifi className="w-4 h-4 text-white" />;
+        return <Wifi className="w-3 h-3 text-white" />;
       default: 
-        return <AlertTriangle className="w-4 h-4 text-white" />;
+        return <AlertTriangle className="w-3 h-3 text-white" />;
     }
   };
 
@@ -70,24 +70,24 @@ export default function CriticalAlertsCard() {
 
   return (
     <Card className="h-full bg-white/70 backdrop-blur-sm shadow-lg border-l-4 border-l-red-500 hover:shadow-xl transition-shadow duration-300">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2 pt-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
+            <div className="p-1.5 bg-red-100 rounded-lg">
+              <AlertTriangle className="w-4 h-4 text-red-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">জরুরি সতর্কতা</h3>
-              <p className="text-sm text-gray-500">গুরুত্বপূর্ণ বিজ্ঞপ্তি</p>
+              <h3 className="text-base font-semibold text-gray-900">জরুরি সতর্কতা</h3>
+              <p className="text-xs text-gray-500">গুরুত্বপূর্ণ বিজ্ঞপ্তি</p>
             </div>
           </div>
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="text-xs px-1 py-0">
             {loading ? 'লোড হচ্ছে...' : `${alerts.length} টি`}
           </Badge>
         </div>
       </CardHeader>
       
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 px-3 pb-3">
         <AnimatePresence>
           {loading ? (
             <div className="flex items-center justify-center py-12">

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Header from "@/components/Header";
 import HeroSection from "@/components/sections/HeroSection";
 import FeatureHighlights from "@/components/sections/FeatureHighlights";
@@ -96,6 +97,29 @@ export default function Home() {
           <TechnologyShowcase />
         </motion.div>
         
+        {/* IoT Dashboard Teaser */}
+        <motion.div 
+          variants={sectionVariants}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
+        >
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8 border border-blue-200">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                🌡️ Real-time IoT Sensor Dashboard
+              </h2>
+              <p className="text-lg text-gray-600 mb-6">
+                Monitor your farm&apos;s temperature, humidity, soil moisture, and water levels in real-time
+              </p>
+              <Link 
+                href="/iot-dashboard"
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+              >
+                View Live Sensor Data →
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+        
         <motion.div variants={sectionVariants}>
           <HowItWorks />
         </motion.div>
@@ -112,6 +136,7 @@ export default function Home() {
           <Footer />
         </motion.div>
       </motion.main>
+
     </>
   );
 }
