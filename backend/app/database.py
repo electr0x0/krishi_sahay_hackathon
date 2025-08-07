@@ -30,6 +30,7 @@ def create_tables():
     from app.models.user import User
     from app.models.chat import ChatSession, ChatMessage
     from app.models.weather import WeatherCache
+    from app.models.detection import DetectionHistory
     Base.metadata.create_all(bind=engine)
 
 def drop_tables():
