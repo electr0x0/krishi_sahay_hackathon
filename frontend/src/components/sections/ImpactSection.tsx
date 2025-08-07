@@ -131,21 +131,21 @@ export default function ImpactSection() {
       title: { bn: 'ক্ষুধা নিবারণ', en: 'Zero Hunger' },
       description: { bn: 'খাদ্য নিরাপত্তা ও পুষ্টি', en: 'Food security and nutrition' },
       icon: '🎯',
-      progress: 85
+      progress: '৮৫'
     },
     {
       number: 8,
       title: { bn: 'কর্মসংস্থান বৃদ্ধি', en: 'Decent Work' },
       description: { bn: 'গ্রামীণ কর্মসংস্থান', en: 'Rural employment' },
       icon: '💼',
-      progress: 78
+      progress: '৭৮'
     },
     {
       number: 13,
       title: { bn: 'জলবায়ু সুরক্ষা', en: 'Climate Action' },
       description: { bn: 'টেকসই কৃষি', en: 'Sustainable agriculture' },
       icon: '🌍',
-      progress: 92
+      progress: '৯২'
     }
   ];
 

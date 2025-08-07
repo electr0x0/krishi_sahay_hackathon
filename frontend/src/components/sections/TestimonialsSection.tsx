@@ -259,12 +259,12 @@ export default function TestimonialsSection() {
         >
           {[
             { 
-              number: '10,000+', 
+              number: '১০,০০০+', 
               label: { bn: 'সন্তুষ্ট কৃষক', en: 'Happy Farmers' },
               icon: '😊'
             },
             { 
-              number: '98%', 
+              number: '৯৮%', 
               label: { bn: 'সুপারিশ হার', en: 'Recommendation Rate' },
               icon: '👍'
             },
@@ -274,7 +274,7 @@ export default function TestimonialsSection() {
               icon: '📈'
             },
             { 
-              number: '২৤/৭', 
+              number: '২৪/৭', 
               label: { bn: 'সহায়তা', en: 'Support' },
               icon: '🚀'
             }
