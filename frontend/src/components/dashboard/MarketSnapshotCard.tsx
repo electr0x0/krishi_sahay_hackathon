@@ -6,10 +6,13 @@ import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, BarChart3, RefreshCw, Loader2 } from "lucide-react";
 import { useMarketPrices } from "@/hooks/useDashboardData";
 import { useRouter } from "next/navigation";
+import { ShineBorder } from "@/components/magicui/shine-border";
+import { useTheme } from "next-themes";
 
 export default function MarketSnapshotCard() {
   const { marketPrices, loading, error, refetch } = useMarketPrices();
   const router = useRouter();
+  const { theme } = useTheme();
 
   const getTrendIcon = (trend: string) => {
     return trend === 'up' ? (
@@ -30,7 +33,8 @@ export default function MarketSnapshotCard() {
   };
 
   return (
-    <Card className="h-full bg-white/70 backdrop-blur-sm shadow-lg border-l-4 border-l-blue-500 hover:shadow-xl transition-shadow duration-300">
+    <Card className="relative h-full bg-white/70 backdrop-blur-sm shadow-lg border-l-4 border-l-blue-500 hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+      <ShineBorder shineColor={theme === "dark" ? "white" : "#3b82f6"} />
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
