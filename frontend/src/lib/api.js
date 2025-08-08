@@ -601,60 +601,56 @@ class ApiService {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-<<<<<<< HEAD
-  }
+  };
 
   // HTTP Method shortcuts
   get = async (endpoint, options = {}) => {
-    return this.request(endpoint, { ...options, method: 'GET' });
-  }
+    return this.request(endpoint, { ...options, method: "GET" });
+  };
 
   post = async (endpoint, data, options = {}) => {
-    const config = { ...options, method: 'POST' };
-    
+    const config = { ...options, method: "POST" };
+
     // Handle different data types
     if (data instanceof FormData) {
       config.body = data;
       // Don't set Content-Type for FormData, let browser set it with boundary
-      delete config.headers?.['Content-Type'];
-    } else if (typeof data === 'object') {
+      delete config.headers?.["Content-Type"];
+    } else if (typeof data === "object") {
       config.body = JSON.stringify(data);
       config.headers = {
-        'Content-Type': 'application/json',
-        ...config.headers
+        "Content-Type": "application/json",
+        ...config.headers,
       };
     } else {
       config.body = data;
     }
-    
+
     return this.request(endpoint, config);
-  }
+  };
 
   put = async (endpoint, data, options = {}) => {
-    const config = { ...options, method: 'PUT' };
-    
+    const config = { ...options, method: "PUT" };
+
     if (data instanceof FormData) {
       config.body = data;
-      delete config.headers?.['Content-Type'];
-    } else if (typeof data === 'object') {
+      delete config.headers?.["Content-Type"];
+    } else if (typeof data === "object") {
       config.body = JSON.stringify(data);
       config.headers = {
-        'Content-Type': 'application/json',
-        ...config.headers
+        "Content-Type": "application/json",
+        ...config.headers,
       };
     } else {
       config.body = data;
     }
-    
+
     return this.request(endpoint, config);
-  }
+  };
 
   delete = async (endpoint, options = {}) => {
-    return this.request(endpoint, { ...options, method: 'DELETE' });
-  }
-=======
+    return this.request(endpoint, { ...options, method: "DELETE" });
   };
->>>>>>> 4714087fd90506b4fb0ff07aa043ecf3b63ab386
 }
 
 // Create singleton instance
