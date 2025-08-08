@@ -8,10 +8,11 @@ import os
 from app.core.config import APP_NAME, APP_VERSION, DEBUG, ALLOWED_ORIGINS
 from app.database import create_tables
 
-from app.api import agent, auth, chat, community, iot, market, tts, user, weather
-from app.api import store as store_api
-
-from app.api import agent, auth, chat, iot, market, tts, user, weather, detection
+from app.api import (
+    agent, auth, chat, community, iot, 
+    market, tts, user, weather, detection,
+    store as store_api, funds
+)
 
 
 # Create FastAPI app
@@ -46,6 +47,7 @@ app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 
 app.include_router(community.router, prefix="/api/community", tags=["Community"])
 app.include_router(detection.router, prefix="/api/detection", tags=["Plant Disease Detection"])
+app.include_router(funds.router, prefix="/api/funds", tags=["Community Funds"])
 app.include_router(iot.router, prefix="/api/iot", tags=["IoT Sensors"])
 app.include_router(market.router, prefix="/api", tags=["Market"])
 app.include_router(store_api.router, prefix="/api/store", tags=["Store"])

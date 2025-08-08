@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 
-import { LayoutDashboard, BarChart2, Bell, MessageSquare, Settings, LifeBuoy, User, LogOut, Home, Camera, Mic, Users } from 'lucide-react';
+import { LayoutDashboard, BarChart2, Bell, MessageSquare, Settings, LifeBuoy, User, LogOut, Home, Camera, Mic, Users, ShoppingBag } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import { cn } from '@/lib/utils';
@@ -57,7 +57,7 @@ const Sidebar = () => {
     { href: '/dashboard/detection', label: 'রোগ শনাক্তকরণ', icon: Camera },
     { href: '/dashboard/analytics', label: 'বিশ্লেষণ', icon: BarChart2 },
     { href: '/dashboard/community', label: 'সম্প্রদায়', icon: Users },
-    { href: '/dashboard/store', label: 'আমার দোকান', icon: BarChart2 },
+    { href: '/dashboard/store', label: 'আমার দোকান', icon: ShoppingBag },
     { href: '/dashboard/notifications', label: 'নোটিফিকেশন', icon: Bell },
     { href: '/dashboard/chat', label: 'চ্যাট', icon: MessageSquare },
     { href: '/dashboard/voice-chat', label: 'AI এর সাথে কথা বলুন', icon: Mic },

@@ -204,7 +204,7 @@ export default function DashboardStorePage() {
               <Package className="w-5 h-5 text-blue-600" />
               <div>
                 <div className="text-lg font-semibold">{myListings.length}</div>
-                <div className="text-sm text-gray-600">Active Listings</div>
+                <div className="text-sm text-gray-600">সক্রিয় লিস্টিং</div>
               </div>
             </div>
           </Card>
@@ -213,7 +213,7 @@ export default function DashboardStorePage() {
               <ShoppingCart className="w-5 h-5 text-green-600" />
               <div>
                 <div className="text-lg font-semibold">{orders.filter(o => o.status !== 'completed').length}</div>
-                <div className="text-sm text-gray-600">Pending Orders</div>
+                <div className="text-sm text-gray-600">মুলতুবি অর্ডার</div>
               </div>
             </div>
           </Card>
@@ -224,19 +224,19 @@ export default function DashboardStorePage() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="create" className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
-            Create Product
+            পণ্য তৈরি করুন
           </TabsTrigger>
           <TabsTrigger value="listings" className="flex items-center gap-2">
             <Package className="w-4 h-4" />
-            My Listings
+            আমার লিস্টিং
           </TabsTrigger>
           <TabsTrigger value="orders" className="flex items-center gap-2">
             <ShoppingCart className="w-4 h-4" />
-            Orders
+            অর্ডার
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
-            Analytics
+            বিশ্লেষণ
           </TabsTrigger>
         </TabsList>
 
@@ -248,15 +248,15 @@ export default function DashboardStorePage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Package className="w-5 h-5" />
-                  Create New Product
+                  নতুন পণ্য তৈরি করুন
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Product Name *</label>
+                  <label className="block text-sm font-medium mb-2">পণ্যের নাম *</label>
                   <input
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="e.g., Fresh Tomatoes, Organic Rice"
+                    placeholder="যেমন: তাজা টমেটো, জৈব চাল"
                     value={productForm.name}
                     onChange={e => setProductForm({ ...productForm, name: e.target.value })}
                   />
@@ -264,39 +264,46 @@ export default function DashboardStorePage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Category *</label>
+                    <label className="block text-sm font-medium mb-2">ধরন *</label>
                     <select
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                       value={productForm.category}
                       onChange={e => setProductForm({ ...productForm, category: e.target.value })}
                     >
-                      {categories.map(cat => (
-                        <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
-                      ))}
+                      <option value="vegetables">সবজি</option>
+                      <option value="fruits">ফল</option>
+                      <option value="grains">শস্য</option>
+                      <option value="pulses">ডাল</option>
+                      <option value="spices">মসলা</option>
+                      <option value="herbs">ভেষজ</option>
+                      <option value="dairy">দুগ্ধজাত</option>
+                      <option value="meat">মাংস</option>
+                      <option value="seafood">মাছ</option>
+                      <option value="other">অন্যান্য</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Unit *</label>
+                    <label className="block text-sm font-medium mb-2">একক *</label>
                     <select
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                       value={productForm.unit}
                       onChange={e => setProductForm({ ...productForm, unit: e.target.value })}
                     >
-                      <option value="kg">Kilogram (kg)</option>
-                      <option value="piece">Piece</option>
-                      <option value="dozen">Dozen</option>
-                      <option value="liter">Liter</option>
-                      <option value="gram">Gram</option>
+                      <option value="kg">কিলোগ্রাম (কেজি)</option>
+                      <option value="piece">পিস</option>
+                      <option value="dozen">ডজন</option>
+                      <option value="liter">লিটার</option>
+                      <option value="gram">গ্রাম</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Description</label>
+                  <label className="block text-sm font-medium mb-2">বিবরণ</label>
                   <textarea
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                     rows={3}
-                    placeholder="Describe your product quality, farming methods, etc."
+                    placeholder="আপনার পণ্যের গুণমান, কৃষি পদ্ধতি ইত্যাদি বর্ণনা করুন"
                     value={productForm.description}
                     onChange={e => setProductForm({ ...productForm, description: e.target.value })}
                   />
@@ -304,7 +311,7 @@ export default function DashboardStorePage() {
 
                 {/* Image Upload */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Product Image</label>
+                  <label className="block text-sm font-medium mb-2">পণ্যের ছবি</label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                     {imagePreview ? (
                       <div className="text-center">
@@ -316,13 +323,13 @@ export default function DashboardStorePage() {
                             setImagePreview('')
                           }}
                         >
-                          Remove Image
+                          ছবি মুছুন
                         </Button>
                       </div>
                     ) : (
                       <div className="text-center">
                         <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                        <div className="text-sm text-gray-600 mb-4">Upload a high-quality image of your product</div>
+                        <div className="text-sm text-gray-600 mb-4">আপনার পণ্যের উচ্চমানের ছবি আপলোড করুন</div>
                         <input
                           type="file"
                           accept="image/*"
@@ -334,7 +341,7 @@ export default function DashboardStorePage() {
                           <Button variant="outline" className="cursor-pointer" asChild>
                             <span>
                               <Camera className="w-4 h-4 mr-2" />
-                              Choose Image
+                              ছবি নির্বাচন করুন
                             </span>
                           </Button>
                         </label>
@@ -344,7 +351,7 @@ export default function DashboardStorePage() {
                 </div>
 
                 <Button onClick={createProduct} className="w-full bg-green-600 hover:bg-green-700" disabled={uploading}>
-                  {uploading ? 'Uploading...' : 'Create Product'}
+                  {uploading ? 'আপলোড হচ্ছে...' : 'পণ্য তৈরি করুন'}
                 </Button>
               </CardContent>
             </Card>
@@ -354,18 +361,18 @@ export default function DashboardStorePage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" />
-                  Create Listing
+                  লিস্টিং তৈরি করুন
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Select Product *</label>
+                  <label className="block text-sm font-medium mb-2">পণ্য নির্বাচন করুন *</label>
                   <select
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                     value={listingForm.product_id}
                     onChange={e => setListingForm({ ...listingForm, product_id: e.target.value })}
                   >
-                    <option value="">Choose a product...</option>
+                    <option value="">একটি পণ্য নির্বাচন করুন...</option>
                     {products.map(p => (
                       <option key={p.id} value={p.id}>{p.name} ({p.category})</option>
                     ))}
@@ -374,23 +381,23 @@ export default function DashboardStorePage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Price per Unit *</label>
+                    <label className="block text-sm font-medium mb-2">প্রতি একক দাম *</label>
                     <input
                       type="number"
                       step="0.01"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
-                      placeholder="৳0.00"
+                      placeholder="৳০.০০"
                       value={listingForm.price}
                       onChange={e => setListingForm({ ...listingForm, price: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Stock Quantity *</label>
+                    <label className="block text-sm font-medium mb-2">মজুদের পরিমাণ *</label>
                     <input
                       type="number"
                       step="0.1"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
-                      placeholder="0"
+                      placeholder="০"
                       value={listingForm.stock_qty}
                       onChange={e => setListingForm({ ...listingForm, stock_qty: e.target.value })}
                     />
@@ -398,10 +405,10 @@ export default function DashboardStorePage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Location *</label>
+                  <label className="block text-sm font-medium mb-2">অবস্থান *</label>
                   <input
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
-                    placeholder="e.g., Dhaka, Chittagong"
+                    placeholder="যেমন: ঢাকা, চট্টগ্রাম"
                     value={listingForm.location}
                     onChange={e => setListingForm({ ...listingForm, location: e.target.value })}
                   />
@@ -409,7 +416,7 @@ export default function DashboardStorePage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Min Order Qty</label>
+                    <label className="block text-sm font-medium mb-2">সর্বনিম্ন অর্ডার পরিমাণ</label>
                     <input
                       type="number"
                       step="0.1"
@@ -419,21 +426,21 @@ export default function DashboardStorePage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Quality Grade</label>
+                    <label className="block text-sm font-medium mb-2">মানের গ্রেড</label>
                     <select
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                       value={listingForm.quality_grade}
                       onChange={e => setListingForm({ ...listingForm, quality_grade: e.target.value })}
                     >
                       {qualityGrades.map(grade => (
-                        <option key={grade} value={grade}>Grade {grade}</option>
+                        <option key={grade} value={grade}>গ্রেড {grade}</option>
                       ))}
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Harvest Date</label>
+                  <label className="block text-sm font-medium mb-2">ফসল তোলার তারিখ</label>
                   <input
                     type="date"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
@@ -450,11 +457,11 @@ export default function DashboardStorePage() {
                     onChange={e => setListingForm({ ...listingForm, organic_certified: e.target.checked })}
                     className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                   />
-                  <label htmlFor="organic" className="text-sm font-medium">Organic Certified</label>
+                  <label htmlFor="organic" className="text-sm font-medium">জৈব সার্টিফাইড</label>
                 </div>
 
                 <Button onClick={createListing} className="w-full bg-blue-600 hover:bg-blue-700">
-                  Create Listing
+                  লিস্টিং তৈরি করুন
                 </Button>
               </CardContent>
             </Card>
@@ -465,7 +472,7 @@ export default function DashboardStorePage() {
         <TabsContent value="listings">
           <Card>
             <CardHeader>
-              <CardTitle>My Active Listings</CardTitle>
+              <CardTitle>আমার সক্রিয় লিস্টিং</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -493,27 +500,27 @@ export default function DashboardStorePage() {
                       
                                               <div className="space-y-2 text-sm text-gray-600">
                           <div className="flex justify-between">
-                            <span>Price:</span>
+                            <span>দাম:</span>
                             <span className="font-semibold text-green-600">৳{Number(listing.price).toFixed(2)}/{listing.unit}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Stock:</span>
+                            <span>মজুদ:</span>
                             <span>{Number(listing.stock_qty).toFixed(1)} {listing.unit}</span>
                           </div>
                         <div className="flex justify-between">
-                          <span>Location:</span>
+                          <span>অবস্থান:</span>
                           <span>{listing.location}</span>
                         </div>
                         {listing.organic_certified && (
                           <div className="flex items-center gap-1 text-green-600">
                             <Leaf className="w-4 h-4" />
-                            <span>Organic Certified</span>
+                            <span>জৈব সার্টিফাইড</span>
                           </div>
                         )}
                         {listing.quality_grade && (
                           <div className="flex items-center gap-1">
                             <Award className="w-4 h-4" />
-                            <span>Grade {listing.quality_grade}</span>
+                            <span>গ্রেড {listing.quality_grade}</span>
                           </div>
                         )}
                       </div>
@@ -529,7 +536,7 @@ export default function DashboardStorePage() {
         <TabsContent value="orders">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Orders</CardTitle>
+              <CardTitle>সাম্প্রতিক অর্ডার</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -550,21 +557,21 @@ export default function DashboardStorePage() {
                             onClick={() => updateOrderStatus(order.id, order.status)}
                             className="bg-green-600 hover:bg-green-700"
                           >
-                            Advance Status
+                            স্ট্যাটাস এগিয়ে নিন
                           </Button>
                         )}
                       </div>
                     </div>
                     
                     <div className="text-sm text-gray-600 mb-2">
-                      <strong>Address:</strong> {order.address}
+                      <strong>ঠিকানা:</strong> {order.address}
                     </div>
                     
                     <div className="text-sm">
-                      <strong>Items:</strong>
+                      <strong>পণ্যসমূহ:</strong>
                       {order.items?.map((item: any) => (
                         <div key={item.id} className="flex justify-between mt-1">
-                          <span>Listing #{item.listing_id} × {Number(item.quantity).toFixed(1)}</span>
+                          <span>লিস্টিং #{item.listing_id} × {Number(item.quantity).toFixed(1)}</span>
                           <span>৳{Number(item.unit_price * item.quantity).toFixed(2)}</span>
                         </div>
                       ))}
@@ -573,7 +580,7 @@ export default function DashboardStorePage() {
                     {order.payment && (
                       <div className="text-sm mt-2 pt-2 border-t">
                         <span className="text-green-600">
-                          Payment: {order.payment.status} {order.payment.amount ? `(৳${order.payment.amount})` : ''}
+                          পেমেন্ট: {order.payment.status} {order.payment.amount ? `(৳${order.payment.amount})` : ''}
                         </span>
                       </div>
                     )}
@@ -589,35 +596,35 @@ export default function DashboardStorePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Total Revenue</CardTitle>
+                <CardTitle className="text-lg">মোট আয়</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
                   ৳{Number(orders.reduce((sum, order) => sum + (order.payment?.amount || 0), 0)).toFixed(2)}
                 </div>
-                <p className="text-sm text-gray-600 mt-1">From {orders.length} orders</p>
+                <p className="text-sm text-gray-600 mt-1">{orders.length} টি অর্ডার থেকে</p>
               </CardContent>
             </Card>
             
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Active Products</CardTitle>
+                <CardTitle className="text-lg">সক্রিয় পণ্য</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-blue-600">{products.filter(p => p.is_active).length}</div>
-                <p className="text-sm text-gray-600 mt-1">Ready for listing</p>
+                <p className="text-sm text-gray-600 mt-1">লিস্টিংয়ের জন্য প্রস্তুত</p>
               </CardContent>
             </Card>
             
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Avg Order Value</CardTitle>
+                <CardTitle className="text-lg">গড় অর্ডার মূল্য</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-purple-600">
-                  ৳{orders.length > 0 ? Number(orders.reduce((sum, order) => sum + (order.payment?.amount || 0), 0) / orders.length).toFixed(2) : '0.00'}
+                  ৳{orders.length > 0 ? Number(orders.reduce((sum, order) => sum + (order.payment?.amount || 0), 0) / orders.length).toFixed(2) : '০.০০'}
                 </div>
-                <p className="text-sm text-gray-600 mt-1">Per order</p>
+                <p className="text-sm text-gray-600 mt-1">প্রতি অর্ডারে</p>
               </CardContent>
             </Card>
           </div>

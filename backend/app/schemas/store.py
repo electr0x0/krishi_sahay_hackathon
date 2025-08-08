@@ -10,7 +10,6 @@ class ProductCreate(BaseModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
 
-
 class ProductResponse(BaseModel):
     id: int
     name: str
@@ -20,6 +19,7 @@ class ProductResponse(BaseModel):
     image_url: Optional[str]
     created_at: datetime
     is_active: bool
+    user_id: int
 
     class Config:
         from_attributes = True
@@ -34,6 +34,7 @@ class ListingCreate(BaseModel):
     harvest_date: Optional[datetime] = None
     quality_grade: str = "A"
     organic_certified: bool = False
+    community_id: Optional[int] = None
 
 
 class ListingResponse(BaseModel):
@@ -49,6 +50,9 @@ class ListingResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     is_active: bool
+    seller_user_id: int
+    community_id: Optional[int] = None
+
 
     class Config:
         from_attributes = True
@@ -59,7 +63,8 @@ class ListingWithProduct(ListingResponse):
     product_category: str = Field(...)
     product_image_url: Optional[str] = Field(None)
     unit: str = Field(...)
-    farmer_name: Optional[str] = Field(None)
+    seller_name: Optional[str] = Field(None)
+    community_name: Optional[str] = Field(None)
 
 
 class OrderItemCreate(BaseModel):

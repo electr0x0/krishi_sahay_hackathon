@@ -20,7 +20,8 @@ import {
   Package,
   Phone,
   MapPinIcon,
-  CreditCard
+  CreditCard,
+  Users
 } from 'lucide-react'
 
 function MiniTrend({ points }: { points: { recorded_at: string, price: number }[] }) {
@@ -54,6 +55,7 @@ export default function StorePage() {
   const [selectedLocation, setSelectedLocation] = useState('')
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
   const [showOrganic, setShowOrganic] = useState(false)
+  const [showCommunityOnly, setShowCommunityOnly] = useState(false)
 
   // Checkout
   const [checkoutData, setCheckoutData] = useState({
@@ -62,6 +64,12 @@ export default function StorePage() {
     address: '',
     advance_amount: 0
   })
+  
+  // Auto-calculate advance payment (5% of total)
+  const calculateAdvancePayment = () => {
+    const total = getTotalPrice()
+    return Math.round(total * 0.05 * 100) / 100 // 5% rounded to 2 decimal places
+  }
   const [orderResult, setOrderResult] = useState<any>(null)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
 
@@ -125,8 +133,12 @@ export default function StorePage() {
       filtered = filtered.filter(l => l.organic_certified)
     }
 
+    if (showCommunityOnly) {
+      filtered = filtered.filter(l => l.community_id != null)
+    }
+
     setFilteredListings(filtered)
-  }, [listings, searchQuery, selectedCategory, selectedLocation, priceRange, showOrganic])
+  }, [listings, searchQuery, selectedCategory, selectedLocation, priceRange, showOrganic, showCommunityOnly])
 
   const addToCart = (listing: any, quantity: number = 1) => {
     setCart(prev => {
@@ -204,8 +216,8 @@ export default function StorePage() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Agriculture Marketplace</h1>
-              <p className="text-gray-600 mt-1">Fresh produce directly from farmers</p>
+              <h1 className="text-3xl font-bold text-gray-900">কৃষি বাজার</h1>
+              <p className="text-gray-600 mt-1">কৃষকদের কাছ থেকে সরাসরি তাজা পণ্য</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -217,7 +229,7 @@ export default function StorePage() {
                 )}
               </div>
               <Button asChild className="bg-green-600 hover:bg-green-700">
-                <a href="/store/track">Track Order</a>
+                <a href="/store/track">অর্ডার ট্র্যাক করুন</a>
               </Button>
             </div>
           </div>
@@ -233,18 +245,18 @@ export default function StorePage() {
                 <div>
                   <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                     <Filter className="w-5 h-5" />
-                    Filters
+                    ফিল্টার
                   </h3>
                 </div>
 
                 {/* Search */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Search Products</label>
+                  <label className="block text-sm font-medium mb-2">পণ্য খুঁজুন</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Search products..."
+                      placeholder="পণ্য খুঁজুন..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                     />
@@ -253,49 +265,60 @@ export default function StorePage() {
 
                 {/* Category */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Category</label>
+                  <label className="block text-sm font-medium mb-2">ধরন</label>
                   <select
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                     value={selectedCategory}
                     onChange={e => setSelectedCategory(e.target.value)}
                   >
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>
-                        {cat === 'all' ? 'All Categories' : cat.charAt(0).toUpperCase() + cat.slice(1)}
-                      </option>
-                    ))}
+                    <option value="all">সকল ধরন</option>
+                    <option value="vegetables">সবজি</option>
+                    <option value="fruits">ফল</option>
+                    <option value="grains">শস্য</option>
+                    <option value="pulses">ডাল</option>
+                    <option value="spices">মসলা</option>
+                    <option value="herbs">ভেষজ</option>
+                    <option value="dairy">দুগ্ধজাত</option>
+                    <option value="meat">মাংস</option>
+                    <option value="seafood">মাছ</option>
+                    <option value="other">অন্যান্য</option>
                   </select>
                 </div>
 
                 {/* Location */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Location</label>
+                  <label className="block text-sm font-medium mb-2">এলাকা</label>
                   <select
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                     value={selectedLocation}
                     onChange={e => setSelectedLocation(e.target.value)}
                   >
-                    <option value="">All Locations</option>
-                    {locations.map(loc => (
-                      <option key={loc} value={loc}>{loc}</option>
-                    ))}
+                    <option value="">সকল এলাকা</option>
+                    <option value="Dhaka">ঢাকা</option>
+                    <option value="Chittagong">চট্টগ্রাম</option>
+                    <option value="Sylhet">সিলেট</option>
+                    <option value="Rajshahi">রাজশাহী</option>
+                    <option value="Khulna">খুলনা</option>
+                    <option value="Barishal">বরিশাল</option>
+                    <option value="Rangpur">রংপুর</option>
+                    <option value="Mymensingh">ময়মনসিংহ</option>
                   </select>
                 </div>
 
                 {/* Price Range */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Price Range (৳)</label>
+                  <label className="block text-sm font-medium mb-2">দাম সীমা (৳)</label>
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       type="number"
-                      placeholder="Min"
+                      placeholder="সর্বনিম্ন"
                       className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                       value={priceRange.min}
                       onChange={e => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
                     />
                     <input
                       type="number"
-                      placeholder="Max"
+                      placeholder="সর্বোচ্চ"
                       className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                       value={priceRange.max}
                       onChange={e => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
@@ -314,7 +337,22 @@ export default function StorePage() {
                   />
                   <label htmlFor="organic-filter" className="text-sm font-medium flex items-center gap-1">
                     <Leaf className="w-4 h-4 text-green-600" />
-                    Organic Only
+                    শুধু জৈব
+                  </label>
+                </div>
+
+                {/* Community Filter */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="community-filter"
+                    checked={showCommunityOnly}
+                    onChange={e => setShowCommunityOnly(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="community-filter" className="text-sm font-medium flex items-center gap-1">
+                    <Users className="w-4 h-4 text-blue-600" />
+                    শুধু কমিউনিটি পণ্য
                   </label>
                 </div>
 
@@ -328,9 +366,10 @@ export default function StorePage() {
                     setSelectedLocation('')
                     setPriceRange({ min: '', max: '' })
                     setShowOrganic(false)
+                    setShowCommunityOnly(false)
                   }}
                 >
-                  Clear All Filters
+                  সব ফিল্টার মুছুন
                 </Button>
               </CardContent>
             </Card>
@@ -342,11 +381,11 @@ export default function StorePage() {
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="products" className="flex items-center gap-2">
                   <Package className="w-4 h-4" />
-                  Products ({filteredListings.length})
+                  পণ্যসমূহ ({filteredListings.length})
                 </TabsTrigger>
                 <TabsTrigger value="cart" className="flex items-center gap-2">
                   <ShoppingCart className="w-4 h-4" />
-                  Cart ({cart.length})
+                  ঝুড়ি ({cart.length})
                 </TabsTrigger>
               </TabsList>
 
@@ -354,7 +393,7 @@ export default function StorePage() {
               <TabsContent value="products">
                 {loading ? (
                   <div className="flex items-center justify-center h-64">
-                    <div className="text-lg">Loading products...</div>
+                    <div className="text-lg">পণ্য লোড হচ্ছে...</div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -375,12 +414,20 @@ export default function StorePage() {
                               </div>
                             </div>
                           )}
-                          {listing.organic_certified && (
-                            <Badge className="absolute top-2 left-2 bg-green-600">
-                              <Leaf className="w-3 h-3 mr-1" />
-                              Organic
-                            </Badge>
-                          )}
+                          <div className="absolute top-2 left-2 flex flex-col gap-1">
+                            {listing.organic_certified && (
+                              <Badge className="bg-green-600">
+                                <Leaf className="w-3 h-3 mr-1" />
+                                জৈব
+                              </Badge>
+                            )}
+                            {listing.community_id && (
+                              <Badge className="bg-blue-600">
+                                <Users className="w-3 h-3 mr-1" />
+                                কমিউনিটি
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                         
                         <CardContent className="p-4">
@@ -395,7 +442,7 @@ export default function StorePage() {
                                 {listing.quality_grade && (
                                   <Badge variant="outline" className="text-xs flex items-center gap-1">
                                     <Award className="w-3 h-3" />
-                                    Grade {listing.quality_grade}
+                                    গ্রেড {listing.quality_grade}
                                   </Badge>
                                 )}
                               </div>
@@ -411,8 +458,8 @@ export default function StorePage() {
                                 <MiniTrend points={trends[listing.id] || []} />
                               </div>
                               <div className="text-right text-sm text-gray-600">
-                                <div>Stock: {Number(listing.stock_qty).toFixed(1)} {listing.unit}</div>
-                                <div>Min: {Number(listing.min_order_qty).toFixed(1)} {listing.unit}</div>
+                                <div>মজুদ: {Number(listing.stock_qty).toFixed(1)} {listing.unit}</div>
+                                <div>সর্বনিম্ন: {Number(listing.min_order_qty).toFixed(1)} {listing.unit}</div>
                               </div>
                             </div>
 
@@ -423,10 +470,10 @@ export default function StorePage() {
                                 <span>{listing.location}</span>
                               </div>
                               {listing.farmer_name && (
-                                <div>Farmer: {listing.farmer_name}</div>
+                                <div>কৃষক: {listing.farmer_name}</div>
                               )}
                               {listing.harvest_date && (
-                                <div>Harvested: {new Date(listing.harvest_date).toLocaleDateString()}</div>
+                                <div>ফসল তোলা: {new Date(listing.harvest_date).toLocaleDateString()}</div>
                               )}
                             </div>
 
@@ -437,7 +484,7 @@ export default function StorePage() {
                               disabled={listing.stock_qty <= 0}
                             >
                               <Plus className="w-4 h-4 mr-2" />
-                              {listing.stock_qty <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                              {listing.stock_qty <= 0 ? 'স্টক নেই' : 'ঝুড়িতে যোগ করুন'}
                             </Button>
                           </div>
                         </CardContent>
@@ -454,11 +501,11 @@ export default function StorePage() {
                   <div className="lg:col-span-2">
                     <Card>
                       <CardContent className="p-6">
-                        <h3 className="font-semibold text-lg mb-4">Shopping Cart</h3>
+                        <h3 className="font-semibold text-lg mb-4">কেনাকাটার ঝুড়ি</h3>
                         {cart.length === 0 ? (
                           <div className="text-center py-8 text-gray-500">
                             <ShoppingCart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                            <p>Your cart is empty</p>
+                            <p>আপনার ঝুড়ি খালি</p>
                           </div>
                         ) : (
                           <div className="space-y-4">
@@ -470,7 +517,7 @@ export default function StorePage() {
                                     ৳{item.price}/{item.unit} • {item.farmer_name}
                                   </p>
                                   <p className="text-xs text-gray-500">
-                                    Min order: {item.min_order_qty} {item.unit}
+                                    সর্বনিম্ন অর্ডার: {item.min_order_qty} {item.unit}
                                   </p>
                                 </div>
                                 
@@ -500,16 +547,26 @@ export default function StorePage() {
                                     onClick={() => updateCartQuantity(item.listing_id, 0)}
                                     className="text-red-600 hover:text-red-700"
                                   >
-                                    Remove
+                                    মুছুন
                                   </Button>
                                 </div>
                               </div>
                             ))}
                             
                             <div className="border-t pt-4">
-                              <div className="flex justify-between text-lg font-semibold">
-                                <span>Total:</span>
-                                <span>৳{Number(getTotalPrice()).toFixed(2)}</span>
+                              <div className="space-y-2">
+                                <div className="flex justify-between text-lg font-semibold">
+                                  <span>মোট:</span>
+                                  <span>৳{Number(getTotalPrice()).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm text-gray-600">
+                                  <span>সুপারিশকৃত অগ্রিম (৫%):</span>
+                                  <span>৳{calculateAdvancePayment().toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm text-gray-600">
+                                  <span>অবশিষ্ট:</span>
+                                  <span>৳{(getTotalPrice() - calculateAdvancePayment()).toFixed(2)}</span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -522,25 +579,31 @@ export default function StorePage() {
                   <div className="lg:col-span-1">
                     <Card>
                       <CardContent className="p-6">
-                        <h3 className="font-semibold text-lg mb-4">Checkout</h3>
+                        <h3 className="font-semibold text-lg mb-4">চেকআউট</h3>
+                        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                          <p className="text-xs text-blue-700">
+                            💡 <strong>অগ্রিম পেমেন্ট:</strong> সাধারণত মোট মূল্যের ৫% অগ্রিম পেমেন্ট করা হয়। 
+                            বাকি টাকা ডেলিভারির সময় পরিশোধ করতে হবে।
+                          </p>
+                        </div>
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-sm font-medium mb-2">Full Name *</label>
+                            <label className="block text-sm font-medium mb-2">পূর্ণ নাম *</label>
                             <input
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
-                              placeholder="Your full name"
+                              placeholder="আপনার পূর্ণ নাম"
                               value={checkoutData.customer_name}
                               onChange={e => setCheckoutData(prev => ({ ...prev, customer_name: e.target.value }))}
                             />
                           </div>
 
                           <div>
-                            <label className="block text-sm font-medium mb-2">Phone Number *</label>
+                            <label className="block text-sm font-medium mb-2">ফোন নম্বর *</label>
                             <div className="relative">
                               <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                               <input
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                placeholder="+880 1xxx-xxxxxx"
+                                placeholder="+৮৮০ ১XXX-XXXXXX"
                                 value={checkoutData.phone}
                                 onChange={e => setCheckoutData(prev => ({ ...prev, phone: e.target.value }))}
                               />
@@ -548,13 +611,13 @@ export default function StorePage() {
                           </div>
 
                           <div>
-                            <label className="block text-sm font-medium mb-2">Delivery Address *</label>
+                            <label className="block text-sm font-medium mb-2">ডেলিভারি ঠিকানা *</label>
                             <div className="relative">
                               <MapPinIcon className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                               <textarea
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                                 rows={3}
-                                placeholder="Your complete address"
+                                placeholder="আপনার সম্পূর্ণ ঠিকানা"
                                 value={checkoutData.address}
                                 onChange={e => setCheckoutData(prev => ({ ...prev, address: e.target.value }))}
                               />
@@ -562,18 +625,31 @@ export default function StorePage() {
                           </div>
 
                           <div>
-                            <label className="block text-sm font-medium mb-2">Advance Payment (Optional)</label>
+                            <label className="block text-sm font-medium mb-2">অগ্রিম পেমেন্ট (ঐচ্ছিক)</label>
                             <div className="relative">
                               <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                               <input
                                 type="number"
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                placeholder="৳0.00"
+                                placeholder="৳০.০০"
                                 value={checkoutData.advance_amount}
                                 onChange={e => setCheckoutData(prev => ({ ...prev, advance_amount: parseFloat(e.target.value) || 0 }))}
                               />
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">Demo payment - any amount</p>
+                            <div className="flex items-center justify-between mt-2">
+                              <p className="text-xs text-gray-500">সুপারিশকৃত অগ্রিম: ৳{calculateAdvancePayment().toFixed(2)} (মোটের ৫%)</p>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setCheckoutData(prev => ({ ...prev, advance_amount: calculateAdvancePayment() }))}
+                                className={`text-xs ${checkoutData.advance_amount === calculateAdvancePayment() ? 'bg-green-100 text-green-800 border-green-300' : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'}`}
+                                disabled={checkoutData.advance_amount === calculateAdvancePayment()}
+                              >
+                                {checkoutData.advance_amount === calculateAdvancePayment() ? 'প্রয়োগকৃত ✓' : 'প্রয়োগ করুন'}
+                              </Button>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">ডেমো পেমেন্ট - যেকোনো পরিমাণ</p>
                           </div>
 
                           <Button 
@@ -581,12 +657,14 @@ export default function StorePage() {
                             className="w-full bg-green-600 hover:bg-green-700"
                             disabled={cart.length === 0 || checkoutLoading}
                           >
-                            {checkoutLoading ? 'Placing Order...' : `Place Order • ৳${Number(getTotalPrice()).toFixed(2)}`}
+                            {checkoutLoading ? 'অর্ডার দেওয়া হচ্ছে...' : 
+                              `অর্ডার দিন • ৳${Number(getTotalPrice()).toFixed(2)}${checkoutData.advance_amount > 0 ? ` (অগ্রিম: ৳${checkoutData.advance_amount.toFixed(2)})` : ''}`
+                            }
                           </Button>
 
                           {orderResult && (
                             <div className="text-sm text-green-700 p-3 bg-green-50 rounded-lg">
-                              ✅ Order #{orderResult.id} placed successfully!
+                              ✅ অর্ডার #{orderResult.id} সফলভাবে দেওয়া হয়েছে!
                             </div>
                           )}
                         </div>

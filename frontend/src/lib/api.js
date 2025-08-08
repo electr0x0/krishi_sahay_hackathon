@@ -219,9 +219,7 @@ class ApiService {
   getSensorDataHistory = async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return this.request(
-      `/api/iot/get-data-history${
-        queryString ? `?${queryString}` : ""
-      }`
+      `/api/iot/get-data-history${queryString ? `?${queryString}` : ""}`
     );
   };
 
@@ -361,6 +359,13 @@ class ApiService {
     });
   };
 
+  requestToJoinCommunity = async (communityId) => {
+    return this.request("/api/community/request-join", {
+      method: "POST",
+      body: JSON.stringify({ community_id: communityId }),
+    });
+  };
+
   // Leave current community
   leaveCommunity = async () => {
     return this.request("/api/community/leave", {
@@ -373,6 +378,33 @@ class ApiService {
     return this.request("/api/community/", {
       method: "POST",
       body: JSON.stringify(communityData),
+    });
+  };
+
+  promoteMember = async (communityId, memberId) => {
+    return this.request(
+      `/api/community/${communityId}/members/${memberId}/promote`,
+      {
+        method: "POST",
+      }
+    );
+  };
+
+  demoteMember = async (communityId, memberId) => {
+    return this.request(
+      `/api/community/${communityId}/members/${memberId}/demote`,
+      {
+        method: "POST",
+      }
+    );
+  };
+
+  uploadCommunityImage = async (communityId, file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.request(`/api/community/${communityId}/upload-image`, {
+      method: "POST",
+      body: formData,
     });
   };
 
@@ -459,6 +491,15 @@ class ApiService {
     );
   };
 
+  rejectHelpRequest = async (communityId, messageId) => {
+    return this.request(
+      `/api/community/${communityId}/help/${messageId}/reject`,
+      {
+        method: "POST",
+      }
+    );
+  };
+
   completeHelpRequest = async (communityId, messageId) => {
     return this.request(
       `/api/community/${communityId}/help/${messageId}/complete`,
@@ -483,6 +524,10 @@ class ApiService {
   getStoreListings = async (params = {}) => {
     const query = new URLSearchParams(params).toString();
     return this.request(`/api/store/listings${query ? `?${query}` : ""}`);
+  };
+
+  getCommunityListings = async (communityId) => {
+    return this.request(`/api/store/listings/community/${communityId}`);
   };
 
   // Public: create order (no auth)
@@ -526,6 +571,10 @@ class ApiService {
       method: "POST",
       body: JSON.stringify(data),
     });
+  };
+
+  getMyProducts = async () => {
+    return this.request(`/api/store/products/mine`);
   };
 
   updateStoreListing = async (listingId, data) => {
@@ -670,6 +719,124 @@ class ApiService {
 
   delete = async (endpoint, options = {}) => {
     return this.request(endpoint, { ...options, method: "DELETE" });
+  };
+
+  // Fund Management API Functions
+
+  // Get community fund information
+  getCommunityFund = async (communityId) => {
+    return this.request(`/api/funds/communities/${communityId}/fund`);
+  };
+
+  // Get fund transaction history
+  getFundTransactions = async (communityId, limit = 50, offset = 0) => {
+    return this.request(
+      `/api/funds/communities/${communityId}/fund/transactions?limit=${limit}&offset=${offset}`
+    );
+  };
+
+  // Donate to community fund
+  donateToFund = async (communityId, amount, description = "") => {
+    return this.request(`/api/funds/communities/${communityId}/fund/donate`, {
+      method: "POST",
+      body: JSON.stringify({ amount, description }),
+    });
+  };
+
+  // Set fixed return rate (leaders only)
+  setReturnRate = async (communityId, returnRate) => {
+    return this.request(
+      `/api/funds/communities/${communityId}/fund/set-return-rate`,
+      {
+        method: "POST",
+        body: JSON.stringify({ return_rate: returnRate }),
+      }
+    );
+  };
+
+  // Record event return (leaders only)
+  recordEventReturn = async (communityId, eventId, actualReturn) => {
+    return this.request(
+      `/api/funds/communities/${communityId}/fund/record-event-return`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          event_id: eventId,
+          actual_return: actualReturn,
+        }),
+      }
+    );
+  };
+
+  // Apply for loan
+  applyForLoan = async (communityId, amount, purpose, dueDate, notes = "") => {
+    return this.request(`/api/funds/communities/${communityId}/loans/apply`, {
+      method: "POST",
+      body: JSON.stringify({
+        amount,
+        purpose,
+        due_date: dueDate,
+        notes,
+      }),
+    });
+  };
+
+  // Get community loans
+  getCommunityLoans = async (communityId, statusFilter = null) => {
+    const url = statusFilter
+      ? `/api/funds/communities/${communityId}/loans?status_filter=${statusFilter}`
+      : `/api/funds/communities/${communityId}/loans`;
+    return this.request(url);
+  };
+
+  // Return loan
+  returnLoan = async (communityId, loanId, amount, notes = "") => {
+    return this.request(
+      `/api/funds/communities/${communityId}/loans/${loanId}/return`,
+      {
+        method: "POST",
+        body: JSON.stringify({ amount, notes }),
+      }
+    );
+  };
+
+  // Create investment (profit rate is now fixed by community)
+  createInvestment = async (
+    communityId,
+    amount,
+    maturityMonths,
+    notes = ""
+  ) => {
+    return this.request(
+      `/api/funds/communities/${communityId}/investments/create`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          amount,
+          maturity_months: maturityMonths,
+          notes,
+        }),
+      }
+    );
+  };
+
+  // Get community investments
+  getCommunityInvestments = async (communityId, statusFilter = null) => {
+    const url = statusFilter
+      ? `/api/funds/communities/${communityId}/investments?status_filter=${statusFilter}`
+      : `/api/funds/communities/${communityId}/investments`;
+    return this.request(url);
+  };
+
+  // Withdraw investment
+  withdrawInvestment = async (communityId, investmentId, notes = "") => {
+    return this.request(
+      `/api/funds/communities/${communityId}/investments/${investmentId}/withdraw`,
+      {
+        method: "POST",
+        body: JSON.stringify({ notes }),
+      }
+    );
   };
 }
 
