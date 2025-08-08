@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { LayoutDashboard, BarChart2, Bell, MessageSquare, Settings, LifeBuoy, User, LogOut, Home, ClipboardPlus } from 'lucide-react';
+
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -51,9 +52,13 @@ const Sidebar = () => {
 
   const navItems = [
     { href: '/dashboard', label: 'ড্যাশবোর্ড', icon: LayoutDashboard },
+    { href: '/dashboard/detection', label: 'রোগ শনাক্তকরণ', icon: Camera },
     { href: '/dashboard/analytics', label: 'বিশ্লেষণ', icon: BarChart2 },
+    { href: '/dashboard/community', label: 'সম্প্রদায়', icon: Users },
+    { href: '/dashboard/store', label: 'আমার দোকান', icon: BarChart2 },
     { href: '/dashboard/notifications', label: 'নোটিফিকেশন', icon: Bell },
     { href: '/dashboard/chat', label: 'চ্যাট', icon: MessageSquare },
+    { href: '/dashboard/voice-chat', label: 'AI এর সাথে কথা বলুন', icon: Mic },
     { href: '/dashboard/profile', label: 'প্রোফাইল', icon: User },
     { href: '/dashboard/settings', label: 'সেটিংস', icon: Settings },
     { href: '/dashboard/report', label: 'কৃষি রিপোর্ট', icon: ClipboardPlus },
@@ -155,6 +160,7 @@ const Sidebar = () => {
           </div>
         )}
       </div>
+      
     </motion.div>
   );
 };

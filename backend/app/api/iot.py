@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
 import random
+from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.sensor import SensorConfig, SensorData
@@ -15,6 +16,17 @@ from app.schemas.sensor import (
 from app.auth.dependencies import get_current_user
 
 router = APIRouter()
+
+# ESP32 specific data model to match your exact format
+class ESP32SensorData(BaseModel):
+    timestamp: str
+    temperature_c: float
+    humidity_percent: float
+    heat_index_c: float
+    water_level_raw: int
+    water_level_percent: int
+    soil_moisture_raw: int
+    soil_moisture_percent: int
 
 # Dummy data generators for testing
 def generate_dht22_data():
@@ -422,3 +434,96 @@ async def get_dashboard_sensors(
         ))
     
     return summaries
+
+# New ESP32 specific endpoints
+@router.post("/sensor-data")
+async def receive_esp32_sensor_data(data: ESP32SensorData, db: Session = Depends(get_db)):
+    """Receive sensor data from ESP32 device (no authentication required for IoT devices)"""
+    print("--- New Sensor Data Received ---")
+    print(f"  Timestamp: {data.timestamp}")
+    print(f"  Temperature: {data.temperature_c}°C")
+    print(f"  Humidity: {data.humidity_percent}%")
+    print(f"  Heat Index: {data.heat_index_c}°C")
+    print(f"  Water Level: {data.water_level_percent}% (Raw: {data.water_level_raw})")
+    print(f"  Soil Moisture: {data.soil_moisture_percent}% (Raw: {data.soil_moisture_raw})")
+    
+    # Convert timestamp string to datetime
+    try:
+        recorded_at = datetime.fromisoformat(data.timestamp.replace('Z', '+00:00'))
+    except:
+        recorded_at = datetime.now()
+    
+    # Create sensor data entry (using a default sensor_config_id = 1 for now)
+    # In production, you might want to create a sensor config first or use device ID
+    new_data = SensorData(
+        sensor_config_id=1,  # You may need to create a default sensor config
+        temperature=data.temperature_c,
+        humidity=data.humidity_percent,
+        soil_moisture=data.soil_moisture_percent,
+        water_level=data.water_level_percent,
+        device_status="online",
+        data_quality="good",
+        recorded_at=recorded_at,
+        received_at=datetime.now()
+    )
+    
+    db.add(new_data)
+    db.commit()
+    db.refresh(new_data)
+    
+    return {"status": "success", "message": "Data received", "id": new_data.id}
+
+@router.get("/get-latest-data")
+async def get_latest_sensor_reading(db: Session = Depends(get_db)):
+    """Get the most recent sensor reading from the database"""
+    latest_data = db.query(SensorData).order_by(SensorData.recorded_at.desc()).first()
+    
+    if not latest_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No sensor data found"
+        )
+    
+    return {
+        "id": latest_data.id,
+        "timestamp": latest_data.recorded_at.isoformat(),
+        "temperature_c": latest_data.temperature,
+        "humidity_percent": latest_data.humidity,
+        "heat_index_c": latest_data.temperature + 2 if latest_data.temperature else None,  # Approximate heat index
+        "water_level_percent": latest_data.water_level,
+        "soil_moisture_percent": latest_data.soil_moisture,
+        "device_status": latest_data.device_status,
+        "data_quality": latest_data.data_quality,
+        "received_at": latest_data.received_at.isoformat()
+    }
+
+@router.get("/get-data-history")
+async def get_sensor_data_history(limit: int = 50, db: Session = Depends(get_db)):
+    """Get the last N sensor readings from the database"""
+    data_history = db.query(SensorData).order_by(
+        SensorData.recorded_at.desc()
+    ).limit(limit).all()
+    
+    if not data_history:
+        return {"data": [], "count": 0}
+    
+    formatted_data = []
+    for data in reversed(data_history):  # Reverse to get chronological order
+        formatted_data.append({
+            "id": data.id,
+            "timestamp": data.recorded_at.isoformat(),
+            "temperature_c": data.temperature,
+            "humidity_percent": data.humidity,
+            "heat_index_c": data.temperature + 2 if data.temperature else None,
+            "water_level_percent": data.water_level,
+            "soil_moisture_percent": data.soil_moisture,
+            "device_status": data.device_status,
+            "data_quality": data.data_quality,
+            "received_at": data.received_at.isoformat()
+        })
+    
+    return {
+        "data": formatted_data,
+        "count": len(formatted_data),
+        "latest_timestamp": formatted_data[-1]["timestamp"] if formatted_data else None
+    }

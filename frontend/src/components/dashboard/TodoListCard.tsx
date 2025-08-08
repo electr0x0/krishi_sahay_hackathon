@@ -1,7 +1,12 @@
 'use client';
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { ShineBorder } from "@/components/magicui/shine-border";
+import { useTheme } from "next-themes";
+import { CheckCircle, Clock, AlertTriangle, ListTodo } from "lucide-react";
 
 interface TodoItem {
   id: string;
@@ -12,6 +17,7 @@ interface TodoItem {
 }
 
 export default function TodoListCard() {
+  const { theme } = useTheme();
   const [todos, setTodos] = useState<TodoItem[]>([
     {
       id: '1',
@@ -49,9 +55,9 @@ export default function TodoListCard() {
 
   const getPriorityIcon = (priority: TodoItem['priority']) => {
     switch (priority) {
-      case 'high': return '🔴';
-      case 'medium': return '🟡';
-      case 'low': return '🟢';
+      case 'high': return <AlertTriangle className="w-3 h-3 text-red-500" />;
+      case 'medium': return <Clock className="w-3 h-3 text-orange-500" />;
+      case 'low': return <CheckCircle className="w-3 h-3 text-green-500" />;
     }
   };
 
@@ -59,30 +65,39 @@ export default function TodoListCard() {
   const totalCount = todos.length;
 
   return (
-    <Card className="shadow-lg hover:shadow-xl transition-all duration-300">
-      <CardHeader className="pb-3">
+    <Card className="relative shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-orange-50 via-white to-yellow-50 overflow-hidden">
+      <ShineBorder shineColor={theme === "dark" ? "white" : "#f97316"} />
+      <CardHeader className="pb-2 pt-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center">
-            📋 আজকের কাজের তালিকা
-          </h2>
           <div className="flex items-center space-x-2">
-            <div className="text-sm text-gray-500">
-              {completedCount}/{totalCount} সম্পন্ন
+            <div className="p-1.5 bg-orange-500 rounded-lg">
+              <ListTodo className="w-4 h-4 text-white" />
             </div>
-            <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <h2 className="text-base font-bold text-gray-900">
+              আজকের কাজের তালিকা
+            </h2>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Badge variant="secondary" className="text-xs px-2 py-1">
+              {completedCount}/{totalCount} সম্পন্ন
+            </Badge>
+            <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-green-500 transition-all duration-300"
+                className="h-full bg-orange-500 transition-all duration-300"
                 style={{ width: `${(completedCount / totalCount) * 100}%` }}
               ></div>
             </div>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {todos.map((todo) => (
-          <div
+      <CardContent className="space-y-2 px-4 pb-4">
+        {todos.map((todo, index) => (
+          <motion.div
             key={todo.id}
-            className={`flex items-start space-x-3 p-3 rounded-lg border transition-all duration-200 hover:shadow-sm ${
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className={`flex items-start space-x-2 p-2 rounded-lg border transition-all duration-200 hover:shadow-sm ${
               todo.completed 
                 ? 'bg-green-50 border-green-200' 
                 : 'bg-white border-gray-200 hover:border-green-300'
@@ -128,15 +143,15 @@ export default function TodoListCard() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
 
         {/* AI Generated Note */}
-        <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+        <div className="mt-3 p-2 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
           <div className="flex items-start space-x-2">
-            <span className="text-lg">🤖</span>
+            <span className="text-sm">🤖</span>
             <div>
-              <p className="text-sm text-gray-700">
+              <p className="text-xs text-gray-700">
                 <strong>AI পরামর্শ:</strong> আজকের আবহাওয়া অনুযায়ী এই কাজগুলো সবচেয়ে গুরুত্বপূর্ণ।
               </p>
               <p className="text-xs text-gray-500 mt-1">

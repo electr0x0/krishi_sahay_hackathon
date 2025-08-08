@@ -42,6 +42,9 @@ class User(Base):
     preferences = relationship("UserPreferences", back_populates="user", uselist=False)
     farms = relationship("Farm", back_populates="owner")
     chat_sessions = relationship("ChatSession", back_populates="user")
+    community_memberships = relationship("CommunityMember", back_populates="user")
+    detection_history = relationship("DetectionHistory", back_populates="user")
+
 
 class UserPreferences(Base):
     __tablename__ = "user_preferences"

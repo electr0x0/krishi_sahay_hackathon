@@ -45,31 +45,31 @@ export default function QuickLinksCard() {
 
   return (
     <Card className="shadow-lg hover:shadow-xl transition-all duration-300">
-      <CardHeader className="pb-3">
-        <h2 className="text-lg font-bold text-gray-900 flex items-center">
+      <CardHeader className="pb-2 pt-3">
+        <h2 className="text-base font-bold text-gray-900 flex items-center">
           ⚡ দ্রুত অ্যাক্সেস
         </h2>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-3">
+      <CardContent className="px-3 pb-3">
+        <div className="grid grid-cols-2 gap-2">
           {links.map((link, index) => (
             <Link key={index} href={link.href}>
-              <div className={`relative p-4 rounded-xl bg-gradient-to-br ${link.color} text-white hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group`}>
+              <div className={`relative p-2 rounded-lg bg-gradient-to-br ${link.color} text-white hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group`}>
                 {/* Background Pattern */}
-                <div className="absolute inset-0 bg-white/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 
                 {/* Content */}
                 <div className="relative z-10">
-                  <div className="text-2xl mb-2">{link.icon}</div>
-                  <h3 className="font-bold text-sm mb-1">{link.title}</h3>
+                  <div className="text-lg mb-1">{link.icon}</div>
+                  <h3 className="font-bold text-xs mb-1">{link.title}</h3>
                   <p className="text-xs text-white/80 leading-tight">
                     {link.description}
                   </p>
                 </div>
 
                 {/* Hover Arrow */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </div>

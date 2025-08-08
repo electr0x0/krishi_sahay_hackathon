@@ -4,6 +4,7 @@ uvicorn[standard]
 python-dotenv
 httpx
 pydantic[email]
+websockets
 
 # Database
 sqlalchemy
@@ -26,6 +27,10 @@ gtts
 
 # Image Processing (for crop disease detection)
 pillow
+opencv-python
+ultralytics
+torch
+torchvision
 
 # Data Processing
 pandas

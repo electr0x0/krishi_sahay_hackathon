@@ -114,6 +114,11 @@ const UserProfile = () => {
             ড্যাশবোর্ড
           </Link>
           
+          <Link href="/iot-dashboard" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition-colors">
+            <Settings className="w-4 h-4 mr-2" />
+            IoT সেন্সর
+          </Link>
+          
           <Link href="/settings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition-colors">
             <Settings className="w-4 h-4 mr-2" />
             সেটিংস
@@ -141,8 +146,10 @@ const Header = () => {
   const navigationItems = [
     { href: "/", label: "হোম" },
     { href: "/services", label: "সেবা" },
+    { href: "/store", label: "বাজার" },
     { href: "/how-it-works", label: "কীভাবে কাজ করে" },
     { href: "/impact", label: "প্রভাব" },
+    { href: "/iot-dashboard", label: "IoT ড্যাশবোর্ড" },
     ...(isAuthenticated ? [
       { href: "/chat", label: "চ্যাট" },
     ] : []),

@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ShineBorder } from "@/components/magicui/shine-border";
+import { useTheme } from "next-themes";
 import { 
   Calendar, 
   Sprout, 
@@ -53,6 +55,7 @@ export default function CropManagementCard() {
   const [selectedView, setSelectedView] = useState<'calendar' | 'crops' | 'activities'>('calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const { theme } = useTheme();
 
   const [crops, setCrops] = useState<Crop[]>([
     {
@@ -237,47 +240,47 @@ export default function CropManagementCard() {
   ];
 
   return (
-    <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden">
-      <CardHeader className="pb-4">
+    <Card className="relative bg-gradient-to-br from-green-50 via-white to-emerald-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+      <CardHeader className="pb-3 pt-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-green-500 rounded-lg">
-              <Sprout className="w-6 h-6 text-white" />
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 bg-green-500 rounded-lg">
+              <Sprout className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-800">
+              <h3 className="text-base font-bold text-gray-800">
                 {language === 'bn' ? 'ফসল ব্যবস্থাপনা' : 'Crop Management'}
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs text-gray-600">
                 {language === 'bn' ? 'আপনার কৃষি কার্যক্রম পরিকল্পনা' : 'Plan your farming activities'}
               </p>
             </div>
           </div>
           <button
             onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
-            className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded text-xs font-medium"
+            className="text-gray-500 hover:text-gray-700 transition-colors p-1.5 rounded-md text-xs font-medium bg-white/60 hover:bg-white/80"
           >
             {language === 'bn' ? 'EN' : 'বাং'}
           </button>
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 px-4 pb-4">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 mb-6 bg-white/80 p-1 rounded-lg">
+        <div className="flex space-x-1 mb-4 bg-white/60 p-1 rounded-lg border">
           {tabs.map((tab) => {
             const IconComponent = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setSelectedView(tab.id as any)}
-                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+                className={`flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-all duration-200 flex items-center justify-center space-x-1 ${
                   selectedView === tab.id
                     ? 'bg-green-500 text-white shadow-md'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                 }`}
               >
-                <IconComponent className="w-4 h-4" />
+                <IconComponent className="w-3 h-3" />
                 <span>{tab.label}</span>
               </button>
             );
