@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -22,13 +23,22 @@ import {
   CheckCircle,
   UserPlus,
   UserMinus,
-  CreditCard
+  CreditCard,
+  MoreHorizontal,
+  Store,
+  DollarSign
 } from 'lucide-react';
+import CommunityStore from './CommunityStore';
+import CommunityFunds from './CommunityFunds';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 
 interface CommunityDetailsModalProps {
   community: any;
@@ -51,6 +61,8 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [showEventDetails, setShowEventDetails] = useState(false);
   const [alert, setAlert] = useState<{type: 'success' | 'error' | 'warning'; message: string} | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
 
   // Load chat messages
   const loadChatMessages = async () => {
@@ -169,6 +181,7 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
 
   // Handle help request actions
   const handleAcceptHelp = async (messageId: any) => {
+    console.log("Accepting help request with message ID:", messageId);
     try {
       await api.acceptHelpRequest(community.id, messageId);
       setAlert({type: 'success', message: 'সাহায্য অনুরোধ সফলভাবে গ্রহণ করেছেন!'});
@@ -188,6 +201,18 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
       setTimeout(() => setAlert(null), 3000);
     } catch (error: any) {
       setAlert({type: 'error', message: error.message || 'সাহায্য সম্পন্নে সমস্যা হয়েছে'});
+      setTimeout(() => setAlert(null), 5000);
+    }
+  };
+
+  const handleRejectHelp = async (messageId: any) => {
+    try {
+      await api.rejectHelpRequest(community.id, messageId);
+      setAlert({type: 'success', message: 'সাহায্য অনুরোধ সফলভাবে প্রত্যাখ্যান করেছেন!'});
+      loadChatMessages(); // Refresh to show updated status
+      setTimeout(() => setAlert(null), 3000);
+    } catch (error: any) {
+      setAlert({type: 'error', message: error.message || 'সাহায্য প্রত্যাখ্যান করতে সমস্যা হয়েছে'});
       setTimeout(() => setAlert(null), 5000);
     }
   };
@@ -226,6 +251,40 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
     } catch (error: any) {
       setAlert({type: 'error', message: 'ইভেন্টে যোগ দিতে সমস্যা হয়েছে'});
       setTimeout(() => setAlert(null), 5000);
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        const response = await api.uploadCommunityImage(community.id, file);
+        // Assuming the API returns the updated community object
+        // You might need to refresh the community data here
+        setAlert({type: 'success', message: 'কমিউনিটি ছবি সফলভাবে আপলোড করা হয়েছে!'});
+      } catch (error: any) {
+        setAlert({type: 'error', message: error.message || 'ছবি আপলোড করতে সমস্যা হয়েছে'});
+      }
+    }
+  };
+
+  const handlePromote = async (memberId) => {
+    try {
+      await api.promoteMember(community.id, memberId);
+      setAlert({ type: 'success', message: 'Member promoted successfully!' });
+      // You might want to refresh the community data here
+    } catch (error) {
+      setAlert({ type: 'error', message: 'Failed to promote member.' });
+    }
+  };
+
+  const handleDemote = async (memberId) => {
+    try {
+      await api.demoteMember(community.id, memberId);
+      setAlert({ type: 'success', message: 'Member demoted successfully!' });
+      // You might want to refresh the community data here
+    } catch (error) {
+      setAlert({ type: 'error', message: 'Failed to demote member.' });
     }
   };
 
@@ -307,11 +366,13 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
               {/* Main Content */}
               <div className="lg:col-span-2">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-6">
                     <TabsTrigger value="overview">সংক্ষিপ্ত</TabsTrigger>
                     <TabsTrigger value="members">সদস্য</TabsTrigger>
                     <TabsTrigger value="chat">আলোচনা</TabsTrigger>
                     <TabsTrigger value="tracker">ট্র্যাকার</TabsTrigger>
+                    <TabsTrigger value="store">স্টোর</TabsTrigger>
+                    <TabsTrigger value="funds">তহবিল</TabsTrigger>
                   </TabsList>
 
                   {/* Overview Tab */}
@@ -395,12 +456,14 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
                                 <h4 className="font-semibold">{community.leader.name}</h4>
                                 {getRoleIcon('leader')}
                               </div>
-                              <p className="text-sm text-gray-600">{community.leader.location}</p>
-                              {community.leader.email && (
-                                <p className="text-xs text-gray-500">{community.leader.email}</p>
+                              <p className="text-sm text-gray-600">
+                                {community.leader.user.village} {community.leader.user.upazila}
+                              </p>
+                              {community.leader.user.email && (
+                                <p className="text-xs text-gray-500">{community.leader.user.email}</p>
                               )}
-                              {community.leader.phone && (
-                                <p className="text-xs text-gray-500">{community.leader.phone}</p>
+                              {community.leader.user.phone && (
+                                <p className="text-xs text-gray-500">{community.leader.user.phone}</p>
                               )}
                             </div>
                           </div>
@@ -440,7 +503,6 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
                                   <h4 className="font-semibold">{elder.name}</h4>
                                   {getRoleIcon('elder')}
                                 </div>
-                                <p className="text-sm text-gray-600">{elder.location}</p>
                                 {elder.email && (
                                   <p className="text-xs text-gray-500">{elder.email}</p>
                                 )}
@@ -450,6 +512,66 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
                               </div>
                             </div>
                           ))}
+                        </div>
+                        <div className="mt-6">
+                          <h4 className="font-semibold mb-4">সদস্য</h4>
+                          <div className="space-y-4">
+                            {community.members?.filter(m => m.role === 'member').map((member: any) => {
+                              const currentUserRole = community.members.find(m => m.user_id === user?.id)?.role;
+                              const canManage = currentUserRole === 'leader' || currentUserRole === 'co-leader';
+
+                              return (
+                                <div key={member.id} className={`flex items-center gap-3 p-3 bg-gray-50 rounded-lg ${member.user_id === user?.id ? 'ring-2 ring-green-500' : ''}`}>
+                                  <img
+                                    src={member.user.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face'}
+                                    alt={member.user.full_name}
+                                    className="w-10 h-10 rounded-full"
+                                  />
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <h4 className="font-semibold">{member.user.full_name}</h4>
+                                        {getRoleIcon(member.role)}
+                                      </div>
+                                    <p className="text-sm text-gray-600">
+                                      {member.user.village} {member.user.upazila}
+                                    </p>
+                                    {member.user.email && (
+                                      <p className="text-xs text-gray-500">{member.user.email}</p>
+                                    )}
+                                    {member.user.phone && (
+                                      <p className="text-xs text-gray-500">{member.user.phone}</p>
+                                    )}
+                                  </div>
+                                  {canManage && member.user_id !== user?.id && (
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                          <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        {currentUserRole === 'leader' && member.role === 'member' && (
+                                          <DropdownMenuItem onClick={() => handlePromote(member.id)}>Promote to Co-Leader</DropdownMenuItem>
+                                        )}
+                                        {currentUserRole === 'leader' && member.role === 'co-leader' && (
+                                          <DropdownMenuItem onClick={() => handlePromote(member.id)}>Promote to Elder</DropdownMenuItem>
+                                        )}
+                                        {currentUserRole === 'co-leader' && member.role === 'member' && (
+                                          <DropdownMenuItem onClick={() => handlePromote(member.id)}>Promote to Elder</DropdownMenuItem>
+                                        )}
+                                        {currentUserRole === 'leader' && member.role === 'elder' && (
+                                          <DropdownMenuItem onClick={() => handleDemote(member.id)}>Demote to Co-Leader</DropdownMenuItem>
+                                        )}
+                                        {currentUserRole === 'leader' && member.role === 'co-leader' && (
+                                          <DropdownMenuItem onClick={() => handleDemote(member.id)}>Demote to Member</DropdownMenuItem>
+                                        )}
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -491,6 +613,8 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 mb-1">
                                     <span className="font-medium text-sm">{message.user?.full_name || 'Unknown User'}</span>
+<span className="text-xs text-gray-500">{message.user?.phone}</span>
+<span className="text-xs text-gray-500">{message.user?.full_name}</span>
                                     <span className="text-xs text-gray-500">
                                       {new Date(message.created_at).toLocaleString('bn-BD')}
                                     </span>
@@ -528,15 +652,23 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
                                     <div className="flex gap-2 mt-2">
                                       {!message.metadata?.status && message.user.id !== user?.id ? (
                                         // Not yet accepted and not self - show accept button
-                                        <Button
+                                        <><Button
                                           size="sm"
                                           variant="outline"
                                           className="text-green-600 border-green-300 hover:bg-green-50"
                                           onClick={() => handleAcceptHelp(message.id)}
                                         >
                                           <Handshake className="w-3 h-3 mr-1" />
-                                          সাহায্য করি
-                                        </Button>
+                                          Accept
+                                        </Button><Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="text-red-600 border-red-300 hover:bg-red-50"
+                                          onClick={() => handleRejectHelp(message.id)}
+                                        >
+                                            <X className="w-3 h-3 mr-1" />
+                                            Reject
+                                          </Button></>
                                       ) : message.metadata?.status === 'accepted' ? (
                                         // Accepted but not completed - show complete/pay button
                                         <Button
@@ -872,6 +1004,14 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
                     </div>
                   </TabsContent>
 
+                  <TabsContent value="store">
+                    <CommunityStore communityId={community.id} />
+                  </TabsContent>
+
+                  <TabsContent value="funds">
+                    <CommunityFunds communityId={community.id} />
+                  </TabsContent>
+
                 </Tabs>
               </div>
 
@@ -880,6 +1020,10 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
                 <Card>
                   <CardHeader>
                     <CardTitle>সম্প্রদায় ছবি</CardTitle>
+  <Button size="sm" variant="outline" className="text-xs" onClick={() => document.getElementById('community-image-upload')?.click()}>
+    Upload
+  </Button>
+  <input type="file" id="community-image-upload" className="hidden" onChange={handleImageUpload} accept="image/*" />
                   </CardHeader>
                   <CardContent>
                     <img
@@ -940,7 +1084,7 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
                       )}
                     </CardContent>
                   </Card>
-                ) : canJoin ? (
+                ) : community.is_public ? (
                   <Card>
                     <CardHeader>
                       <CardTitle>যোগদান</CardTitle>
@@ -961,15 +1105,12 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
                       <CardTitle>যোগদান</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-gray-600 mb-3">
-                        আপনি শুধুমাত্র আপনার কাছাকাছি সম্প্রদায়ে যোগ দিতে পারবেন (৫০ কিমি এর মধ্যে)।
-                      </p>
                       <Button 
-                        variant="outline"
-                        className="w-full"
-                        disabled
+                        onClick={onJoin}
+                        className="w-full bg-yellow-600 hover:bg-yellow-700"
                       >
-                        যোগদান সম্ভব নয়
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        যোগদানের জন্য অনুরোধ করুন
                       </Button>
                     </CardContent>
                   </Card>
@@ -1073,69 +1214,132 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.9 }}
-            className="bg-white rounded-xl p-6 w-full max-w-md"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold mb-4">নতুন ইভেন্ট</h3>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target);
-              sendEvent({
-                title: formData.get('title'),
-                description: formData.get('description'),
-                type: formData.get('type'),
-                location: formData.get('location'),
-                date: formData.get('date'),
-                time: formData.get('time'),
-                is_free: formData.get('is_free') === 'on',
-                fee: formData.get('fee')
-              });
-            }}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">ইভেন্টের নাম</label>
-                  <input name="title" required className="w-full border rounded px-3 py-2" />
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-t-xl">
+              <h3 className="text-xl font-semibold flex items-center gap-2">
+                <Calendar className="w-6 h-6" />
+                নতুন ইভেন্ট তৈরি করুন
+              </h3>
+            </div>
+            
+            <div className="p-6">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                sendEvent({
+                  title: formData.get('title'),
+                  description: formData.get('description'),
+                  type: formData.get('type'),
+                  location: formData.get('location'),
+                  date: formData.get('date'),
+                  time: formData.get('time'),
+                  is_free: formData.get('is_free') === 'on',
+                  fee: formData.get('fee'),
+                  fund_cost: formData.get('fund_cost'),
+                  expected_return: formData.get('expected_return')
+                });
+              }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Basic Information */}
+                  <div className="md:col-span-2">
+                    <h4 className="text-lg font-medium text-gray-800 mb-4 border-b pb-2">মূল তথ্য</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-700">ইভেন্টের নাম *</label>
+                        <Input name="title" required placeholder="ইভেন্টের নাম লিখুন" className="border-gray-300 focus:ring-blue-500 focus:border-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-700">ধরন *</label>
+                        <select name="type" required className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                          <option value="">ইভেন্টের ধরন নির্বাচন করুন</option>
+                          <option value="training">প্রশিক্ষণ</option>
+                          <option value="meeting">সভা</option>
+                          <option value="cultural">সাংস্কৃতিক</option>
+                          <option value="charity">দান</option>
+                          <option value="celebration">উৎসব</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-2 text-gray-700">বিবরণ *</label>
+                    <Textarea name="description" required placeholder="ইভেন্টের বিস্তারিত বিবরণ" rows={3} className="border-gray-300 focus:ring-blue-500 focus:border-blue-500" />
+                  </div>
+
+                  {/* Date & Location */}
+                  <div className="md:col-span-2">
+                    <h4 className="text-lg font-medium text-gray-800 mb-4 border-b pb-2">সময় ও স্থান</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-700">তারিখ *</label>
+                        <Input name="date" type="date" required min={new Date().toISOString().split('T')[0]} className="border-gray-300 focus:ring-blue-500 focus:border-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-700">সময় *</label>
+                        <Input name="time" type="time" required className="border-gray-300 focus:ring-blue-500 focus:border-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-700">স্থান *</label>
+                        <Input name="location" required placeholder="ইভেন্টের স্থান" className="border-gray-300 focus:ring-blue-500 focus:border-blue-500" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fee Information */}
+                  <div className="md:col-span-2">
+                    <h4 className="text-lg font-medium text-gray-800 mb-4 border-b pb-2">ফি তথ্য</h4>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <input type="checkbox" name="is_free" id="is_free_event" defaultChecked className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+                        <label htmlFor="is_free_event" className="text-sm font-medium text-gray-700">এই ইভেন্ট বিনামূল্যে</label>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-700">অংশগ্রহণ ফি (ঐচ্ছিক)</label>
+                        <Input name="fee" type="number" min="0" step="0.01" placeholder="ফি পরিমাণ (৳)" className="border-gray-300 focus:ring-blue-500 focus:border-blue-500" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fund Management */}
+                  <div className="md:col-span-2">
+                    <h4 className="text-lg font-medium text-gray-800 mb-4 border-b pb-2 flex items-center gap-2">
+                      <DollarSign className="w-5 h-5 text-green-600" />
+                      তহবিল ব্যবস্থাপনা
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-700">কমিউনিটি তহবিল থেকে খরচ (৳)</label>
+                        <Input name="fund_cost" type="number" min="0" step="0.01" placeholder="যেমন: ৫০০০" className="border-gray-300 focus:ring-green-500 focus:border-green-500" />
+                        <p className="text-xs text-gray-500 mt-1">এই ইভেন্টে কমিউনিটি তহবিল থেকে কত টাকা খরচ হবে</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-700">প্রত্যাশিত আয় (৳)</label>
+                        <Input name="expected_return" type="number" min="0" step="0.01" placeholder="যেমন: ৮০০০" className="border-gray-300 focus:ring-green-500 focus:border-green-500" />
+                        <p className="text-xs text-gray-500 mt-1">এই ইভেন্ট থেকে কমিউনিটি তহবিলে কত টাকা আসার আশা</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 p-3 bg-green-50 rounded-lg">
+                      <p className="text-sm text-green-700">
+                        💡 <strong>পরামর্শ:</strong> ইভেন্ট শেষে প্রকৃত আয় রেকর্ড করতে ভুলবেন না যাতে তহবিল হিসাব সঠিক থাকে।
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">বিবরণ</label>
-                  <textarea name="description" required className="w-full border rounded px-3 py-2 h-20"></textarea>
+
+                <div className="flex gap-3 mt-8 pt-6 border-t">
+                  <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    ইভেন্ট তৈরি করুন
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setShowEventForm(false)} className="border-gray-300 text-gray-700 hover:bg-gray-50">
+                    বাতিল
+                  </Button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">ধরন</label>
-                  <select name="type" required className="w-full border rounded px-3 py-2">
-                    <option value="training">প্রশিক্ষণ</option>
-                    <option value="meeting">সভা</option>
-                    <option value="cultural">সাংস্কৃতিক</option>
-                    <option value="charity">দান</option>
-                    <option value="celebration">উৎসব</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">স্থান</label>
-                  <input name="location" required className="w-full border rounded px-3 py-2" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">তারিখ</label>
-                  <input name="date" type="date" required className="w-full border rounded px-3 py-2" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">সময়</label>
-                  <input name="time" type="time" required className="w-full border rounded px-3 py-2" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" name="is_free" id="is_free_event" defaultChecked />
-                  <label htmlFor="is_free_event" className="text-sm">বিনামূল্যে</label>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">ফি (ঐচ্ছিক)</label>
-                  <input name="fee" type="number" className="w-full border rounded px-3 py-2" />
-                </div>
-              </div>
-              <div className="flex gap-2 mt-6">
-                <Button type="submit" className="flex-1">তৈরি করুন</Button>
-                <Button type="button" variant="outline" onClick={() => setShowEventForm(false)}>বাতিল</Button>
-              </div>
-            </form>
+              </form>
+            </div>
           </motion.div>
         </motion.div>
       )}

@@ -64,6 +64,9 @@ class CommunityMessageType(enum.Enum):
     EVENT = "event"
     SYSTEM = "system"
 
+from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.dialects.postgresql import JSONB
+
 class CommunityMessage(Base):
     __tablename__ = "community_messages"
     
@@ -72,7 +75,7 @@ class CommunityMessage(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     message_type = Column(SQLEnum(CommunityMessageType), default=CommunityMessageType.TEXT, nullable=False)
     content = Column(Text, nullable=False)
-    message_metadata = Column(JSON, nullable=True)  # JSON for additional data
+    message_metadata = Column(MutableDict.as_mutable(JSON), nullable=True)  # JSON for additional data
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
     

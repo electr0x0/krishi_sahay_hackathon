@@ -102,7 +102,7 @@ export class RealTimeAnalyticsService {
     return RealTimeAnalyticsService.instance
   }
 
-  async fetchRealTimeData(): Promise<RealTimeData> {
+  async fetchRealTimeData(user?: any): Promise<RealTimeData> {
     // Check cache validity
     if (this.cache && this.lastFetch && 
         (Date.now() - this.lastFetch.getTime()) < this.CACHE_DURATION) {
@@ -119,7 +119,7 @@ export class RealTimeAnalyticsService {
       ] = await Promise.allSettled([
         this.fetchSensorData(),
         this.fetchMarketData(),
-        this.fetchWeatherData(),
+        this.fetchWeatherData(user),
         this.fetchDashboardSensors()
       ])
 
@@ -257,12 +257,17 @@ export class RealTimeAnalyticsService {
     }
   }
 
-  private async fetchWeatherData() {
+  private async fetchWeatherData(user?: any) {
     try {
+      // Get location from user or use default
+      const location = user && typeof user === 'object' && 'district' in user 
+        ? user.district || 'Dhaka'
+        : 'Dhaka';
+        
       const [currentWeather, forecast, alerts] = await Promise.allSettled([
-        api.request('/api/weather/current'),
-        api.request('/api/weather/forecast?days=5'),
-        api.request('/api/weather/alerts')
+        api.request(`/api/weather/current?location=${encodeURIComponent(location)}`),
+        api.request(`/api/weather/forecast?days=5&location=${encodeURIComponent(location)}`),
+        api.request(`/api/weather/alerts?location=${encodeURIComponent(location)}`)
       ])
 
       const current = currentWeather.status === 'fulfilled' 

@@ -9,7 +9,7 @@ from sqlalchemy import (
     Boolean
 )
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ..database import Base
 
@@ -23,9 +23,13 @@ class StoreProduct(Base):
     unit = Column(String(50), nullable=False, default="kg")
     description = Column(Text, nullable=True)
     image_url = Column(String(500), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     is_active = Column(Boolean, default=True)
+    
+    # NEW: Link to user and optionally community
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
+    user = relationship("User")
     listings = relationship("StoreListing", back_populates="product")
 
 
@@ -34,7 +38,8 @@ class StoreListing(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("store_products.id"), nullable=False, index=True)
-    farmer_user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    seller_user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    community_id = Column(Integer, ForeignKey("communities.id"), nullable=True, index=True)
     location = Column(String(200), nullable=False)
     price = Column(Float, nullable=False)
     stock_qty = Column(Float, nullable=False, default=0.0)
@@ -42,12 +47,13 @@ class StoreListing(Base):
     harvest_date = Column(DateTime, nullable=True)
     quality_grade = Column(String(50), nullable=True, default="A")
     organic_certified = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     is_active = Column(Boolean, default=True)
 
     product = relationship("StoreProduct", back_populates="listings")
-    farmer = relationship("User")
+    seller = relationship("User", foreign_keys=[seller_user_id])
+    community = relationship("Community")
     price_history = relationship("StorePriceHistory", back_populates="listing", cascade="all, delete")
     order_items = relationship("StoreOrderItem", back_populates="listing")
 
@@ -58,7 +64,7 @@ class StorePriceHistory(Base):
     id = Column(Integer, primary_key=True, index=True)
     listing_id = Column(Integer, ForeignKey("store_listings.id"), nullable=False, index=True)
     price = Column(Float, nullable=False)
-    recorded_at = Column(DateTime, default=datetime.utcnow, index=True)
+    recorded_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     listing = relationship("StoreListing", back_populates="price_history")
 
@@ -71,8 +77,8 @@ class StoreOrder(Base):
     customer_name = Column(String(200), nullable=False)
     address = Column(Text, nullable=False)
     status = Column(String(50), default="pending", index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     items = relationship("StoreOrderItem", back_populates="order", cascade="all, delete")
     payment = relationship("StorePayment", back_populates="order", uselist=False, cascade="all, delete")
