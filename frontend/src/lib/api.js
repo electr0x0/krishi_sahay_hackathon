@@ -1,6 +1,8 @@
 import Cookies from "js-cookie";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Use empty base URL in development to leverage Next.js proxy
+// In production, set NEXT_PUBLIC_API_URL to your backend URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 class ApiService {
   constructor() {
@@ -286,7 +288,7 @@ class ApiService {
 
   // AI Agent API
   askAgent = async (query, context = {}) => {
-    return this.request("/api/agent/ask", {
+    return this.request("/api/agent/invoke", {
       method: "POST",
       body: JSON.stringify({
         query,
