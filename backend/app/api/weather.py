@@ -23,9 +23,15 @@ def get_current_weather_data(
     db: Session = Depends(get_db)
 ):
     lat, lon = current_user.latitude, current_user.longitude
+    
+    # Use user's location if available, otherwise use provided location, fallback to Dhaka
+    if not location:
+        if hasattr(current_user, 'district') and current_user.district:
+            location = current_user.district
+        else:
+            location = "Dhaka"  # Default fallback location
+    
     loc_key = f"{lat},{lon}" if lat and lon else location
-    if not loc_key:
-        raise HTTPException(status_code=400, detail="আপনার প্রোফাইলে কোনো লোকেশন সেট করা নেই।")
 
     cached = db.query(WeatherCache).filter(WeatherCache.location == loc_key).first()
     if cached and cached.current_data and not force_refresh and (datetime.utcnow() - cached.last_updated) < CACHE_DURATION:
@@ -53,9 +59,15 @@ def get_weather_forecast_data(
     db: Session = Depends(get_db)
 ):
     lat, lon = current_user.latitude, current_user.longitude
+    
+    # Use user's location if available, otherwise use provided location, fallback to Dhaka
+    if not location:
+        if hasattr(current_user, 'district') and current_user.district:
+            location = current_user.district
+        else:
+            location = "Dhaka"  # Default fallback location
+    
     loc_key = f"{lat},{lon}" if lat and lon else location
-    if not loc_key:
-        raise HTTPException(status_code=400, detail="আপনার প্রোফাইলে কোনো লোকেশন সেট করা নেই।")
 
     cached = db.query(WeatherCache).filter(WeatherCache.location == loc_key).first()
     if cached and cached.forecast_data and not force_refresh and (datetime.utcnow() - cached.last_updated) < CACHE_DURATION:
@@ -80,8 +92,13 @@ def get_weather_alerts_data(
     current_user: User = Depends(get_current_active_user)
 ):
     lat, lon = current_user.latitude, current_user.longitude
-    if not (lat and lon) and not location:
-        raise HTTPException(status_code=400, detail="আপনার প্রোফাইলে কোনো লোকেশন সেট করা নেই।")
+    
+    # Use user's location if available, otherwise use provided location, fallback to Dhaka
+    if not location:
+        if hasattr(current_user, 'district') and current_user.district:
+            location = current_user.district
+        else:
+            location = "Dhaka"  # Default fallback location
 
     result = get_weather_alerts.invoke({"location": location, "lat": lat, "lon": lon})
     if result and "error" in result[0]:

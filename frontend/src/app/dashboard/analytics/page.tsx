@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,8 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
-import { BackgroundGradient, HoverEffect, Spotlight } from "@/components/ui/aceternity"
+import { HoverEffect } from "@/components/ui/aceternity"
 import { realTimeAnalytics, type RealTimeData } from "@/lib/real-time-analytics"
 import api from "@/lib/api"
 import { motion, AnimatePresence } from "framer-motion"
@@ -58,28 +57,27 @@ interface IoTSensorData {
   received_at: string;
 }
 
+// Types for farm data
+interface FarmData {
+  id: number;
+  farmerName: string;
+  location: string;
+  cropType: string;
+  farmingExperience?: string;
+  totalAmount: string;
+  successfulResult: number;
+  todaysWork?: number;
+  monthlyIncome?: number;
+}
+
 // IoT Data Hook
 function useIoTSensorData() {
   const [latestData, setLatestData] = useState<IoTSensorData | null>(null);
   const [historyData, setHistoryData] = useState<IoTSensorData[]>([]);
-  
-  
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
 
-  const fetchLatestData = async () => {
-    try {
-      const data = await api.getLatestSensorData();
-      setLatestData(data);
-      setError(null);
-    } catch (err) {
-      console.error('Failed to fetch latest sensor data:', err);
-      setError('সেন্সর ডেটা লোড করতে ব্যর্থ হয়েছে');
-    }
-  };
-
- 
 
   const fetchHistoryData = async () => {
     try {
@@ -92,31 +90,14 @@ function useIoTSensorData() {
     }
   };
 
-  const refreshData = async () => {
-    setIsLoading(true);
-    await Promise.all([fetchLatestData(), fetchHistoryData()]);
-    setIsLoading(false);
-  };
 
-  useEffect(() => {
-    const initData = async () => {
-      await Promise.all([fetchLatestData(), fetchHistoryData()]);
-      setIsLoading(false);
-    };
-    
-    initData();
-    
-    // Auto-refresh every 10 seconds for real-time updates
-    const interval = setInterval(fetchLatestData, 10000);
-    return () => clearInterval(interval);
-  }, []);
+
 
   return {
     latestData,
     historyData,
     isLoading,
     error,
-    refreshData
   };
 }
 
@@ -146,8 +127,7 @@ function RealTimeWeatherCard() {
 
   useEffect(() => {
     const fetchWeatherData = async () => {
-      if (!user) return;
-
+      // Set default location to Dhaka if user or user location is not available
       const location = user && typeof user === 'object' && 'district' in user 
         ? (user as { district?: string }).district || 'Dhaka'
         : 'Dhaka';
@@ -163,8 +143,22 @@ function RealTimeWeatherCard() {
         setForecast(forecastData);
         setError(null);
       } catch (err) {
-        setError("আবহাওয়ার তথ্য আনতে ব্যর্থ হয়েছে।");
-        console.error(err);
+        console.error('Weather fetch error:', err);
+        setError("আবহাওয়ার তথ্য আনতে ব্যর্থ হয়েছে। ডিফল্ট লোকেশন (ঢাকা) ব্যবহার করা হচ্ছে।");
+        
+        // Try with default Dhaka location as fallback
+        try {
+          const [current, forecastData] = await Promise.all([
+            api.getWeatherData('Dhaka'),
+            api.getWeatherForecast('Dhaka', 5)
+          ]);
+          setCurrentWeather(current);
+          setForecast(forecastData);
+          setError(null);
+        } catch (fallbackErr) {
+          console.error('Fallback weather fetch failed:', fallbackErr);
+          setError("আবহাওয়ার তথ্য লোড করতে সমস্যা হচ্ছে।");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -276,7 +270,6 @@ function RealTimeWeatherCard() {
 
 export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState("overview")
-  const [isLoading, setIsLoading] = useState(true)
   const [realTimeData, setRealTimeData] = useState<RealTimeData | null>(null)
   const [aiQuery, setAiQuery] = useState("")
   const [aiResponse, setAiResponse] = useState("")
@@ -284,38 +277,49 @@ export default function AnalyticsPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const { latestData, historyData, error: ioTError, refreshData: refreshIoTData } = useIoTSensorData();
-    const { user, loading: authLoading } = useAuth();
-    const [farmData, setFarmData] = useState([]);
-  const loadRealTimeData = async () => {
-    setIsLoading(true)
+  const { user, loading: authLoading } = useAuth();
+  const [farmData, setFarmData] = useState<FarmData[]>([]);
+  
+  // Component loading states
+  const [loadingStates, setLoadingStates] = useState({
+    realTimeData: false,
+    farmData: false,
+    weather: true,
+    sensors: false, // Load when sensors tab is accessed
+    market: false,  // Load when market tab is accessed
+    ai: false       // Load when AI tab is accessed
+  });
+  
+  const loadRealTimeData = useCallback(async () => {
+    setLoadingStates(prev => ({ ...prev, realTimeData: true }))
     try {
-      const data = await realTimeAnalytics.fetchRealTimeData()
+      const data = await realTimeAnalytics.fetchRealTimeData(user)
       setRealTimeData(data)
       setLastUpdated(new Date())
     } catch (error) {
       console.error("Failed to load real-time data:", error)
     } finally {
-      setIsLoading(false)
+      setLoadingStates(prev => ({ ...prev, realTimeData: false }))
     }
-  }
+  }, [user])
 
    useEffect(() => {
         const fetchData = async () => {
             // Only fetch if authentication is resolved and a user exists
             if (!authLoading && user) {
+                setLoadingStates(prev => ({ ...prev, farmData: true }))
                 try {
                     const response = await api.getFarmData();
                     // Sort data by most recent first (assuming 'id' increments)
                     setFarmData((response || []).sort((a, b) => b.id - a.id));
                 } catch (err) {
-                    setError('আপনার ডেটা আনতে ব্যর্থ হয়েছে।');
                     console.error("Failed to fetch farm data:", err);
                 } finally {
-                    setIsLoading(false);
+                    setLoadingStates(prev => ({ ...prev, farmData: false }))
                 }
             } else if (!authLoading && !user) {
                 // If auth is resolved and there's no user, stop loading
-                setIsLoading(false);
+                setLoadingStates(prev => ({ ...prev, farmData: false }))
             }
         };
         fetchData();
@@ -354,26 +358,92 @@ export default function AnalyticsPage() {
     setRefreshing(false)
   }
 
+  // Check overall loading state
+  const isPageLoading = loadingStates.realTimeData || loadingStates.farmData || authLoading;
+
   useEffect(() => {
     loadRealTimeData()
     
     // Set up auto-refresh every 5 minutes
-    const interval = setInterval(loadRealTimeData, 5 * 60 * 1000)
+    const interval = setInterval(() => loadRealTimeData(), 5 * 60 * 1000)
     return () => clearInterval(interval)
-  }, [])
+  }, [loadRealTimeData]) // Reload when user changes
 
-  if (isLoading) {
+  // Handle tab changes with lazy loading
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    
+    // Load data for specific tabs when accessed
+    if (value === 'sensors' && !loadingStates.sensors) {
+      setLoadingStates(prev => ({ ...prev, sensors: true }))
+      // Sensors data is already loaded via useIoTSensorData hook
+      setTimeout(() => setLoadingStates(prev => ({ ...prev, sensors: false })), 500)
+    } else if (value === 'market' && !loadingStates.market) {
+      setLoadingStates(prev => ({ ...prev, market: true }))
+      // Market data is loaded via realTimeData
+      setTimeout(() => setLoadingStates(prev => ({ ...prev, market: false })), 500)
+    } else if (value === 'ai' && !loadingStates.ai) {
+      setLoadingStates(prev => ({ ...prev, ai: true }))
+      setTimeout(() => setLoadingStates(prev => ({ ...prev, ai: false })), 500)
+    }
+  }
+
+  if (isPageLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden">
         <div className="absolute inset-0 bg-white/40 backdrop-blur-sm"></div>
         <div className="p-4 max-w-7xl mx-auto relative z-10 w-full pt-20 md:pt-0">
-          <div className="text-4xl md:text-7xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-b from-slate-900 to-slate-600">
-            ডেটা লোড করছি...
-          </div>
-          <p className="mt-4 font-normal text-base text-slate-600 max-w-lg text-center mx-auto">
-            <Loader2 className="h-6 w-6 animate-spin mx-auto mt-4 text-blue-600" />
-            খামারের তথ্য সংগ্রহ করা হচ্ছে
-          </p>
+          <motion.div 
+            className="text-center space-y-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <motion.div 
+              className="text-4xl md:text-7xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-b from-slate-900 to-slate-600"
+              animate={{ scale: [1, 1.02, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              ডেটা লোড করছি...
+            </motion.div>
+            
+            <motion.div 
+              className="space-y-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <div className="flex justify-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  <Loader2 className="h-12 w-12 text-blue-600" />
+                </motion.div>
+              </div>
+              
+              <div className="max-w-md mx-auto space-y-2">
+                <motion.p 
+                  className="font-normal text-base text-slate-600"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  {loadingStates.realTimeData && "রিয়েল-টাইম ডেটা সংগ্রহ করা হচ্ছে..."}
+                  {loadingStates.farmData && !loadingStates.realTimeData && "খামারের তথ্য লোড করা হচ্ছে..."}
+                  {authLoading && !loadingStates.realTimeData && !loadingStates.farmData && "ব্যবহারকারীর তথ্য যাচাই করা হচ্ছে..."}
+                </motion.p>
+                
+                <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
     )
@@ -393,33 +463,6 @@ export default function AnalyticsPage() {
       </div>
     )
   }
-
-  const overviewCards = [
-    {
-      title: "মোট ফসল",
-      description: "সক্রিয় কৃষি এলাকা",
-      icon: <Sprout className="h-4 w-4 text-emerald-600" />,
-      value: realTimeData.farmStats.totalCrops
-    },
-    {
-      title: "মোট জমি",
-      description: "একর হিসাবে",
-      icon: <MapPin className="h-4 w-4 text-blue-600" />,
-      value: `${realTimeData.farmStats.totalArea} একর`
-    },
-    {
-      title: "সুস্থ ফসল",
-      description: "স্বাস্থ্যকর অবস্থায়",
-      icon: <CheckCircle className="h-4 w-4 text-green-600" />,
-      value: `${realTimeData.farmStats.healthyCrops}/${realTimeData.farmStats.totalCrops}`
-    },
-    {
-      title: "প্রত্যাশিত মূল্য",
-      description: "বর্তমান বাজার মূল্যে",
-      icon: <DollarSign className="h-4 w-4 text-orange-600" />,
-      value: `৳${Math.round(realTimeData.marketData.totalValue / 1000)}k`
-    }
-  ]
 
   // Generate sensor cards with real IoT data or fallback to mock data
   const sensorCards = [
@@ -500,98 +543,175 @@ export default function AnalyticsPage() {
       <div className="container mx-auto px-4 py-6 space-y-8 relative z-10">
         {/* Overview Cards with Aceternity Effect */}
         <div className="space-y-4">
-  <h2 className="text-xl font-bold text-slate-900">আমার কৃষি তথ্য</h2>
-  
-  {/* Check if there is data to display */}
-  {farmData.length > 0 ? (
+          <h2 className="text-xl font-bold text-slate-900">আমার কৃষি তথ্য</h2>
+          
+          {/* Farm Data Section with Loading State */}
+          {loadingStates.farmData ? (
+            <div className="space-y-4">
+              {[1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <Card className="bg-white/90 backdrop-blur-sm border-gray-200 shadow-lg">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 bg-slate-200 rounded animate-pulse" />
+                        <div className="w-32 h-5 bg-slate-200 rounded animate-pulse" />
+                      </div>
+                      <div className="w-24 h-3 bg-slate-200 rounded animate-pulse mt-2" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-4">
+                        {[1, 2, 3, 4].map((j) => (
+                          <div key={j} className="space-y-2">
+                            <div className="w-16 h-3 bg-slate-200 rounded animate-pulse" />
+                            <div className="w-20 h-4 bg-slate-200 rounded animate-pulse" />
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          ) : farmData.length > 0 ? (
     <motion.div
-  className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 "
-  initial="hidden"
-  animate="visible"
-  variants={{
-    visible: { transition: { staggerChildren: 0.1 } },
-  }}
->
-  {farmData.map((entry) => (
-    <motion.div
-      key={entry.id}
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+      initial="hidden"
+      animate="visible"
       variants={{
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0 },
+        visible: { transition: { staggerChildren: 0.1 } },
       }}
-      className="h-full" // Ensure motion.div takes full height for the card
     >
-      <Card className="bg-white/90 backdrop-blur-sm border-gray-200 shadow-lg h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center text-gray-800">
-            <Leaf className="h-5 w-5 mr-2 text-green-600 flex-shrink-0" />
-            <span className="truncate">{entry.farmerName}</span>
-          </CardTitle>
-          <p className="text-xs text-gray-500 pt-1 flex items-center">
-            <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
-            {entry.location}
-          </p>
-        </CardHeader>
-        <CardContent>
-          <Separator className="mb-4" />
-
-          {/* Grid layout for stats to make them scannable */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-            
-            {/* Stat: Crop Type */}
-            <div className="space-y-1">
-              <p className="text-xs text-gray-500 flex items-center">
-                <Sprout className="h-3 w-3 mr-1.5" />
-                ফসলের ধরন
+      {/* Create individual stat cards for each farm entry */}
+      {farmData.map((entry) => [
+        // Farmer Name Card
+        <motion.div
+          key={`${entry.id}-farmer`}
+          variants={{
+            hidden: { opacity: 0, y: 20 },
+            visible: { opacity: 1, y: 0 },
+          }}
+        >
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200 shadow-lg h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+            <CardContent className="p-6 text-center">
+              <div className="flex justify-center mb-3">
+                <div className="p-3 rounded-full bg-green-50">
+                  <Leaf className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">
+                কৃষকের নাম
+              </h3>
+              <p className="text-2xl font-bold text-gray-900 mb-3">
+                {entry.farmerName}
               </p>
-              <p className="font-bold text-sm text-gray-800">{entry.cropType}</p>
-            </div>
-
-            {/* Stat: Total Land */}
-            <div className="space-y-1">
-              <p className="text-xs text-gray-500 flex items-center">
+              <p className="text-xs text-gray-500 flex items-center justify-center">
                 <MapPin className="h-3 w-3 mr-1.5" />
-                মোট জমি
+                {entry.location}
               </p>
-              <p className="font-bold text-sm text-gray-800">{entry.totalAmount}</p>
-            </div>
+            </CardContent>
+          </Card>
+        </motion.div>,
 
-            {/* Stat: Successful Crops */}
-            <div className="space-y-1">
-              <p className="text-xs text-gray-500 flex items-center">
-                <CheckCircle className="h-3 w-3 mr-1.5" />
-                সফল ফসল
+        // Crop Type Card
+        <motion.div
+          key={`${entry.id}-crop`}
+          variants={{
+            hidden: { opacity: 0, y: 20 },
+            visible: { opacity: 1, y: 0 },
+          }}
+        >
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200 shadow-lg h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+            <CardContent className="p-6 text-center">
+              <div className="flex justify-center mb-3">
+                <div className="p-3 rounded-full bg-blue-50">
+                  <Sprout className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">
+                ফসলের ধরন
+              </h3>
+              <p className="text-2xl font-bold text-blue-900 mb-3">
+                {entry.cropType}
               </p>
-              <p className="font-bold text-sm text-gray-800">{entry.successfulResult}টি</p>
-            </div>
-            
-            {/* Stat: Monthly Income (highlighted) */}
-            <div className="space-y-1 col-span-2 bg-green-50/70 p-3 rounded-lg border border-green-200">
-              <p className="text-xs text-green-800 flex items-center font-semibold">
-                <DollarSign className="h-3 w-3 mr-1.5" />
+              <p className="text-xs text-gray-500">
+                চাষকৃত ফসল
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>,
+
+        // Total Land Card
+        <motion.div
+          key={`${entry.id}-land`}
+          variants={{
+            hidden: { opacity: 0, y: 20 },
+            visible: { opacity: 1, y: 0 },
+          }}
+        >
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200 shadow-lg h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+            <CardContent className="p-6 text-center">
+              <div className="flex justify-center mb-3">
+                <div className="p-3 rounded-full bg-orange-50">
+                  <MapPin className="h-6 w-6 text-orange-600" />
+                </div>
+              </div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">
+                মোট জমি
+              </h3>
+              <p className="text-2xl font-bold text-orange-900 mb-3">
+                {entry.totalAmount}
+              </p>
+              <p className="text-xs text-gray-500">
+                চাষযোগ্য জমির পরিমাণ
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>,
+
+        // Monthly Income Card
+        <motion.div
+          key={`${entry.id}-income`}
+          variants={{
+            hidden: { opacity: 0, y: 20 },
+            visible: { opacity: 1, y: 0 },
+          }}
+        >
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200 shadow-lg h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+            <CardContent className="p-6 text-center">
+              <div className="flex justify-center mb-3">
+                <div className="p-3 rounded-full bg-green-50">
+                  <DollarSign className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">
                 মাসিক আয়
-              </p>
-              <p className="font-bold text-lg text-green-700">
+              </h3>
+              <p className="text-2xl font-bold text-green-700 mb-3">
                 ৳{Number(entry.monthlyIncome || 0).toLocaleString()}
               </p>
-            </div>
-
-          </div>
-        </CardContent>
-      </Card>
+              <p className="text-xs text-gray-500">
+                প্রতি মাসের গড় আয়
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ]).flat()}
     </motion.div>
-  ))}
-</motion.div>
   ) : (
     // Show this message if no data has been entered yet
     <div className="text-center p-8 bg-white/80 rounded-2xl border border-slate-200">
         <p className="text-slate-600">এখনও কোনো কৃষি তথ্য যোগ করা হয়নি।</p>
     </div>
   )}
-</div>
+        </div>
 
         {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList className="bg-white/80 backdrop-blur-sm border border-slate-200 shadow-lg">
             <TabsTrigger value="overview" className="text-slate-700 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900">সংক্ষিপ্ত</TabsTrigger>
             <TabsTrigger value="sensors" className="text-slate-700 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900">সেন্সর</TabsTrigger>
@@ -600,6 +720,35 @@ export default function AnalyticsPage() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
+            {loadingStates.realTimeData ? (
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* Loading skeletons for overview */}
+                {[1, 2, 3].map((i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                  >
+                    <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
+                      <CardHeader>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-5 h-5 bg-slate-200 rounded animate-pulse" />
+                          <div className="w-32 h-5 bg-slate-200 rounded animate-pulse" />
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="w-full h-16 bg-slate-200 rounded animate-pulse" />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="w-full h-12 bg-slate-200 rounded animate-pulse" />
+                          <div className="w-full h-12 bg-slate-200 rounded animate-pulse" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Farm Health Overview */}
               <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
@@ -703,9 +852,44 @@ export default function AnalyticsPage() {
                 </Card>
               </div>
             </div>
+            )}
           </TabsContent>
 
           <TabsContent value="sensors" className="space-y-6">
+            {loadingStates.sensors ? (
+              <div className="space-y-6">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-8"
+                >
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600 mb-4" />
+                  <p className="text-slate-600">সেন্সর ডেটা লোড করা হচ্ছে...</p>
+                </motion.div>
+                
+                {/* Sensor cards skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                    >
+                      <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
+                        <CardContent className="p-6">
+                          <div className="space-y-3">
+                            <div className="w-24 h-4 bg-slate-200 rounded animate-pulse" />
+                            <div className="w-16 h-6 bg-slate-200 rounded animate-pulse" />
+                            <div className="w-full h-3 bg-slate-200 rounded animate-pulse" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-slate-900">সেন্সর ডেটা (রিয়েল-টাইম)</h2>
@@ -729,6 +913,7 @@ export default function AnalyticsPage() {
               </div>
               <HoverEffect items={sensorCards} />
             </div>
+            )}
 
             {/* Device Status and Connection Info */}
             {latestData && (
@@ -1016,6 +1201,41 @@ export default function AnalyticsPage() {
           </TabsContent>
 
           <TabsContent value="market" className="space-y-6">
+            {loadingStates.market ? (
+              <div className="space-y-6">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-8"
+                >
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600 mb-4" />
+                  <p className="text-slate-600">বাজারের তথ্য লোড করা হচ্ছে...</p>
+                </motion.div>
+                
+                {/* Market cards skeleton */}
+                <div className="grid lg:grid-cols-2 gap-6">
+                  {[1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                    >
+                      <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
+                        <CardHeader>
+                          <div className="w-48 h-6 bg-slate-200 rounded animate-pulse" />
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {[1, 2, 3].map((j) => (
+                            <div key={j} className="w-full h-12 bg-slate-200 rounded animate-pulse" />
+                          ))}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            ) : (
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Market Performance */}
               <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
@@ -1111,6 +1331,7 @@ export default function AnalyticsPage() {
                 </CardContent>
               </Card>
             </div>
+            )}
 
             {/* Market Summary */}
             <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
@@ -1149,7 +1370,29 @@ export default function AnalyticsPage() {
           </TabsContent>
 
           <TabsContent value="ai" className="space-y-6">
-            {/* AI Chat Interface */}
+            {loadingStates.ai ? (
+              <div className="space-y-6">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-8"
+                >
+                  <Brain className="h-12 w-12 mx-auto text-purple-600 mb-4 animate-pulse" />
+                  <p className="text-slate-600">AI সহায়ক প্রস্তুত করা হচ্ছে...</p>
+                </motion.div>
+                
+                <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
+                  <CardHeader>
+                    <div className="w-64 h-6 bg-slate-200 rounded animate-pulse" />
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="w-full h-10 bg-slate-200 rounded animate-pulse" />
+                    <div className="w-32 h-8 bg-slate-200 rounded animate-pulse" />
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+            /* AI Chat Interface */
             <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-slate-900">
@@ -1238,6 +1481,7 @@ export default function AnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
+            )}
           </TabsContent>
         </Tabs>
       </div>
