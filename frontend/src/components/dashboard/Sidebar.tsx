@@ -58,7 +58,7 @@ const Sidebar = () => {
     { href: '/dashboard/voice-chat', label: 'AI এর সাথে কথা বলুন', icon: Mic },
     { href: '/dashboard/community', label: 'সম্প্রদায়', icon: Users },
     { href: '/dashboard/store', label: 'আমার দোকান', icon: BarChart2 },
-    { href: '/dashboard/notifications', label: 'নোটিফিকেশন', icon: Bell },
+    // { href: '/dashboard/notifications', label: 'নোটিফিকেশন', icon: Bell },
     { href: '/dashboard/profile', label: 'প্রোফাইল', icon: User },
     { href: '/dashboard/settings', label: 'সেটিংস', icon: Settings },
     { href: '/dashboard/report', label: 'কৃষি রিপোর্ট', icon: ClipboardPlus },

@@ -286,7 +286,7 @@ export default function EnhancedBengaliInfoForm() {
                                         {/* Successful Result (Crops) */}
                                         <div className="space-y-2">
                                           <label className="flex items-center text-green-800 font-medium">
-                                              <CheckCircle className="w-4 h-4 mr-2" /> সফল ফসল *
+                                              <CheckCircle className="w-4 h-4 mr-2" /> সক্রিয় ফসল *
                                           </label>
                                           <input
                                               type="number" name="successfulResult" value={formData.successfulResult} onChange={handleInputChange}

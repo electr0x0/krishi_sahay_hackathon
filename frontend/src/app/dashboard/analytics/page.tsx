@@ -560,7 +560,7 @@ export default function AnalyticsPage() {
             <div className="space-y-1">
               <p className="text-xs text-gray-500 flex items-center">
                 <CheckCircle className="h-3 w-3 mr-1.5" />
-                সফল ফসল
+                সক্রিয়  ফসল
               </p>
               <p className="font-bold text-sm text-gray-800">{entry.successfulResult}টি</p>
             </div>

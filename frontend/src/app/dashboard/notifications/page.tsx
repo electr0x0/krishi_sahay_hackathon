@@ -83,13 +83,13 @@ export default function MyDataPage() {
     
     // --- Main Display ---
     return (
-        <div className="container mx-auto p-4 md:p-8">
+        <div className="">
             <h1 className="text-3xl font-bold text-gray-800 mb-6">আমার কৃষি তথ্য</h1>
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                className=""
             >
                 {farmData.map((entry) => (
                     <motion.div
@@ -105,8 +105,8 @@ export default function MyDataPage() {
                             <InfoRow icon={Sprout} label="ফসলের ধরন" value={entry.cropType} />
                             <InfoRow icon={Clock} label="অভিজ্ঞতা" value={entry.farmingExperience} />
                             <hr className="my-2"/>
-                            <InfoRow icon={MapPin} label="মোট জমি" value={entry.totalAmount} />
-                            <InfoRow icon={CheckCircle} label="সফল ফসল" value={entry.successfulResult} />
+                            <InfoRow icon={MapPin} label="মোট জমি" value={`${entry.totalAmount} একর`}/> 
+                            <InfoRow icon={CheckCircle} label="সক্রিয় ফসল" value={entry.successfulResult}   />
                             <InfoRow icon={Wheat} label="আজকের কাজ" value={entry.todaysWork} />
                             <InfoRow icon={DollarSign} label="মাসিক আয়" value={`৳${Number(entry.monthlyIncome || 0).toLocaleString()}`} />
                         </div>

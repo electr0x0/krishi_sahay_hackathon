@@ -1,7 +1,8 @@
 'use client'
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+
 import CriticalAlertsCard from "@/components/dashboard/CriticalAlertsCard";
 import TodoListCard from "@/components/dashboard/TodoListCard";
 import MarketSnapshotCard from "@/components/dashboard/MarketSnapshotCard";
@@ -10,6 +11,9 @@ import SmartWeatherCard from "@/components/dashboard/SmartWeatherCard";
 import CropManagementCard from "@/components/dashboard/CropManagementCard";
 import VoiceAssistantButton from "@/components/dashboard/VoiceAssistantButton";
 import { Pointer } from "@/components/magicui/pointer";
+import { useAuth } from '@/contexts/AuthContext.jsx';
+import api from '@/lib/api.js';
+import MyDataPage from "./notifications/page";
 
 const LoadingCard = ({ height = "h-24" }: { height?: string }) => (
   <div className={`${height} bg-white/50 backdrop-blur-sm rounded-xl shadow-sm animate-pulse border border-gray-100`}>
@@ -21,7 +25,12 @@ const LoadingCard = ({ height = "h-24" }: { height?: string }) => (
   </div>
 );
 
+
+
 export default function Dashboard() {
+
+  
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -36,6 +45,8 @@ export default function Dashboard() {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
   };
+
+ 
 
   return (
     <div className="relative">
@@ -107,7 +118,7 @@ export default function Dashboard() {
             </motion.div>
 
             {/* Quick Stats Card */}
-            <motion.div variants={cardVariants} transition={{ duration: 0.5, ease: "easeOut" }}>
+            {/* <motion.div variants={cardVariants} transition={{ duration: 0.5, ease: "easeOut" }}>
               <div className="bg-white/95 backdrop-blur-sm border-0 shadow-lg rounded-xl p-4">
                 <h3 className="text-base font-bold text-gray-800 mb-3">দ্রুত পরিসংখ্যান</h3>
                 <div className="space-y-3">
@@ -129,7 +140,8 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </motion.div> */}
+           <div className="w-full"><MyDataPage></MyDataPage></div>
 
             {/* Tips Card */}
             <motion.div variants={cardVariants} transition={{ duration: 0.5, ease: "easeOut" }}>
