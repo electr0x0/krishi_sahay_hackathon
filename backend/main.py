@@ -10,8 +10,7 @@ from app.database import create_tables
 
 from app.api import agent, auth, chat, community, iot, market, tts, user, weather
 from app.api import store as store_api
-
-from app.api import agent, auth, chat, iot, market, tts, user, weather, detection
+from app.api import detection, weather_recommendations
 
 
 # Create FastAPI app
@@ -52,6 +51,7 @@ app.include_router(store_api.router, prefix="/api/store", tags=["Store"])
 app.include_router(tts.router, prefix="/api", tags=["Text-to-Speech"])
 app.include_router(user.router, prefix="/api", tags=["Users"])
 app.include_router(weather.router, prefix="/api", tags=["Weather"])
+app.include_router(weather_recommendations.router, prefix="/api/weather", tags=["Weather Recommendations"])
 
 @app.on_event("startup")
 async def startup_event():
