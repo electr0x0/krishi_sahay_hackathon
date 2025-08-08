@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship 
 from app.database import Base
-
+from typing import TYPE_CHECKING
 class FarmData(Base):
     __tablename__ = "farm_data"
 
