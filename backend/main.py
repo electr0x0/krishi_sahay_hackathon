@@ -4,14 +4,24 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 import uvicorn
 import os
-
+from app.api import form_data as form_data_router
 from app.core.config import APP_NAME, APP_VERSION, DEBUG, ALLOWED_ORIGINS
 from app.database import create_tables
 
 from app.api import (
-    agent, auth, chat, community, iot, 
-    market, tts, user, weather, detection,
-    store as store_api, funds
+    agent,
+    auth,
+    chat,
+    community,
+    detection,
+    funds,
+    iot,
+    market,
+    store as store_api,
+    tts,
+    user,
+    weather,
+    weather_recommendations,
 )
 
 
@@ -54,6 +64,8 @@ app.include_router(store_api.router, prefix="/api/store", tags=["Store"])
 app.include_router(tts.router, prefix="/api", tags=["Text-to-Speech"])
 app.include_router(user.router, prefix="/api", tags=["Users"])
 app.include_router(weather.router, prefix="/api", tags=["Weather"])
+app.include_router(weather_recommendations.router, prefix="/api/weather", tags=["Weather Recommendations"])
+app.include_router(form_data_router.router, prefix="/api/form-data", tags=["Form Data"])
 
 @app.on_event("startup")
 async def startup_event():

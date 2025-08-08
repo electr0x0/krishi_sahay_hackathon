@@ -86,50 +86,107 @@ export const useCriticalAlerts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchAlerts = async () => {
-      if (!user) return;
+  const fetchAlerts = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-      // const location = 'Dhaka'; // Default location since user.district doesn't exist
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch different types of alerts in parallel
+      const [detectionAlertsResponse, weatherAlerts] = await Promise.allSettled([
+        api.getDetectionAlerts(0, 10, true, false), // Get unread, non-dismissed detection alerts
+        api.getWeatherAlerts('Dhaka') // Default location for weather alerts
+      ]);
 
-      try {
-        setLoading(true);
-        const weatherAlerts = await api.getWeatherAlerts('Dhaka'); // Default location
+      const newAlerts: AlertType[] = [];
+
+      // Process detection alerts
+      if (detectionAlertsResponse.status === 'fulfilled' && detectionAlertsResponse.value?.success) {
+        const detectionAlerts = detectionAlertsResponse.value.alerts || [];
         
-        // The API returns a string, so we need to parse it or handle it.
-        // For now, we'll create a single alert from the string response.
-        const newAlerts: AlertType[] = [];
-        if (weatherAlerts && typeof weatherAlerts === 'string' && !weatherAlerts.startsWith('✅')) {
-            newAlerts.push({
-                id: 'weather-1',
-                type: 'weather' as const,
-                severity: 'high' as const, // Assuming all API alerts are high severity for now
-                title: 'আবহাওয়া সতর্কতা',
-                message: weatherAlerts,
-                timestamp: new Date().toISOString(),
-                action_required: true,
-            });
-        }
-        
-        // Here you could also fetch other types of alerts (pest, market) and combine them
-        setAlerts(newAlerts);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch alerts');
-        setAlerts([]);
-      } finally {
-        setLoading(false);
+        detectionAlerts.forEach((alert: any) => {
+          // Convert backend detection alert to frontend Alert interface
+          const severity = alert.severity === 'high' ? 'high' : 
+                          alert.severity === 'medium' ? 'medium' : 'low';
+          
+          // Determine alert type based on backend alert_type
+          let alertType: string = 'pest';
+          if (alert.alert_type === 'severe_disease') alertType = 'severe_disease';
+          else if (alert.alert_type === 'multiple_diseases') alertType = 'multiple_diseases';
+          else if (alert.alert_type === 'disease_detected') alertType = 'disease_detected';
+
+          newAlerts.push({
+            id: `detection-${alert.id}`,
+            type: alertType as any,
+            severity: severity as any,
+            title: alert.title_bn || alert.title_en || 'রোগ সনাক্ত করা হয়েছে',
+            message: alert.message_bn || alert.message_en || 'আপনার ফসলে রোগ পাওয়া গেছে।',
+            timestamp: alert.created_at,
+            action_required: true,
+          });
+        });
       }
-    };
 
-    fetchAlerts();
+      // Process weather alerts
+      if (weatherAlerts.status === 'fulfilled' && weatherAlerts.value) {
+        const weatherAlertsData = weatherAlerts.value;
+        if (typeof weatherAlertsData === 'string' && !weatherAlertsData.startsWith('✅')) {
+          newAlerts.push({
+            id: 'weather-1',
+            type: 'weather' as const,
+            severity: 'high' as const,
+            title: 'আবহাওয়া সতর্কতা',
+            message: weatherAlertsData,
+            timestamp: new Date().toISOString(),
+            action_required: true,
+          });
+        }
+      }
+
+      // Sort alerts by timestamp (newest first)
+      newAlerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      
+      setAlerts(newAlerts);
+    } catch (err) {
+      console.error('Error fetching alerts:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch alerts');
+      setAlerts([]);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
-  const dismissAlert = (alertId: string) => {
-    setAlerts(prev => prev.filter(alert => alert.id !== alertId));
+  useEffect(() => {
+    fetchAlerts();
+    
+    // Set up polling to refresh alerts every 30 seconds
+    const interval = setInterval(fetchAlerts, 30000);
+    
+    return () => clearInterval(interval);
+  }, [fetchAlerts]);
+
+  const dismissAlert = async (alertId: string) => {
+    try {
+      // Check if it's a detection alert
+      if (alertId.startsWith('detection-')) {
+        const backendAlertId = alertId.replace('detection-', '');
+        await api.dismissAlert(backendAlertId);
+      }
+      
+      // Remove from local state
+      setAlerts(prev => prev.filter(alert => alert.id !== alertId));
+    } catch (error) {
+      console.error('Error dismissing alert:', error);
+      // Still remove from local state even if API call fails
+      setAlerts(prev => prev.filter(alert => alert.id !== alertId));
+    }
   };
 
-  return { alerts, loading, error, dismissAlert };
+  return { alerts, loading, error, dismissAlert, refetch: fetchAlerts };
 };
 
 export const useSensorData = () => {

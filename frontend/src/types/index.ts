@@ -110,12 +110,34 @@ export interface WeatherData {
 // Alert interface
 export interface Alert {
   id: string;
-  type: 'weather' | 'pest' | 'market' | 'sensor';
+  type: 'weather' | 'pest' | 'market' | 'sensor' | 'disease_detected' | 'severe_disease' | 'multiple_diseases';
   severity: 'low' | 'medium' | 'high' | 'critical';
   title: string;
   message: string;
   timestamp: string;
   action_required: boolean;
+}
+
+// Detection Alert from backend
+export interface DetectionAlert {
+  id: number;
+  user_id: number;
+  detection_history_id: number;
+  alert_type: string;
+  severity: string;
+  disease_names: string[];
+  confidence_scores: number[];
+  title_bn?: string;
+  title_en?: string;
+  message_bn?: string;
+  message_en?: string;
+  recommendations_bn?: string;
+  recommendations_en?: string;
+  is_read: boolean;
+  is_dismissed: boolean;
+  created_at: string;
+  read_at?: string;
+  dismissed_at?: string;
 }
 
 // Alias for compatibility

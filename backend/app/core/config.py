@@ -25,6 +25,7 @@ DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001", 
+    "http://localhost:5174",
     "https://your-frontend-domain.com"
 ]
 

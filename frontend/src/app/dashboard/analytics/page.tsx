@@ -19,7 +19,6 @@ import {
   ArrowLeft,
   TrendingUp,
   TrendingDown,
-  BarChart3,
   PieChart,
   Activity,
   DollarSign,
@@ -37,11 +36,6 @@ import {
   Send,
   Loader2,
   Target,
-  Calendar,
-  Users,
-  Globe,
-  Zap,
-  Eye,
   Wind,
   Gauge,
   Battery,
@@ -49,6 +43,82 @@ import {
   Leaf,
   Minus,
 } from "lucide-react"
+
+// Types for IoT sensor data
+interface IoTSensorData {
+  id: number;
+  timestamp: string;
+  temperature_c: number;
+  humidity_percent: number;
+  heat_index_c: number;
+  water_level_percent: number;
+  soil_moisture_percent: number;
+  device_status: string;
+  data_quality: string;
+  received_at: string;
+}
+
+// IoT Data Hook
+function useIoTSensorData() {
+  const [latestData, setLatestData] = useState<IoTSensorData | null>(null);
+  const [historyData, setHistoryData] = useState<IoTSensorData[]>([]);
+  
+  
+
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+  const fetchLatestData = async () => {
+    try {
+      const data = await api.getLatestSensorData();
+      setLatestData(data);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch latest sensor data:', err);
+      setError('সেন্সর ডেটা লোড করতে ব্যর্থ হয়েছে');
+    }
+  };
+
+ 
+
+  const fetchHistoryData = async () => {
+    try {
+      const response = await api.getSensorDataHistory({ limit: 24 });
+      setHistoryData(response.data || []);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch sensor history:', err);
+      setError('সেন্সর ইতিহাস লোড করতে ব্যর্থ হয়েছে');
+    }
+  };
+
+  const refreshData = async () => {
+    setIsLoading(true);
+    await Promise.all([fetchLatestData(), fetchHistoryData()]);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    const initData = async () => {
+      await Promise.all([fetchLatestData(), fetchHistoryData()]);
+      setIsLoading(false);
+    };
+    
+    initData();
+    
+    // Auto-refresh every 10 seconds for real-time updates
+    const interval = setInterval(fetchLatestData, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return {
+    latestData,
+    historyData,
+    isLoading,
+    error,
+    refreshData
+  };
+}
 
 // Real-time Weather Card Component
 function RealTimeWeatherCard() {
@@ -213,7 +283,9 @@ export default function AnalyticsPage() {
   const [isAiLoading, setIsAiLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
-
+  const { latestData, historyData, error: ioTError, refreshData: refreshIoTData } = useIoTSensorData();
+    const { user, loading: authLoading } = useAuth();
+    const [farmData, setFarmData] = useState([]);
   const loadRealTimeData = async () => {
     setIsLoading(true)
     try {
@@ -226,6 +298,28 @@ export default function AnalyticsPage() {
       setIsLoading(false)
     }
   }
+
+   useEffect(() => {
+        const fetchData = async () => {
+            // Only fetch if authentication is resolved and a user exists
+            if (!authLoading && user) {
+                try {
+                    const response = await api.getFarmData();
+                    // Sort data by most recent first (assuming 'id' increments)
+                    setFarmData((response || []).sort((a, b) => b.id - a.id));
+                } catch (err) {
+                    setError('আপনার ডেটা আনতে ব্যর্থ হয়েছে।');
+                    console.error("Failed to fetch farm data:", err);
+                } finally {
+                    setIsLoading(false);
+                }
+            } else if (!authLoading && !user) {
+                // If auth is resolved and there's no user, stop loading
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, [user, authLoading]); 
 
   const handleAiQuery = async () => {
     if (!aiQuery.trim()) return
@@ -253,7 +347,10 @@ export default function AnalyticsPage() {
   const refreshData = async () => {
     setRefreshing(true)
     realTimeAnalytics.clearCache()
-    await loadRealTimeData()
+    await Promise.all([
+      loadRealTimeData(),
+      refreshIoTData()
+    ])
     setRefreshing(false)
   }
 
@@ -324,30 +421,35 @@ export default function AnalyticsPage() {
     }
   ]
 
+  // Generate sensor cards with real IoT data or fallback to mock data
   const sensorCards = [
     {
       title: "মাটির আর্দ্রতা",
-      description: `${realTimeData.sensorData.soilMoisture}% (আদর্শ: ৬০-৮০%)`,
+      description: `${latestData?.soil_moisture_percent || realTimeData.sensorData.soilMoisture}% (আদর্শ: ৬০-৮০%)`,
       icon: <Droplets className="h-4 w-4 text-blue-600" />,
-      value: `${realTimeData.sensorData.soilMoisture}%`
+      value: `${latestData?.soil_moisture_percent || realTimeData.sensorData.soilMoisture}%`,
+      status: latestData ? (latestData.soil_moisture_percent >= 60 && latestData.soil_moisture_percent <= 80 ? 'good' : 'warning') : 'unknown'
     },
     {
       title: "তাপমাত্রা",
-      description: `পরিবেশের তাপমাত্রা`,
+      description: `পরিবেশের তাপমাত্রা (হিট ইনডেক্স: ${latestData?.heat_index_c?.toFixed(1) || 'N/A'}°C)`,
       icon: <Thermometer className="h-4 w-4 text-red-600" />,
-      value: `${realTimeData.sensorData.temperature}°C`
+      value: `${latestData?.temperature_c || realTimeData.sensorData.temperature}°C`,
+      status: latestData ? (latestData.temperature_c >= 20 && latestData.temperature_c <= 30 ? 'good' : 'warning') : 'unknown'
     },
     {
       title: "আর্দ্রতা",
       description: `বাতাসের আর্দ্রতা`,
       icon: <Wind className="h-4 w-4 text-cyan-600" />,
-      value: `${realTimeData.sensorData.humidity}%`
+      value: `${latestData?.humidity_percent || realTimeData.sensorData.humidity}%`,
+      status: latestData ? (latestData.humidity_percent >= 40 && latestData.humidity_percent <= 70 ? 'good' : 'warning') : 'unknown'
     },
     {
-      title: "আলোর তীব্রতা",
-      description: `ফসলের জন্য পর্যাপ্ত আলো`,
-      icon: <Sun className="h-4 w-4 text-yellow-600" />,
-      value: `${Math.round(realTimeData.sensorData.lightIntensity / 1000)}k Lux`
+      title: "পানির স্তর",
+      description: `জলাধারের পানির স্তর`,
+      icon: <Gauge className="h-4 w-4 text-blue-500" />,
+      value: `${latestData?.water_level_percent || realTimeData.sensorData.waterLevel || 0}%`,
+      status: latestData ? (latestData.water_level_percent > 70 ? 'good' : latestData.water_level_percent > 40 ? 'warning' : 'critical') : 'unknown'
     }
   ]
 
@@ -398,9 +500,95 @@ export default function AnalyticsPage() {
       <div className="container mx-auto px-4 py-6 space-y-8 relative z-10">
         {/* Overview Cards with Aceternity Effect */}
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-900">খামারের সংক্ষিপ্ত তথ্য</h2>
-          <HoverEffect items={overviewCards} />
-        </div>
+  <h2 className="text-xl font-bold text-slate-900">আমার কৃষি তথ্য</h2>
+  
+  {/* Check if there is data to display */}
+  {farmData.length > 0 ? (
+    <motion.div
+  className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 "
+  initial="hidden"
+  animate="visible"
+  variants={{
+    visible: { transition: { staggerChildren: 0.1 } },
+  }}
+>
+  {farmData.map((entry) => (
+    <motion.div
+      key={entry.id}
+      variants={{
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 },
+      }}
+      className="h-full" // Ensure motion.div takes full height for the card
+    >
+      <Card className="bg-white/90 backdrop-blur-sm border-gray-200 shadow-lg h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center text-gray-800">
+            <Leaf className="h-5 w-5 mr-2 text-green-600 flex-shrink-0" />
+            <span className="truncate">{entry.farmerName}</span>
+          </CardTitle>
+          <p className="text-xs text-gray-500 pt-1 flex items-center">
+            <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
+            {entry.location}
+          </p>
+        </CardHeader>
+        <CardContent>
+          <Separator className="mb-4" />
+
+          {/* Grid layout for stats to make them scannable */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-5">
+            
+            {/* Stat: Crop Type */}
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500 flex items-center">
+                <Sprout className="h-3 w-3 mr-1.5" />
+                ফসলের ধরন
+              </p>
+              <p className="font-bold text-sm text-gray-800">{entry.cropType}</p>
+            </div>
+
+            {/* Stat: Total Land */}
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500 flex items-center">
+                <MapPin className="h-3 w-3 mr-1.5" />
+                মোট জমি
+              </p>
+              <p className="font-bold text-sm text-gray-800">{entry.totalAmount}</p>
+            </div>
+
+            {/* Stat: Successful Crops */}
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500 flex items-center">
+                <CheckCircle className="h-3 w-3 mr-1.5" />
+                সফল ফসল
+              </p>
+              <p className="font-bold text-sm text-gray-800">{entry.successfulResult}টি</p>
+            </div>
+            
+            {/* Stat: Monthly Income (highlighted) */}
+            <div className="space-y-1 col-span-2 bg-green-50/70 p-3 rounded-lg border border-green-200">
+              <p className="text-xs text-green-800 flex items-center font-semibold">
+                <DollarSign className="h-3 w-3 mr-1.5" />
+                মাসিক আয়
+              </p>
+              <p className="font-bold text-lg text-green-700">
+                ৳{Number(entry.monthlyIncome || 0).toLocaleString()}
+              </p>
+            </div>
+
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  ))}
+</motion.div>
+  ) : (
+    // Show this message if no data has been entered yet
+    <div className="text-center p-8 bg-white/80 rounded-2xl border border-slate-200">
+        <p className="text-slate-600">এখনও কোনো কৃষি তথ্য যোগ করা হয়নি।</p>
+    </div>
+  )}
+</div>
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -519,9 +707,92 @@ export default function AnalyticsPage() {
 
           <TabsContent value="sensors" className="space-y-6">
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-slate-900">সেন্সর ডেটা (রিয়েল-টাইম)</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-slate-900">সেন্সর ডেটা (রিয়েল-টাইম)</h2>
+                <div className="flex items-center space-x-2">
+                  {ioTError && (
+                    <Badge variant="destructive" className="text-xs">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      সংযোগ সমস্যা
+                    </Badge>
+                  )}
+                  {latestData && (
+                    <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                      <Activity className="h-3 w-3 mr-1" />
+                      লাইভ
+                    </Badge>
+                  )}
+                  <Badge variant="outline" className="text-xs">
+                    শেষ আপডেট: {latestData ? new Date(latestData.received_at).toLocaleTimeString('bn-BD') : 'N/A'}
+                  </Badge>
+                </div>
+              </div>
               <HoverEffect items={sensorCards} />
             </div>
+
+            {/* Device Status and Connection Info */}
+            {latestData && (
+              <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-slate-900">
+                    <Activity className="h-5 w-5 mr-2 text-green-600" />
+                    ডিভাইস স্ট্যাটাস
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center justify-center mb-2">
+                        {latestData.device_status === 'online' ? (
+                          <CheckCircle className="h-6 w-6 text-green-500" />
+                        ) : (
+                          <AlertTriangle className="h-6 w-6 text-red-500" />
+                        )}
+                      </div>
+                      <p className="text-sm text-slate-600">ডিভাইস স্ট্যাটাস</p>
+                      <p className="text-lg font-bold text-slate-900 capitalize">{latestData.device_status}</p>
+                    </div>
+                    
+                    <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center justify-center mb-2">
+                        {latestData.data_quality === 'good' ? (
+                          <CheckCircle className="h-6 w-6 text-green-500" />
+                        ) : latestData.data_quality === 'fair' ? (
+                          <AlertTriangle className="h-6 w-6 text-yellow-500" />
+                        ) : (
+                          <AlertTriangle className="h-6 w-6 text-red-500" />
+                        )}
+                      </div>
+                      <p className="text-sm text-slate-600">ডেটা গুণমান</p>
+                      <p className="text-lg font-bold text-slate-900 capitalize">{latestData.data_quality}</p>
+                    </div>
+                    
+                    <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center justify-center mb-2">
+                        <Gauge className="h-6 w-6 text-blue-500" />
+                      </div>
+                      <p className="text-sm text-slate-600">সেন্সর ID</p>
+                      <p className="text-lg font-bold text-slate-900">#{latestData.id}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-start space-x-2">
+                      <Thermometer className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-blue-900">হিট ইনডেক্স</p>
+                        <p className="text-2xl font-bold text-blue-900">{latestData.heat_index_c?.toFixed(1)}°C</p>
+                        <p className="text-xs text-blue-700 mt-1">
+                          {latestData.heat_index_c && latestData.heat_index_c > 32 
+                            ? "⚠️ অত্যধিক গরম - সতর্কতা প্রয়োজন" 
+                            : "✅ নিরাপদ তাপমাত্রা পরিসীমা"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Detailed Sensor Information */}
             <div className="grid md:grid-cols-2 gap-6">
@@ -533,29 +804,53 @@ export default function AnalyticsPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Battery Level Simulation based on data quality */}
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-2">
                       <Battery className="h-4 w-4 text-green-600" />
-                      <span className="text-sm text-slate-700">ব্যাটারি</span>
+                      <span className="text-sm text-slate-700">ব্যাটারি (আনুমানিক)</span>
                     </div>
-                    <span className="font-bold text-slate-900">{realTimeData.sensorData.batteryLevel}%</span>
+                    <span className="font-bold text-slate-900">
+                      {latestData ? (
+                        latestData.data_quality === 'good' ? '85%' :
+                        latestData.data_quality === 'fair' ? '60%' : '30%'
+                      ) : `${realTimeData.sensorData.batteryLevel}%`}
+                    </span>
                   </div>
-                  <Progress value={realTimeData.sensorData.batteryLevel} className="h-2" />
+                  <Progress value={
+                    latestData ? (
+                      latestData.data_quality === 'good' ? 85 :
+                      latestData.data_quality === 'fair' ? 60 : 30
+                    ) : realTimeData.sensorData.batteryLevel
+                  } className="h-2" />
                   
+                  {/* Signal Strength based on device status */}
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-2">
                       <Signal className="h-4 w-4 text-blue-600" />
                       <span className="text-sm text-slate-700">সিগন্যাল</span>
                     </div>
-                    <span className="font-bold text-slate-900">{realTimeData.sensorData.signalStrength}%</span>
+                    <span className="font-bold text-slate-900">
+                      {latestData ? (latestData.device_status === 'online' ? '92%' : '0%') : `${realTimeData.sensorData.signalStrength}%`}
+                    </span>
                   </div>
-                  <Progress value={realTimeData.sensorData.signalStrength} className="h-2" />
+                  <Progress value={
+                    latestData ? (latestData.device_status === 'online' ? 92 : 0) : realTimeData.sensorData.signalStrength
+                  } className="h-2" />
                   
                   <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
                     <p className="text-xs text-slate-500">শেষ আপডেট</p>
                     <p className="text-sm text-slate-900">
-                      {new Date(realTimeData.sensorData.lastUpdated).toLocaleString('bn-BD')}
+                      {latestData 
+                        ? new Date(latestData.received_at).toLocaleString('bn-BD')
+                        : new Date(realTimeData.sensorData.lastUpdated).toLocaleString('bn-BD')
+                      }
                     </p>
+                    {latestData && (
+                      <p className="text-xs text-slate-500 mt-1">
+                        রিডিং: {new Date(latestData.timestamp).toLocaleString('bn-BD')}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -570,23 +865,154 @@ export default function AnalyticsPage() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <p className="text-sm text-slate-600">pH মান</p>
-                      <p className="text-2xl font-bold text-slate-900">{realTimeData.sensorData.ph}</p>
-                      <Badge variant={realTimeData.sensorData.ph >= 6.0 && realTimeData.sensorData.ph <= 7.5 ? "default" : "destructive"} className="mt-1">
-                        {realTimeData.sensorData.ph >= 6.0 && realTimeData.sensorData.ph <= 7.5 ? "আদর্শ" : "সমন্বয় প্রয়োজন"}
+                      <p className="text-sm text-slate-600">pH মান (আনুমানিক)</p>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {latestData ? (
+                          // Estimate pH based on soil moisture
+                          latestData.soil_moisture_percent > 70 ? '6.8' :
+                          latestData.soil_moisture_percent > 50 ? '6.5' :
+                          latestData.soil_moisture_percent > 30 ? '6.2' : '5.9'
+                        ) : realTimeData.sensorData.ph}
+                      </p>
+                      <Badge variant={
+                        latestData ? (
+                          latestData.soil_moisture_percent > 50 ? "default" : "destructive"
+                        ) : (realTimeData.sensorData.ph >= 6.0 && realTimeData.sensorData.ph <= 7.5 ? "default" : "destructive")
+                      } className="mt-1">
+                        {latestData ? (
+                          latestData.soil_moisture_percent > 50 ? "আদর্শ" : "সমন্বয় প্রয়োজন"
+                        ) : (realTimeData.sensorData.ph >= 6.0 && realTimeData.sensorData.ph <= 7.5 ? "আদর্শ" : "সমন্বয় প্রয়োজন")}
                       </Badge>
                     </div>
                     <div className="text-center p-3 bg-slate-50 rounded-lg border border-slate-200">
                       <p className="text-sm text-slate-600">পানির স্তর</p>
-                      <p className="text-2xl font-bold text-slate-900">{realTimeData.sensorData.waterLevel}%</p>
-                      <Badge variant={realTimeData.sensorData.waterLevel > 70 ? "default" : "destructive"} className="mt-1">
-                        {realTimeData.sensorData.waterLevel > 70 ? "পর্যাপ্ত" : "কম"}
+                      <p className="text-2xl font-bold text-slate-900">
+                        {latestData?.water_level_percent || realTimeData.sensorData.waterLevel}%
+                      </p>
+                      <Badge variant={
+                        (latestData?.water_level_percent || realTimeData.sensorData.waterLevel) > 70 ? "default" : "destructive"
+                      } className="mt-1">
+                        {(latestData?.water_level_percent || realTimeData.sensorData.waterLevel) > 70 ? "পর্যাপ্ত" : "কম"}
                       </Badge>
+                    </div>
+                  </div>
+                  
+                  {/* Soil Moisture Progress Bar */}
+                  <div className="mt-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <p className="text-sm font-medium text-slate-700">মাটির আর্দ্রতা স্তর</p>
+                      <span className="text-sm text-slate-600">
+                        {latestData?.soil_moisture_percent || realTimeData.sensorData.soilMoisture}%
+                      </span>
+                    </div>
+                    <Progress 
+                      value={latestData?.soil_moisture_percent || realTimeData.sensorData.soilMoisture} 
+                      className="h-3"
+                    />
+                    <div className="flex justify-between text-xs text-slate-500 mt-1">
+                      <span>শুষ্ক (0%)</span>
+                      <span>আদর্শ (60-80%)</span>
+                      <span>অতিরিক্ত (100%)</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Historical Data Chart */}
+            {historyData.length > 0 && (
+              <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-slate-900">
+                    <Activity className="h-5 w-5 mr-2 text-purple-600" />
+                    সেন্সর ট্রেন্ড (গত ২৪ ঘন্টা)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Recent readings summary */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-slate-700">সাম্প্রতিক রিডিং</h4>
+                      {historyData.slice(0, 5).map((reading, index) => (
+                        <motion.div 
+                          key={reading.id}
+                          className="flex justify-between items-center p-2 bg-slate-50 rounded border border-slate-200"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <div>
+                            <p className="text-xs text-slate-500">
+                              {new Date(reading.timestamp).toLocaleTimeString('bn-BD')}
+                            </p>
+                            <div className="flex space-x-4 text-sm">
+                              <span>🌡️ {reading.temperature_c}°C</span>
+                              <span>💧 {reading.humidity_percent}%</span>
+                            </div>
+                          </div>
+                          <div className="text-right text-sm">
+                            <div>🌱 {reading.soil_moisture_percent}%</div>
+                            <div>💧 {reading.water_level_percent}%</div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                    
+                    {/* Stats summary */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-slate-700">পরিসংখ্যান (গত ২৪ ঘন্টা)</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-3 bg-red-50 rounded border border-red-200">
+                          <p className="text-xs text-red-600">গড় তাপমাত্রা</p>
+                          <p className="text-lg font-bold text-red-700">
+                            {(historyData.reduce((sum, r) => sum + r.temperature_c, 0) / historyData.length).toFixed(1)}°C
+                          </p>
+                        </div>
+                        <div className="p-3 bg-blue-50 rounded border border-blue-200">
+                          <p className="text-xs text-blue-600">গড় আর্দ্রতা</p>
+                          <p className="text-lg font-bold text-blue-700">
+                            {(historyData.reduce((sum, r) => sum + r.humidity_percent, 0) / historyData.length).toFixed(1)}%
+                          </p>
+                        </div>
+                        <div className="p-3 bg-green-50 rounded border border-green-200">
+                          <p className="text-xs text-green-600">গড় মাটির আর্দ্রতা</p>
+                          <p className="text-lg font-bold text-green-700">
+                            {(historyData.reduce((sum, r) => sum + r.soil_moisture_percent, 0) / historyData.length).toFixed(1)}%
+                          </p>
+                        </div>
+                        <div className="p-3 bg-cyan-50 rounded border border-cyan-200">
+                          <p className="text-xs text-cyan-600">গড় পানির স্তর</p>
+                          <p className="text-lg font-bold text-cyan-700">
+                            {(historyData.reduce((sum, r) => sum + r.water_level_percent, 0) / historyData.length).toFixed(1)}%
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Error State for IoT */}
+            {ioTError && !latestData && (
+              <Card className="bg-red-50 border-red-200 shadow-xl">
+                <CardContent className="flex items-center justify-center py-8">
+                  <div className="text-center">
+                    <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-red-700 mb-2">সেন্সর সংযোগ সমস্যা</h3>
+                    <p className="text-red-600 mb-4">{ioTError}</p>
+                    <Button 
+                      onClick={refreshIoTData}
+                      variant="outline" 
+                      className="border-red-300 text-red-700 hover:bg-red-100"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      পুনরায় চেষ্টা করুন
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="market" className="space-y-6">

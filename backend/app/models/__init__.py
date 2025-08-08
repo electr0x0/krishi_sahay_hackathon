@@ -4,6 +4,7 @@ from .chat import ChatSession, ChatMessage, CommunityMessage, CommunityMessageTy
 from .farm import Farm, Crop, CropCalendar
 from .market import MarketPrice, MarketAlert
 from .weather import WeatherCache
+from .detection import DetectionHistory, DetectionAlert
 from .store import StoreProduct, StoreListing, StoreOrder, StoreOrderItem, StorePayment, StorePriceHistory
 from .community import (
     Community, 
