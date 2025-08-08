@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, BarChart2, Bell, MessageSquare, Settings, LifeBuoy, User, LogOut, Home, ClipboardPlus } from 'lucide-react';
+import { LayoutDashboard, BarChart2, Bell, MessageSquare, Settings, LifeBuoy, User, LogOut, Home, ClipboardPlus,Camera, Mic,Users, } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import { cn } from '@/lib/utils';
