@@ -6,6 +6,7 @@ import api from '@/lib/api.js';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, MapPin, Edit, Save, X } from 'lucide-react';
 
+
 // Dynamically import the Map component to avoid SSR issues
 import dynamic from 'next/dynamic';
 const MapEditor = dynamic(() => import('@/components/dashboard/MapEditor'), { ssr: false });

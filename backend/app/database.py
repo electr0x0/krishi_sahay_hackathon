@@ -34,6 +34,7 @@ def create_tables():
     from app.models.farm import Farm
     from app.models.market import MarketPrice
     from app.models.detection import DetectionHistory
+    from app.models.form_data import FarmData
     Base.metadata.create_all(bind=engine)
 
 def drop_tables():
