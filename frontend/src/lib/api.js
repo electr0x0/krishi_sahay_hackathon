@@ -601,7 +601,6 @@ class ApiService {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-<<<<<<< HEAD
   }
 
   // HTTP Method shortcuts
@@ -652,9 +651,6 @@ class ApiService {
   delete = async (endpoint, options = {}) => {
     return this.request(endpoint, { ...options, method: 'DELETE' });
   }
-=======
-  };
->>>>>>> 4714087fd90506b4fb0ff07aa043ecf3b63ab386
 }
 
 // Create singleton instance
