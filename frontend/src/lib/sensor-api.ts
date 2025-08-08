@@ -1,6 +1,9 @@
 // API base URL
 const API_BASE_URL = 'http://localhost:8000';
 
+// Import the main API service for authenticated requests
+import api from './api';
+
 // API endpoints
 export const API_ENDPOINTS = {
   // IoT Sensor endpoints
@@ -46,54 +49,41 @@ export interface ESP32SensorData {
 // API helper functions
 export class SensorAPI {
   static async getLatestData(): Promise<SensorData> {
-    const response = await fetch(API_ENDPOINTS.LATEST_SENSOR_DATA);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch latest sensor data: ${response.statusText}`);
-    }
-    return response.json();
+    return await api.getLatestSensorData();
   }
 
   static async getHistoryData(limit: number = 50): Promise<SensorHistoryResponse> {
-    const response = await fetch(`${API_ENDPOINTS.SENSOR_HISTORY}?limit=${limit}`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch sensor history: ${response.statusText}`);
-    }
-    return response.json();
+    return await api.getSensorDataHistory({ limit: limit.toString() });
   }
 
-  static async submitSensorData(data: ESP32SensorData): Promise<any> {
-    const response = await fetch(API_ENDPOINTS.SUBMIT_SENSOR_DATA, {
+  static async submitSensorData(data: ESP32SensorData): Promise<{success: boolean; message: string}> {
+    return await api.request('/api/iot/sensor-data', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(data),
     });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to submit sensor data: ${response.statusText}`);
-    }
-    return response.json();
   }
 
   // Utility function to check if API is available
   static async healthCheck(): Promise<boolean> {
     try {
-      const response = await fetch(`${API_BASE_URL}/health`);
-      return response.ok;
+      await api.request('/health');
+      return true;
     } catch {
       return false;
     }
   }
 }
 
-// SWR fetcher function
-export const fetcher = (url: string) => fetch(url).then(res => {
-  if (!res.ok) {
-    throw new Error(`API request failed: ${res.statusText}`);
+// SWR fetcher function that uses the authenticated API service
+export const fetcher = async (url: string) => {
+  try {
+    // Extract the endpoint from the full URL
+    const endpoint = url.replace(API_BASE_URL, '');
+    return await api.request(endpoint);
+  } catch (error) {
+    throw new Error(`API request failed: ${error}`);
   }
-  return res.json();
-});
+};
 
 // Utility functions for data formatting
 export class DataFormatter {

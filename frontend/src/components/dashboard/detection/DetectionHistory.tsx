@@ -130,7 +130,7 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
                   </span>
                   {item.processed_image_url && (
                     <Image
-                      src={`http://localhost:8000${item.processed_image_url}`}
+                      src={`http://127.0.0.1:8000${item.processed_image_url}`}
                       alt="Processed result"
                       width={64}
                       height={64}
