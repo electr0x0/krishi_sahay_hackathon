@@ -62,8 +62,11 @@ interface IoTSensorData {
 function useIoTSensorData() {
   const [latestData, setLatestData] = useState<IoTSensorData | null>(null);
   const [historyData, setHistoryData] = useState<IoTSensorData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  
+  
+
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
   const fetchLatestData = async () => {
     try {
@@ -75,6 +78,8 @@ function useIoTSensorData() {
       setError('সেন্সর ডেটা লোড করতে ব্যর্থ হয়েছে');
     }
   };
+
+ 
 
   const fetchHistoryData = async () => {
     try {
@@ -279,7 +284,8 @@ export default function AnalyticsPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const { latestData, historyData, error: ioTError, refreshData: refreshIoTData } = useIoTSensorData();
-
+    const { user, loading: authLoading } = useAuth();
+    const [farmData, setFarmData] = useState([]);
   const loadRealTimeData = async () => {
     setIsLoading(true)
     try {
@@ -292,6 +298,28 @@ export default function AnalyticsPage() {
       setIsLoading(false)
     }
   }
+
+   useEffect(() => {
+        const fetchData = async () => {
+            // Only fetch if authentication is resolved and a user exists
+            if (!authLoading && user) {
+                try {
+                    const response = await api.getFarmData();
+                    // Sort data by most recent first (assuming 'id' increments)
+                    setFarmData((response || []).sort((a, b) => b.id - a.id));
+                } catch (err) {
+                    setError('আপনার ডেটা আনতে ব্যর্থ হয়েছে।');
+                    console.error("Failed to fetch farm data:", err);
+                } finally {
+                    setIsLoading(false);
+                }
+            } else if (!authLoading && !user) {
+                // If auth is resolved and there's no user, stop loading
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, [user, authLoading]); 
 
   const handleAiQuery = async () => {
     if (!aiQuery.trim()) return
@@ -472,9 +500,95 @@ export default function AnalyticsPage() {
       <div className="container mx-auto px-4 py-6 space-y-8 relative z-10">
         {/* Overview Cards with Aceternity Effect */}
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-900">খামারের সংক্ষিপ্ত তথ্য</h2>
-          <HoverEffect items={overviewCards} />
-        </div>
+  <h2 className="text-xl font-bold text-slate-900">আমার কৃষি তথ্য</h2>
+  
+  {/* Check if there is data to display */}
+  {farmData.length > 0 ? (
+    <motion.div
+  className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 "
+  initial="hidden"
+  animate="visible"
+  variants={{
+    visible: { transition: { staggerChildren: 0.1 } },
+  }}
+>
+  {farmData.map((entry) => (
+    <motion.div
+      key={entry.id}
+      variants={{
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 },
+      }}
+      className="h-full" // Ensure motion.div takes full height for the card
+    >
+      <Card className="bg-white/90 backdrop-blur-sm border-gray-200 shadow-lg h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center text-gray-800">
+            <Leaf className="h-5 w-5 mr-2 text-green-600 flex-shrink-0" />
+            <span className="truncate">{entry.farmerName}</span>
+          </CardTitle>
+          <p className="text-xs text-gray-500 pt-1 flex items-center">
+            <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
+            {entry.location}
+          </p>
+        </CardHeader>
+        <CardContent>
+          <Separator className="mb-4" />
+
+          {/* Grid layout for stats to make them scannable */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-5">
+            
+            {/* Stat: Crop Type */}
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500 flex items-center">
+                <Sprout className="h-3 w-3 mr-1.5" />
+                ফসলের ধরন
+              </p>
+              <p className="font-bold text-sm text-gray-800">{entry.cropType}</p>
+            </div>
+
+            {/* Stat: Total Land */}
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500 flex items-center">
+                <MapPin className="h-3 w-3 mr-1.5" />
+                মোট জমি
+              </p>
+              <p className="font-bold text-sm text-gray-800">{entry.totalAmount}</p>
+            </div>
+
+            {/* Stat: Successful Crops */}
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500 flex items-center">
+                <CheckCircle className="h-3 w-3 mr-1.5" />
+                সফল ফসল
+              </p>
+              <p className="font-bold text-sm text-gray-800">{entry.successfulResult}টি</p>
+            </div>
+            
+            {/* Stat: Monthly Income (highlighted) */}
+            <div className="space-y-1 col-span-2 bg-green-50/70 p-3 rounded-lg border border-green-200">
+              <p className="text-xs text-green-800 flex items-center font-semibold">
+                <DollarSign className="h-3 w-3 mr-1.5" />
+                মাসিক আয়
+              </p>
+              <p className="font-bold text-lg text-green-700">
+                ৳{Number(entry.monthlyIncome || 0).toLocaleString()}
+              </p>
+            </div>
+
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  ))}
+</motion.div>
+  ) : (
+    // Show this message if no data has been entered yet
+    <div className="text-center p-8 bg-white/80 rounded-2xl border border-slate-200">
+        <p className="text-slate-600">এখনও কোনো কৃষি তথ্য যোগ করা হয়নি।</p>
+    </div>
+  )}
+</div>
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
