@@ -437,7 +437,7 @@ def get_comprehensive_chaldal_data() -> List[Dict[str, Any]]:
         {"bn": "মরিচ", "en": "chili", "category": "spice"},
         {"bn": "আদা", "en": "ginger", "category": "spice"},
         {"bn": "কলা", "en": "banana", "category": "fruit"},
-        {"bn": "আম", "en": "mango", "category": "fruit"},
+        {"bn": "জাফরান", "en": "mango", "category": "fruit"},
         {"bn": "লেবু", "en": "lemon", "category": "fruit"},
         {"bn": "পেঁপে", "en": "papaya", "category": "fruit"},
         {"bn": "ডাল", "en": "lentil", "category": "grain"},
