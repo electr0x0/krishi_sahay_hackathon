@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import useSWR from 'swr';
 import { 
   LineChart, 
@@ -24,14 +24,65 @@ import {
   AlertCircle,
   CheckCircle
 } from 'lucide-react';
-import { 
-  SensorAPI, 
-  API_ENDPOINTS, 
-  fetcher, 
-  DataFormatter,
-  type SensorData,
-  type SensorHistoryResponse 
-} from '@/lib/sensor-api';
+
+// Types for sensor data
+interface SensorData {
+  id: number;
+  timestamp: string;
+  temperature_c: number;
+  humidity_percent: number;
+  heat_index_c: number;
+  water_level_percent: number;
+  soil_moisture_percent: number;
+  device_status: string;
+  data_quality: string;
+  received_at: string;
+}
+
+interface SensorHistoryResponse {
+  data: SensorData[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// API helper functions
+const apiRequest = async (endpoint: string) => {
+  const response = await fetch(`http://localhost:8000${endpoint}`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.statusText}`);
+  }
+  
+  return response.json();
+};
+
+// SWR fetcher function
+const fetcher = async (url: string) => {
+  if (url === 'latest-sensor-data') {
+    return await apiRequest('/api/iot/get-latest-data');
+  } else if (url === 'sensor-history') {
+    return await apiRequest('/api/iot/get-data-history?limit=50');
+  }
+  throw new Error('Unknown endpoint');
+};
+
+// Utility functions for data formatting
+const DataFormatter = {
+  formatTimestamp: (timestamp: string): string => {
+    return new Date(timestamp).toLocaleString();
+  },
+  formatTimeForChart: (timestamp: string): string => {
+    return new Date(timestamp).toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  }
+};
 
 // Gauge component for displaying sensor values
 const SensorGauge = ({ 
@@ -47,7 +98,7 @@ const SensorGauge = ({
   unit: string;
   max: number;
   color: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
 }) => {
   const percentage = Math.min((value / max) * 100, 100);
   
@@ -130,7 +181,7 @@ export default function IoTDashboard() {
 
   // Fetch latest sensor data with SWR (refreshes every 5 seconds)
   const { data: latestData, error: latestError, mutate: mutateLatest } = useSWR<SensorData>(
-    API_ENDPOINTS.LATEST_SENSOR_DATA,
+    'latest-sensor-data',
     fetcher,
     {
       refreshInterval: 5000, // Refresh every 5 seconds
@@ -140,7 +191,7 @@ export default function IoTDashboard() {
 
   // Fetch historical data
   const { data: historyData, error: historyError, mutate: mutateHistory } = useSWR<SensorHistoryResponse>(
-    `${API_ENDPOINTS.SENSOR_HISTORY}?limit=50`,
+    'sensor-history',
     fetcher,
     {
       refreshInterval: 10000, // Refresh every 10 seconds
@@ -303,8 +354,8 @@ export default function IoTDashboard() {
                       <Tooltip 
                         labelFormatter={(label) => `Time: ${label}`}
                         formatter={(value, name) => [
-                          `${value}${name.includes('temperature') ? '°C' : '%'}`,
-                          name.charAt(0).toUpperCase() + name.slice(1)
+                          `${value}${String(name).includes('temperature') ? '°C' : '%'}`,
+                          String(name).charAt(0).toUpperCase() + String(name).slice(1)
                         ]}
                       />
                       <Line 
@@ -343,7 +394,7 @@ export default function IoTDashboard() {
                         labelFormatter={(label) => `Time: ${label}`}
                         formatter={(value, name) => [
                           `${value}%`,
-                          name.replace('_', ' ').charAt(0).toUpperCase() + name.replace('_', ' ').slice(1)
+                          String(name).replace('_', ' ').charAt(0).toUpperCase() + String(name).replace('_', ' ').slice(1)
                         ]}
                       />
                       <Area 
