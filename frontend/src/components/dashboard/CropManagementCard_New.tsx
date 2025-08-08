@@ -54,9 +54,7 @@ export default function CropManagementCard() {
   // Helper functions
   const getAgendasForDate = (date: Date) => {
     const dateString = date.toDateString();
-    // Ensure agendas is always an array
-    const agendasArray = Array.isArray(agendas) ? agendas : [];
-    return agendasArray.filter(agenda => {
+    return agendas.filter(agenda => {
       const agendaDate = agenda.scheduled_date 
         ? new Date(agenda.scheduled_date).toDateString()
         : new Date(agenda.created_at).toDateString();
@@ -106,9 +104,7 @@ export default function CropManagementCard() {
       
       if (response.ok) {
         const data = await response.json();
-        // Ensure we always set an array
-        const agendaArray = Array.isArray(data) ? data : (data?.agendas || []);
-        setAgendas(agendaArray);
+        setAgendas(data || []);
       } else {
         setAgendaError('Failed to fetch agendas');
       }
@@ -147,10 +143,7 @@ export default function CropManagementCard() {
 
       if (response.ok) {
         const newAgenda = await response.json();
-        setAgendas(prev => {
-          const prevArray = Array.isArray(prev) ? prev : [];
-          return [newAgenda, ...prevArray];
-        });
+        setAgendas(prev => [newAgenda, ...prev]);
         setNewAgendaTitle('');
         setNewAgendaDescription('');
         setShowAddAgenda(false);
@@ -183,10 +176,7 @@ export default function CropManagementCard() {
       if (response.ok) {
         const suggestions = await response.json();
         const suggestionArray = Array.isArray(suggestions) ? suggestions : suggestions.suggestions || [];
-        setAgendas(prev => {
-          const prevArray = Array.isArray(prev) ? prev : [];
-          return [...suggestionArray, ...prevArray];
-        });
+        setAgendas(prev => [...suggestionArray, ...prev]);
       } else {
         setAgendaError('Failed to generate AI suggestions');
       }
@@ -215,14 +205,11 @@ export default function CropManagementCard() {
       });
 
       if (response.ok) {
-        setAgendas(prev => {
-          const prevArray = Array.isArray(prev) ? prev : [];
-          return prevArray.map(agenda => 
-            agenda.id === agendaId 
-              ? { ...agenda, status: 'completed' }
-              : agenda
-          );
-        });
+        setAgendas(prev => prev.map(agenda => 
+          agenda.id === agendaId 
+            ? { ...agenda, status: 'completed' }
+            : agenda
+        ));
       } else {
         setAgendaError('Failed to complete agenda');
       }

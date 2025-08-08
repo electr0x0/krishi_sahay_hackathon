@@ -46,6 +46,7 @@ class User(Base):
     chat_sessions = relationship("ChatSession", back_populates="user")
     community_memberships = relationship("CommunityMember", back_populates="user")
     detection_history = relationship("DetectionHistory", back_populates="user")
+    agendas = relationship("Agenda", back_populates="user")
 
 
 class UserPreferences(Base):

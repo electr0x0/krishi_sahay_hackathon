@@ -166,11 +166,22 @@ export default function EnhancedBengaliInfoForm() {
                         className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-green-200 overflow-hidden"
                     >
                         <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-white">
-                            <div className="flex items-center">
-                                <BarChart3 className="w-8 h-8 mr-3" />
-                                <div>
-                                    <h2 className="text-2xl font-bold">কৃষি তথ্য ফর্ম</h2>
-                                    <p className="text-green-100 text-sm">পেশাদার কৃষি ব্যবস্থাপনা</p>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <BarChart3 className="w-8 h-8 mr-3" />
+                                    <div>
+                                        <h2 className="text-2xl font-bold">কৃষি তথ্য ফর্ম</h2>
+                                        <p className="text-green-100 text-sm">সাধারণ কৃষি তথ্য সংগ্রহ</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <a 
+                                        href="/dashboard/report/comprehensive"
+                                        className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center"
+                                    >
+                                        <Database className="w-4 h-4 mr-2" />
+                                        বিস্তারিত ফর্ম
+                                    </a>
                                 </div>
                             </div>
                         </div>
