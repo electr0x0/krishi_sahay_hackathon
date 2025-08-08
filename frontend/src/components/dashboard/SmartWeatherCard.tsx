@@ -24,13 +24,30 @@ import {
 import api from '@/lib/api.js';
 import { useAuth } from '@/contexts/AuthContext.jsx';
 
-const generateFarmingAdvice = (current: any, forecast: any) => {
+const generateFarmingAdvice = async (location: string) => {
+    try {
+      const response = await api.getWeatherRecommendations(location);
+      if (response.success && response.ai_recommendations) {
+        // The backend now returns parsed recommendations directly
+        return response.ai_recommendations;
+      }
+      // Fallback to basic weather data if available
+      return generateFallbackAdvice(response.current_weather, response.forecast);
+    } catch (error) {
+      console.error('Error getting AI recommendations:', error);
+      return generateFallbackAdvice(null, null);
+    }
+  };
+
+const generateFallbackAdvice = (current: any, forecast: any) => {
     const advice: { [key: string]: any } = {
       irrigation: { recommended: true, reason: 'আবহাওয়া শুষ্ক।', reasonEn: 'Weather is dry.'},
       spraying: { suitable: true, reason: 'বাতাস শান্ত।', reasonEn: 'Wind is calm.' },
       harvesting: { suitable: true, reason: 'আজ ফসল কাটার জন্য ভাল দিন।', reasonEn: 'Good day for harvesting.' },
       planting: { suitable: true, reason: 'মাটি প্রস্তুত।', reasonEn: 'Soil is ready.' },
     };
+
+    if (!current || !forecast) return advice;
 
     if (current.main.temp > 32) {
       advice.irrigation = { recommended: true, reason: 'খুব গরম, সেচ প্রয়োজন।', reasonEn: 'Very hot, irrigation needed.' };
@@ -53,6 +70,7 @@ export default function SmartWeatherCard() {
   const [currentWeather, setCurrentWeather] = useState<any>(null);
   const [forecast, setForecast] = useState<any>(null);
   const [farmingAdvice, setFarmingAdvice] = useState<any>(null);
+  const [weatherTranslations, setWeatherTranslations] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +82,11 @@ export default function SmartWeatherCard() {
 
       try {
         setIsLoading(true);
+        // Get AI-powered recommendations with weather data
+        const aiResponse = await generateFarmingAdvice(location);
+        setFarmingAdvice(aiResponse);
+        
+        // Also get the basic weather data for display
         const [current, forecastData] = await Promise.all([
           api.getWeatherData(location),
           api.getWeatherForecast(location, 5)
@@ -71,7 +94,14 @@ export default function SmartWeatherCard() {
         
         setCurrentWeather(current);
         setForecast(forecastData);
-        setFarmingAdvice(generateFarmingAdvice(current, forecastData));
+        
+        // Get weather translations
+        try {
+          const translations = await api.getWeatherTranslations();
+          setWeatherTranslations(translations.translations);
+        } catch (e) {
+          console.warn('Could not load weather translations');
+        }
         setError(null);
       } catch (err) {
         setError("আবহাওয়ার তথ্য আনতে ব্যর্থ হয়েছে।");
@@ -239,7 +269,10 @@ export default function SmartWeatherCard() {
                   </div>
                 </div>
                 <p className="text-lg text-gray-700 font-medium capitalize">
-                  {conditionText}
+                  {language === 'bn' && weatherTranslations && weatherTranslations[conditionText.toLowerCase()]
+                    ? weatherTranslations[conditionText.toLowerCase()]
+                    : conditionText
+                  }
                 </p>
               </div>
 
@@ -322,7 +355,12 @@ export default function SmartWeatherCard() {
                           {language === 'bn' ? day.day : day.dayEn}
                         </h4>
                         <p className="text-sm text-gray-600 capitalize">
-                          {language === 'bn' ? day.conditionBn : day.condition}
+                          {language === 'bn' 
+                            ? (weatherTranslations && weatherTranslations[day.conditionBn.toLowerCase()]
+                                ? weatherTranslations[day.conditionBn.toLowerCase()]
+                                : day.conditionBn)
+                            : day.condition
+                          }
                         </p>
                       </div>
                     </div>
@@ -347,7 +385,20 @@ export default function SmartWeatherCard() {
                    irrigation: { bn: 'সেচ দেওয়া', en: 'Irrigation' },
                    spraying: { bn: 'স্প্রে করা', en: 'Spraying' },
                    harvesting: { bn: 'ফসল কাটা', en: 'Harvesting' },
-                   planting: { bn: 'বীজ বপন', en: 'Planting' }
+                   planting: { bn: 'বীজ বপন', en: 'Planting' },
+                   field_work: { bn: 'মাঠের কাজ', en: 'Field Work' },
+                   'field work': { bn: 'মাঠের কাজ', en: 'Field Work' },
+                   fertilizer_application: { bn: 'সার প্রয়োগ', en: 'Fertilizer Application' },
+                   'fertilizer application': { bn: 'সার প্রয়োগ', en: 'Fertilizer Application' },
+                   pest_control: { bn: 'পোকা নিয়ন্ত্রণ', en: 'Pest Control' },
+                   'pest control': { bn: 'পোকা নিয়ন্ত্রণ', en: 'Pest Control' },
+                   weeding: { bn: 'আগাছা দমন', en: 'Weeding' }
+                 };
+
+                 // Get the display name or use the activity key as fallback
+                 const displayName = activityNames[activity] || { 
+                   bn: activity.replace(/_/g, ' '), 
+                   en: activity.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) 
                  };
 
                  return (
@@ -381,8 +432,8 @@ export default function SmartWeatherCard() {
                             : 'text-red-800'
                         }`}>
                           {language === 'bn' 
-                            ? activityNames[activity].bn
-                            : activityNames[activity].en
+                            ? displayName.bn
+                            : displayName.en
                           }
                           <Badge className={`ml-2 text-xs ${
                             advice.recommended || advice.suitable

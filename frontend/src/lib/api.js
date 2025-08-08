@@ -258,6 +258,25 @@ class ApiService {
     return this.request(`/api/weather/alerts${params}`);
   };
 
+  // AI-powered weather recommendations
+  getWeatherRecommendations = async (location, lat = null, lon = null) => {
+    const body = {};
+    if (location) body.location = location;
+    if (lat && lon) {
+      body.lat = lat;
+      body.lon = lon;
+    }
+    
+    return this.request("/api/weather/weather-recommendations", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  };
+
+  getWeatherTranslations = async () => {
+    return this.request("/api/weather/weather-translations");
+  };
+
   // Market APIs
   getMarketPrices = async () => {
     return this.request("/api/market/prices");
@@ -617,6 +636,80 @@ class ApiService {
       });
     } catch (error) {
       console.error("Delete Detection Error:", error);
+      throw error;
+    }
+  };
+
+  // Detection Alert API methods
+  getDetectionAlerts = async (skip = 0, limit = 20, unreadOnly = false, includeDismissed = false) => {
+    try {
+      const params = new URLSearchParams({
+        skip: skip.toString(),
+        limit: limit.toString(),
+        unread_only: unreadOnly.toString(),
+        include_dismissed: includeDismissed.toString()
+      });
+      
+      return await this.request(`/api/detection/alerts?${params}`, {
+        method: "GET",
+      });
+    } catch (error) {
+      console.error("Get Detection Alerts Error:", error);
+      throw error;
+    }
+  };
+
+  markAlertAsRead = async (alertId) => {
+    try {
+      return await this.request(`/api/detection/alerts/${alertId}/read`, {
+        method: "PUT",
+      });
+    } catch (error) {
+      console.error("Mark Alert as Read Error:", error);
+      throw error;
+    }
+  };
+
+  dismissAlert = async (alertId) => {
+    try {
+      return await this.request(`/api/detection/alerts/${alertId}/dismiss`, {
+        method: "PUT",
+      });
+    } catch (error) {
+      console.error("Dismiss Alert Error:", error);
+      throw error;
+    }
+  };
+
+  deleteAlert = async (alertId) => {
+    try {
+      return await this.request(`/api/detection/alerts/${alertId}`, {
+        method: "DELETE",
+      });
+    } catch (error) {
+      console.error("Delete Alert Error:", error);
+      throw error;
+    }
+  };
+
+  markAllAlertsAsRead = async () => {
+    try {
+      return await this.request('/api/detection/alerts/mark-all-read', {
+        method: "PUT",
+      });
+    } catch (error) {
+      console.error("Mark All Alerts as Read Error:", error);
+      throw error;
+    }
+  };
+
+  getAlertStats = async () => {
+    try {
+      return await this.request('/api/detection/alerts/stats', {
+        method: "GET",
+      });
+    } catch (error) {
+      console.error("Get Alert Stats Error:", error);
       throw error;
     }
   };

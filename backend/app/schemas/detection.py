@@ -43,3 +43,48 @@ class DetectionHistoryResponse(BaseModel):
     success: bool
     history: List[DetectionHistoryItem]
     total_count: int
+
+
+class DetectionAlertCreate(BaseModel):
+    detection_history_id: int
+    alert_type: str
+    severity: str = "medium"
+    disease_names: List[str]
+    confidence_scores: List[float]
+    title_bn: Optional[str] = None
+    title_en: Optional[str] = None
+    message_bn: Optional[str] = None
+    message_en: Optional[str] = None
+    recommendations_bn: Optional[str] = None
+    recommendations_en: Optional[str] = None
+
+
+class DetectionAlert(BaseModel):
+    id: int
+    user_id: int
+    detection_history_id: int
+    alert_type: str
+    severity: str
+    disease_names: List[str]
+    confidence_scores: List[float]
+    title_bn: Optional[str] = None
+    title_en: Optional[str] = None
+    message_bn: Optional[str] = None
+    message_en: Optional[str] = None
+    recommendations_bn: Optional[str] = None
+    recommendations_en: Optional[str] = None
+    is_read: bool
+    is_dismissed: bool
+    created_at: datetime
+    read_at: Optional[datetime] = None
+    dismissed_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class DetectionAlertResponse(BaseModel):
+    success: bool
+    alerts: List[DetectionAlert]
+    total_count: int
+    unread_count: int

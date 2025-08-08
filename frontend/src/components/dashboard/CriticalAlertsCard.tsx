@@ -7,11 +7,15 @@ import { AlertTriangle, Cloud, Bug, TrendingUp, Clock, ChevronRight, X, Loader2,
 import { useCriticalAlerts } from "@/hooks/useDashboardData";
 
 export default function CriticalAlertsCard() {
-  const { alerts, loading, error, dismissAlert } = useCriticalAlerts();
+  const { alerts, loading, error, dismissAlert, refetch } = useCriticalAlerts();
 
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'pest': 
+        return <Bug className="w-3 h-3 text-white" />;
+      case 'disease_detected':
+      case 'severe_disease':
+      case 'multiple_diseases':
         return <Bug className="w-3 h-3 text-white" />;
       case 'weather': 
         return <Cloud className="w-3 h-3 text-white" />;
@@ -24,7 +28,19 @@ export default function CriticalAlertsCard() {
     }
   };
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityColor = (severity: string, alertType?: string) => {
+    // Special colors for detection alerts
+    if (alertType?.includes('disease') || alertType === 'pest') {
+      switch (severity) {
+        case 'critical': return 'bg-red-600';
+        case 'high': return 'bg-red-500';
+        case 'medium': return 'bg-orange-500';
+        case 'low': return 'bg-yellow-500';
+        default: return 'bg-gray-400';
+      }
+    }
+    
+    // Default colors for other alerts
     switch (severity) {
       case 'critical': return 'bg-red-500';
       case 'high': return 'bg-red-400';
@@ -94,8 +110,17 @@ export default function CriticalAlertsCard() {
               <Loader2 className="w-8 h-8 animate-spin text-green-600" />
             </div>
           ) : error ? (
-            <div className="text-center py-8 text-red-600">
-              <p>সতর্কতা লোড করতে সমস্যা হয়েছে</p>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <AlertTriangle className="w-8 h-8 text-red-600" />
+              </div>
+              <p className="text-red-600 text-sm mb-2">সতর্কতা লোড করতে সমস্যা হয়েছে</p>
+              <button 
+                onClick={() => refetch()}
+                className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded-md transition-colors"
+              >
+                আবার চেষ্টা করুন
+              </button>
             </div>
           ) : alerts.length === 0 ? (
             <motion.div
@@ -122,7 +147,7 @@ export default function CriticalAlertsCard() {
                 >
                   <div className="p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 hover:border-red-200 hover:shadow-md transition-all duration-200">
                     <div className="flex items-start space-x-3">
-                      <div className={`p-2 rounded-lg ${getSeverityColor(alert.severity)} flex-shrink-0`}>
+                      <div className={`p-2 rounded-lg ${getSeverityColor(alert.severity, alert.type)} flex-shrink-0`}>
                         {getAlertIcon(alert.type)}
                       </div>
                       <div className="flex-1 min-w-0">

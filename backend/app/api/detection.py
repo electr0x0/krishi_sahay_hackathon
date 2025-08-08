@@ -12,9 +12,12 @@ from datetime import datetime
 from typing import List, Optional
 
 from app.database import get_db
-from app.models.detection import DetectionHistory
-from app.models.user import User
-from app.schemas.detection import DetectionRequest, DetectionResponse, DetectionHistoryResponse, DetectionHistoryItem
+from app.models.detection import DetectionHistory, DetectionAlert
+from app.models.user import User, UserPreferences
+from app.schemas.detection import (
+    DetectionRequest, DetectionResponse, DetectionHistoryResponse, DetectionHistoryItem,
+    DetectionAlertCreate, DetectionAlert as DetectionAlertSchema, DetectionAlertResponse
+)
 from app.services.detection_service import PlantDiseaseDetector
 from app.services.video_detection_service import VideoPlantDiseaseDetector
 from app.auth.dependencies import get_current_active_user
@@ -23,6 +26,100 @@ router = APIRouter()
 
 # Model path
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "visionmodels", "plantvillage.pt")
+
+
+def create_detection_alert(
+    db: Session,
+    user_id: int,
+    detection_history_id: int,
+    detections: List[dict]
+) -> Optional[DetectionAlert]:
+    """
+    Create an alert when diseases are detected
+    """
+    try:
+        # Only create alert if diseases were detected
+        if not detections:
+            return None
+        
+        # Extract disease information with deduplication
+        disease_dict = {}  # disease_name -> highest_confidence
+        
+        for detection in detections:
+            disease_name = detection.get('class_name', '')
+            confidence = detection.get('confidence', 0.0)
+            
+            # Only include actual diseases (not healthy plants)
+            if 'healthy' not in disease_name.lower() and 'normal' not in disease_name.lower():
+                # Keep only the highest confidence for each disease
+                if disease_name not in disease_dict or confidence > disease_dict[disease_name]:
+                    disease_dict[disease_name] = confidence
+        
+        # Convert dict to lists
+        disease_names = list(disease_dict.keys())
+        confidence_scores = list(disease_dict.values())
+        highest_confidence = max(confidence_scores) if confidence_scores else 0.0
+        
+        # If no diseases found (all healthy), don't create alert
+        if not disease_names:
+            return None
+        
+        # Determine alert type and severity
+        disease_count = len(disease_names)
+        if disease_count > 1:
+            alert_type = "multiple_diseases"
+            severity = "high"
+        elif highest_confidence > 0.8:
+            alert_type = "severe_disease"
+            severity = "high"
+        else:
+            alert_type = "disease_detected"
+            severity = "medium"
+        
+        # Create Bengali and English messages
+        disease_list_bn = ", ".join(disease_names)
+        disease_list_en = ", ".join(disease_names)
+        
+        if disease_count == 1:
+            title_bn = f"রোগ সনাক্ত: {disease_names[0]}"
+            title_en = f"Disease Detected: {disease_names[0]}"
+            message_bn = f"আপনার ফসলে {disease_names[0]} রোগ সনাক্ত করা হয়েছে। আত্মবিশ্বাস: {highest_confidence:.1%}"
+            message_en = f"{disease_names[0]} disease detected in your crop. Confidence: {highest_confidence:.1%}"
+        else:
+            title_bn = f"একাধিক রোগ সনাক্ত ({disease_count}টি)"
+            title_en = f"Multiple Diseases Detected ({disease_count})"
+            message_bn = f"আপনার ফসলে {disease_count}টি রোগ সনাক্ত করা হয়েছে: {disease_list_bn}"
+            message_en = f"{disease_count} diseases detected in your crop: {disease_list_en}"
+        
+        # Create recommendations
+        recommendations_bn = "অবিলম্বে কৃষি বিশেষজ্ঞের সাথে যোগাযোগ করুন এবং উপযুক্ত চিকিৎসা শুরু করুন।"
+        recommendations_en = "Contact an agricultural expert immediately and start appropriate treatment."
+        
+        # Create alert record
+        detection_alert = DetectionAlert(
+            user_id=user_id,
+            detection_history_id=detection_history_id,
+            alert_type=alert_type,
+            severity=severity,
+            disease_names=disease_names,
+            confidence_scores=confidence_scores,
+            title_bn=title_bn,
+            title_en=title_en,
+            message_bn=message_bn,
+            message_en=message_en,
+            recommendations_bn=recommendations_bn,
+            recommendations_en=recommendations_en
+        )
+        
+        db.add(detection_alert)
+        db.commit()
+        db.refresh(detection_alert)
+        
+        return detection_alert
+        
+    except Exception as e:
+        print(f"Error creating detection alert: {e}")
+        return None
 
 @router.post("/detect", response_model=DetectionResponse)
 async def detect_plant_disease(
@@ -96,6 +193,21 @@ async def detect_plant_disease(
         db.add(detection_history)
         db.commit()
         db.refresh(detection_history)
+        
+        # Create alert if diseases are detected and user has pest_alerts enabled
+        alert_created = None
+        # Check if user has preferences and pest_alerts is enabled (default to True if preferences don't exist)
+        pest_alerts_enabled = True  # Default value
+        if current_user.preferences:
+            pest_alerts_enabled = current_user.preferences.pest_alerts
+        
+        if pest_alerts_enabled:
+            alert_created = create_detection_alert(
+                db=db,
+                user_id=current_user.id,
+                detection_history_id=detection_history.id,
+                detections=detections
+            )
         
         return DetectionResponse(
             success=True,
@@ -378,6 +490,21 @@ async def detect_camera_frame(
         db.commit()
         db.refresh(detection_history)
         
+        # Create alert if diseases are detected and user has pest_alerts enabled
+        alert_created = None
+        # Check if user has preferences and pest_alerts is enabled (default to True if preferences don't exist)
+        pest_alerts_enabled = True  # Default value
+        if current_user.preferences:
+            pest_alerts_enabled = current_user.preferences.pest_alerts
+        
+        if pest_alerts_enabled:
+            alert_created = create_detection_alert(
+                db=db,
+                user_id=current_user.id,
+                detection_history_id=detection_history.id,
+                detections=detections
+            )
+        
         return {
             "success": True,
             "message": "Camera frame processed successfully",
@@ -443,3 +570,218 @@ async def websocket_camera_stream(
         }))
     finally:
         await websocket.close()
+
+
+@router.get("/alerts", response_model=DetectionAlertResponse)
+async def get_detection_alerts(
+    skip: int = 0,
+    limit: int = 20,
+    unread_only: bool = False,
+    include_dismissed: bool = False,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get user's detection alerts.
+    """
+    try:
+        # Build query - exclude dismissed alerts by default unless requested
+        query = db.query(DetectionAlert).filter(
+            DetectionAlert.user_id == current_user.id
+        )
+        
+        if not include_dismissed:
+            query = query.filter(DetectionAlert.is_dismissed == False)
+        
+        if unread_only:
+            query = query.filter(DetectionAlert.is_read == False)
+        
+        # Get total count
+        total_count = query.count()
+        
+        # Get unread count (excluding dismissed)
+        unread_count = db.query(DetectionAlert).filter(
+            DetectionAlert.user_id == current_user.id,
+            DetectionAlert.is_read == False,
+            DetectionAlert.is_dismissed == False
+        ).count()
+        
+        # Get alerts with pagination
+        alerts = query.order_by(DetectionAlert.created_at.desc()).offset(skip).limit(limit).all()
+        
+        return DetectionAlertResponse(
+            success=True,
+            alerts=alerts,
+            total_count=total_count,
+            unread_count=unread_count
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching alerts: {str(e)}")
+
+
+@router.put("/alerts/{alert_id}/read")
+async def mark_alert_as_read(
+    alert_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Mark an alert as read.
+    """
+    try:
+        alert = db.query(DetectionAlert).filter(
+            DetectionAlert.id == alert_id,
+            DetectionAlert.user_id == current_user.id
+        ).first()
+        
+        if not alert:
+            raise HTTPException(status_code=404, detail="Alert not found")
+        
+        if not alert.is_read:
+            alert.is_read = True
+            alert.read_at = datetime.now()
+            db.commit()
+        
+        return {"success": True, "message": "Alert marked as read"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating alert: {str(e)}")
+
+
+@router.put("/alerts/{alert_id}/dismiss")
+async def dismiss_alert(
+    alert_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Dismiss an alert.
+    """
+    try:
+        alert = db.query(DetectionAlert).filter(
+            DetectionAlert.id == alert_id,
+            DetectionAlert.user_id == current_user.id
+        ).first()
+        
+        if not alert:
+            raise HTTPException(status_code=404, detail="Alert not found")
+        
+        alert.is_dismissed = True
+        alert.dismissed_at = datetime.now()
+        db.commit()
+        
+        return {"success": True, "message": "Alert dismissed"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error dismissing alert: {str(e)}")
+
+
+@router.delete("/alerts/{alert_id}")
+async def delete_alert(
+    alert_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Delete an alert permanently.
+    """
+    try:
+        alert = db.query(DetectionAlert).filter(
+            DetectionAlert.id == alert_id,
+            DetectionAlert.user_id == current_user.id
+        ).first()
+        
+        if not alert:
+            raise HTTPException(status_code=404, detail="Alert not found")
+        
+        db.delete(alert)
+        db.commit()
+        
+        return {"success": True, "message": "Alert deleted"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting alert: {str(e)}")
+
+
+@router.put("/alerts/mark-all-read")
+async def mark_all_alerts_as_read(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Mark all alerts as read for the current user.
+    """
+    try:
+        # Update all unread alerts
+        updated_count = db.query(DetectionAlert).filter(
+            DetectionAlert.user_id == current_user.id,
+            DetectionAlert.is_read == False
+        ).update({
+            "is_read": True,
+            "read_at": datetime.now()
+        })
+        
+        db.commit()
+        
+        return {
+            "success": True, 
+            "message": f"Marked {updated_count} alerts as read"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating alerts: {str(e)}")
+
+
+@router.get("/alerts/stats")
+async def get_alert_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get alert statistics for the current user.
+    """
+    try:
+        # Get various counts
+        total_alerts = db.query(DetectionAlert).filter(
+            DetectionAlert.user_id == current_user.id
+        ).count()
+        
+        unread_alerts = db.query(DetectionAlert).filter(
+            DetectionAlert.user_id == current_user.id,
+            DetectionAlert.is_read == False
+        ).count()
+        
+        high_severity_alerts = db.query(DetectionAlert).filter(
+            DetectionAlert.user_id == current_user.id,
+            DetectionAlert.severity == "high"
+        ).count()
+        
+        # Get alert type distribution
+        alert_types = db.query(
+            DetectionAlert.alert_type,
+            db.func.count(DetectionAlert.id).label('count')
+        ).filter(
+            DetectionAlert.user_id == current_user.id
+        ).group_by(DetectionAlert.alert_type).all()
+        
+        alert_type_distribution = {alert_type: count for alert_type, count in alert_types}
+        
+        return {
+            "success": True,
+            "stats": {
+                "total_alerts": total_alerts,
+                "unread_alerts": unread_alerts,
+                "high_severity_alerts": high_severity_alerts,
+                "alert_type_distribution": alert_type_distribution
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching alert stats: {str(e)}")
