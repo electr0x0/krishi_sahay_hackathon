@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, Clock, AlertTriangle, ListTodo, Bot, Plus, RefreshCw } from "lucide-react";
-import Cookies from 'js-cookie';
 
 interface Agenda {
   id: number;
@@ -36,7 +35,7 @@ export default function TodoListCard() {
   const fetchTodayAgendas = async () => {
     try {
       setError(null);
-      const token = Cookies.get('auth_token') || localStorage.getItem('token');
+      const token = localStorage.getItem('token');
       if (!token) {
         setLoading(false);
         console.log('No token found - user not logged in');
@@ -73,7 +72,7 @@ export default function TodoListCard() {
     setGeneratingAI(true);
     setError(null);
     try {
-      const token = Cookies.get('auth_token') || localStorage.getItem('token');
+      const token = localStorage.getItem('token');
       if (!token) {
         setError('Not logged in');
         return;
@@ -117,7 +116,7 @@ export default function TodoListCard() {
 
     setError(null);
     try {
-      const token = Cookies.get('auth_token') || localStorage.getItem('token');
+      const token = localStorage.getItem('token');
       if (!token) {
         setError('Not logged in');
         return;
@@ -160,7 +159,7 @@ export default function TodoListCard() {
   const completeAgenda = async (agendaId: number) => {
     setError(null);
     try {
-      const token = Cookies.get('auth_token') || localStorage.getItem('token');
+      const token = localStorage.getItem('token');
       if (!token) {
         setError('Not logged in');
         return;

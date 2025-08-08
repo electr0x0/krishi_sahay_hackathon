@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -442,6 +443,7 @@ const ToolOutputDisplay = ({ toolOutputs, toolCalls, language }) => {
 
 const ChatInterface = () => {
   const { isAuthenticated } = useAuth();
+  const searchParams = useSearchParams();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -452,6 +454,7 @@ const ChatInterface = () => {
   const [chatSessions, setChatSessions] = useState([]);
   const [showSidebar, setShowSidebar] = useState(false);
   const [language] = useState('bn'); // Only Bengali as requested
+  const [hasAutoSent, setHasAutoSent] = useState(false); // Track if auto-send was triggered
   
   const messagesEndRef = useRef(null);
   const { isListening, transcript, startListening, stopListening, setTranscript } = useVoiceRecognition('bn-BD');
@@ -481,6 +484,29 @@ const ChatInterface = () => {
       loadChatSessions();
     }
   }, [isAuthenticated]); // loadChatSessions is defined within this component, so it's safe to exclude
+
+  // Handle URL parameters for prefilled messages and auto-send
+  useEffect(() => {
+    const message = searchParams.get('message');
+    const autoSend = searchParams.get('send');
+    
+    if (message && !hasAutoSent) {
+      const decodedMessage = decodeURIComponent(message);
+      setInputText(decodedMessage);
+      
+      // If auto-send is enabled, trigger send after a short delay to allow UI to render
+      if (autoSend === 'true') {
+        setTimeout(() => {
+          // We'll trigger the send by setting a flag that handleSendMessage can check
+          const sendButton = document.querySelector('[data-auto-send="true"]');
+          if (sendButton) {
+            (sendButton as HTMLButtonElement).click();
+            setHasAutoSent(true);
+          }
+        }, 1000);
+      }
+    }
+  }, [searchParams, hasAutoSent]);
 
   // Load chat sessions
   const loadChatSessions = async () => {
@@ -1149,6 +1175,7 @@ const ChatInterface = () => {
                     disabled={!inputText.trim() || isLoading}
                     size="lg"
                     className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200 relative overflow-hidden"
+                    data-auto-send="true"
                   >
                     {isLoading ? (
                       <RotateCw className="w-5 h-5 animate-spin" />

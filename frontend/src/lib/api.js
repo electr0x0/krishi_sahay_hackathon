@@ -112,7 +112,7 @@ class ApiService {
     return data;
   };
 
-  
+  // Farm Data APIs
   saveFarmData = async (data) => {
     return this.request('/api/form-data/', {
       method: 'POST',
@@ -120,8 +120,26 @@ class ApiService {
     });
   }
 
+  saveComprehensiveFarmData = async (data) => {
+    return this.request('/api/form-data/comprehensive', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  updateComprehensiveFarmData = async (data) => {
+    return this.request('/api/form-data/comprehensive', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
   getFarmData = async () => {
     return this.request('/api/form-data/');
+  }
+
+  getComprehensiveFarmData = async () => {
+    return this.request('/api/form-data/comprehensive');
   }
 
   getCurrentUser = async () => {

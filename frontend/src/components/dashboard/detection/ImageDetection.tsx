@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useRef } from 'react';
-import { Upload, X, Eye } from 'lucide-react';
+import { Upload, X, Eye, MessageCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface ImageDetectionProps {
   confidenceThreshold: number;
@@ -35,6 +36,14 @@ const ImageDetection: React.FC<ImageDetectionProps> = ({
   const [showComparison, setShowComparison] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  const redirectToChat = () => {
+    // Navigate to chat with prefilled message
+    const message = "আমার শেষ ছবি সনাক্তকরণের ফলাফল বিশ্লেষণ করুন";
+    const encodedMessage = encodeURIComponent(message);
+    router.push(`/dashboard/chat?message=${encodedMessage}&send=true`);
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -289,6 +298,20 @@ const ImageDetection: React.FC<ImageDetectionProps> = ({
               </div>
             </div>
           )}
+
+          {/* Chat Analysis Button */}
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <button
+              onClick={redirectToChat}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span>চ্যাটে ফলাফল বিশ্লেষণ করুন</span>
+            </button>
+            <p className="text-sm text-gray-500 text-center mt-2">
+              AI চ্যাটবট আপনার সনাক্তকরণের ফলাফল বিস্তারিত বিশ্লেষণ করবে
+            </p>
+          </div>
         </div>
       )}
     </div>
