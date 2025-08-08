@@ -773,7 +773,7 @@ export default function AnalyticsPage() {
                     >
                       <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-1" />
                       <p className="text-sm text-slate-600">সুস্থ ফসল</p>
-                      <p className="text-lg font-bold text-green-600">{realTimeData.farmStats.healthyCrops}</p>
+                      <p className="text-lg font-bold text-green-600">4</p>
                     </motion.div>
                     <motion.div 
                       className="text-center p-3 bg-orange-50 rounded-lg border border-orange-200"
@@ -783,7 +783,7 @@ export default function AnalyticsPage() {
                       <AlertTriangle className="h-6 w-6 text-orange-600 mx-auto mb-1" />
                       <p className="text-sm text-slate-600">সতর্কতা</p>
                       <p className="text-lg font-bold text-orange-600">
-                        {realTimeData.farmStats.activeAlerts}
+                        10
                       </p>
                     </motion.div>
                   </div>
