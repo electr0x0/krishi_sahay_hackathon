@@ -210,6 +210,26 @@ class ApiService {
     });
   };
 
+  // Get latest sensor data from all sensors
+  getLatestSensorData = async () => {
+    return this.request("/api/iot/get-latest-data");
+  };
+
+  // Get sensor data history
+  getSensorDataHistory = async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(
+      `/api/iot/get-data-history${
+        queryString ? `?${queryString}` : ""
+      }`
+    );
+  };
+
+  // Get dashboard sensor summary
+  getDashboardSensorData = async () => {
+    return this.request("/api/iot/dashboard/sensors");
+  };
+
   // Weather APIs
   getWeatherData = async (location) => {
     const params = location ? `?location=${encodeURIComponent(location)}` : "";
@@ -649,7 +669,6 @@ class ApiService {
   };
 
   delete = async (endpoint, options = {}) => {
-
     return this.request(endpoint, { ...options, method: "DELETE" });
   };
 }
