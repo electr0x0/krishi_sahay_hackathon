@@ -601,8 +601,6 @@ class ApiService {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-  };
-
   // HTTP Method shortcuts
   get = async (endpoint, options = {}) => {
     return this.request(endpoint, { ...options, method: "GET" });
@@ -649,6 +647,7 @@ class ApiService {
   };
 
   delete = async (endpoint, options = {}) => {
+
     return this.request(endpoint, { ...options, method: "DELETE" });
   };
 }
