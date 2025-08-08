@@ -110,6 +110,18 @@ class ApiService {
     return data;
   };
 
+  
+  saveFarmData = async (data) => {
+    return this.request('/api/form-data/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  getFarmData = async () => {
+    return this.request('/api/form-data/');
+  }
+
   getCurrentUser = async () => {
     return this.request("/api/auth/me");
   };
