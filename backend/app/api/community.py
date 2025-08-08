@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_, or_
 from typing import List, Optional
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import math
 
 from app.database import get_db
@@ -11,7 +11,7 @@ from app.auth.dependencies import get_current_user
 from app.models import (
     Community, CommunityMember, HelpRequest, CommunityEvent, EventAttendee,
     User, MemberRole, HelpCategory, UrgencyLevel, HelpStatus, EventType,
-    CommunityMessage, CommunityMessageType
+    CommunityMessage, CommunityMessageType, CommunityJoinRequest
 )
 from app.schemas.community import (
     CommunityCreate, CommunityUpdate, CommunityResponse, CommunityListResponse,
@@ -19,7 +19,8 @@ from app.schemas.community import (
     HelpRequestCreate, HelpRequestUpdate, HelpRequestResponse, HelpRequestListResponse,
     CommunityEventCreate, CommunityEventUpdate, CommunityEventResponse, CommunityEventListResponse,
     JoinCommunityRequest, AcceptHelpRequestRequest, JoinEventRequest,
-    CommunityWithDistance, ChatMessageCreate, ChatMessageResponse, ChatHistoryResponse
+    CommunityWithDistance, ChatMessageCreate, ChatMessageResponse, ChatHistoryResponse,
+    CommunityJoinRequestCreate, CommunityJoinRequestResponse
 )
 
 # The router is defined without a prefix, as the prefix should be
@@ -212,7 +213,7 @@ def accept_help_request(
     
     message.message_metadata['accepted_by'] = current_user.id
     message.message_metadata['accepted_by_name'] = current_user.full_name
-    message.message_metadata['accepted_at'] = datetime.utcnow().isoformat()
+    message.message_metadata['accepted_at'] = datetime.now(timezone.utc).isoformat()
     message.message_metadata['status'] = 'accepted'
     
     db.commit()
@@ -250,7 +251,7 @@ def complete_help_request(
         message.message_metadata = {}
     
     message.message_metadata['completed_by'] = current_user.id
-    message.message_metadata['completed_at'] = datetime.utcnow().isoformat()
+    message.message_metadata['completed_at'] = datetime.now(timezone.utc).isoformat()
     message.message_metadata['status'] = 'completed'
     
     # If it's paid, mark as paid
@@ -317,7 +318,7 @@ def pay_for_event(
     attendees.append({
         'user_id': current_user.id,
         'user_name': current_user.full_name,
-        'paid_at': datetime.utcnow().isoformat(),
+        'paid_at': datetime.now(timezone.utc).isoformat(),
         'payment_status': 'paid'
     })
     
@@ -372,6 +373,241 @@ def join_community(
     db.commit()
     
     return {"message": "Successfully joined community"}
+
+@router.post("/request-join", response_model=CommunityJoinRequestResponse)
+def request_to_join_community(
+    join_data: CommunityJoinRequestCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Request to join a private community"""
+    community = db.query(Community).filter(Community.id == join_data.community_id).first()
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+    
+    if community.is_public:
+        raise HTTPException(status_code=400, detail="This community is public. Use the join endpoint.")
+
+    existing_request = db.query(CommunityJoinRequest).filter(
+        and_(
+            CommunityJoinRequest.community_id == join_data.community_id,
+            CommunityJoinRequest.user_id == current_user.id,
+            CommunityJoinRequest.status == "pending"
+        )
+    ).first()
+    
+    if existing_request:
+        raise HTTPException(status_code=400, detail="You have already requested to join this community.")
+
+    join_request = CommunityJoinRequest(
+        community_id=join_data.community_id,
+        user_id=current_user.id
+    )
+    db.add(join_request)
+    db.commit()
+    
+    return join_request
+
+@router.get("/{community_id}/join-requests", response_model=List[CommunityJoinRequestResponse])
+def get_join_requests(
+    community_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all join requests for a community"""
+    membership = db.query(CommunityMember).filter(
+        and_(
+            CommunityMember.community_id == community_id,
+            CommunityMember.user_id == current_user.id,
+            CommunityMember.is_active == True,
+            CommunityMember.role.in_([MemberRole.LEADER, MemberRole.CO_LEADER])
+        )
+    ).first()
+    
+    if not membership:
+        raise HTTPException(status_code=403, detail="You are not authorized to view join requests.")
+        
+    join_requests = db.query(CommunityJoinRequest).filter(
+        and_(
+            CommunityJoinRequest.community_id == community_id,
+            CommunityJoinRequest.status == "pending"
+        )
+    ).all()
+    
+    return join_requests
+
+@router.post("/{community_id}/join-requests/{request_id}/approve")
+def approve_join_request(
+    community_id: int,
+    request_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Approve a join request"""
+    membership = db.query(CommunityMember).filter(
+        and_(
+            CommunityMember.community_id == community_id,
+            CommunityMember.user_id == current_user.id,
+            CommunityMember.is_active == True,
+            CommunityMember.role.in_([MemberRole.LEADER, MemberRole.CO_LEADER])
+        )
+    ).first()
+    
+    if not membership:
+        raise HTTPException(status_code=403, detail="You are not authorized to approve join requests.")
+        
+    join_request = db.query(CommunityJoinRequest).filter(CommunityJoinRequest.id == request_id).first()
+    if not join_request or join_request.community_id != community_id:
+        raise HTTPException(status_code=404, detail="Join request not found.")
+        
+    if join_request.status != "pending":
+        raise HTTPException(status_code=400, detail="Join request has already been processed.")
+        
+    join_request.status = "approved"
+    
+    new_member = CommunityMember(
+        community_id=community_id,
+        user_id=join_request.user_id,
+        role=MemberRole.MEMBER
+    )
+    db.add(new_member)
+    db.commit()
+    
+    return {"message": "Join request approved."}
+
+@router.post("/{community_id}/join-requests/{request_id}/reject")
+def reject_join_request(
+    community_id: int,
+    request_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Reject a join request"""
+    membership = db.query(CommunityMember).filter(
+        and_(
+            CommunityMember.community_id == community_id,
+            CommunityMember.user_id == current_user.id,
+            CommunityMember.is_active == True,
+            CommunityMember.role.in_([MemberRole.LEADER, MemberRole.CO_LEADER])
+        )
+    ).first()
+    
+    if not membership:
+        raise HTTPException(status_code=403, detail="You are not authorized to reject join requests.")
+        
+    join_request = db.query(CommunityJoinRequest).filter(CommunityJoinRequest.id == request_id).first()
+    if not join_request or join_request.community_id != community_id:
+        raise HTTPException(status_code=404, detail="Join request not found.")
+        
+    if join_request.status != "pending":
+        raise HTTPException(status_code=400, detail="Join request has already been processed.")
+        
+    join_request.status = "rejected"
+    db.commit()
+    
+    return {"message": "Join request rejected."}
+
+@router.post("/{community_id}/members/{member_id}/promote")
+def promote_community_member(
+    community_id: int,
+    member_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Promote a community member"""
+    # Check if current user is a leader or co-leader
+    current_membership = db.query(CommunityMember).filter(
+        and_(
+            CommunityMember.community_id == community_id,
+            CommunityMember.user_id == current_user.id,
+            CommunityMember.is_active == True,
+            CommunityMember.role.in_([MemberRole.LEADER, MemberRole.CO_LEADER])
+        )
+    ).first()
+    
+    if not current_membership:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to promote members."
+        )
+        
+    # Get the member to be promoted
+    member_to_promote = db.query(CommunityMember).filter(
+        and_(
+            CommunityMember.id == member_id,
+            CommunityMember.community_id == community_id,
+            CommunityMember.is_active == True
+        )
+    ).first()
+    
+    if not member_to_promote:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found.")
+        
+    # Promotion logic
+    if current_membership.role == MemberRole.LEADER:
+        if member_to_promote.role == MemberRole.MEMBER:
+            member_to_promote.role = MemberRole.CO_LEADER
+        elif member_to_promote.role == MemberRole.CO_LEADER:
+            member_to_promote.role = MemberRole.ELDER
+    elif current_membership.role == MemberRole.CO_LEADER:
+        if member_to_promote.role == MemberRole.MEMBER:
+            member_to_promote.role = MemberRole.ELDER
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Co-leaders can only promote members to elders."
+            )
+            
+    db.commit()
+    
+    return {"message": f"Successfully promoted member to {member_to_promote.role.value}."}
+
+@router.post("/{community_id}/members/{member_id}/demote")
+def demote_community_member(
+    community_id: int,
+    member_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Demote a community member"""
+    # Check if current user is a leader
+    current_membership = db.query(CommunityMember).filter(
+        and_(
+            CommunityMember.community_id == community_id,
+            CommunityMember.user_id == current_user.id,
+            CommunityMember.is_active == True,
+            CommunityMember.role == MemberRole.LEADER
+        )
+    ).first()
+    
+    if not current_membership:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only leaders can demote members."
+        )
+        
+    # Get the member to be demoted
+    member_to_demote = db.query(CommunityMember).filter(
+        and_(
+            CommunityMember.id == member_id,
+            CommunityMember.community_id == community_id,
+            CommunityMember.is_active == True
+        )
+    ).first()
+    
+    if not member_to_demote:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found.")
+        
+    # Demotion logic
+    if member_to_demote.role == MemberRole.ELDER:
+        member_to_demote.role = MemberRole.CO_LEADER
+    elif member_to_demote.role == MemberRole.CO_LEADER:
+        member_to_demote.role = MemberRole.MEMBER
+    
+    db.commit()
+    
+    return {"message": f"Successfully demoted member to {member_to_demote.role.value}."}
+
 
 @router.post("/leave")
 def leave_community(
@@ -715,7 +951,7 @@ def get_community_response(community: Community, db: Session) -> CommunityRespon
     co_leaders = [m for m in members if m.role == MemberRole.CO_LEADER]
     elders = [m for m in members if m.role == MemberRole.ELDER]
     
-    age_in_days = (datetime.utcnow() - community.created_at).days
+    age_in_days = (datetime.now(community.created_at.tzinfo) - community.created_at).days
     
     help_requests = db.query(HelpRequest).filter(HelpRequest.community_id == community.id).all()
     events = db.query(CommunityEvent).filter(CommunityEvent.community_id == community.id).all()
@@ -737,6 +973,7 @@ def get_community_response(community: Community, db: Session) -> CommunityRespon
         leader=get_member_response(leader, db) if leader else None,
         co_leaders=[get_member_response(m, db) for m in co_leaders],
         elders=[get_member_response(m, db) for m in elders],
+        members=[get_member_response(m, db) for m in members],
         help_requests=[get_help_request_response(hr, db) for hr in help_requests],
         events=[get_event_response(e, db) for e in events]
     )

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 import uuid
 from pathlib import Path
@@ -17,6 +17,7 @@ from ..models.store import (
     StorePriceHistory
 )
 from ..models.user import User
+from ..models.community import CommunityFund, FundTransaction, TransactionType
 from ..schemas.store import (
     ProductCreate,
     ProductResponse,
@@ -29,6 +30,38 @@ from ..schemas.store import (
 )
 
 router = APIRouter()
+
+# Helper function to handle community commission
+def handle_community_commission(db: Session, order: StoreOrder, payment_amount: float):
+    """Process community commission for community listings"""
+    for item in order.items:
+        listing = db.query(StoreListing).filter(StoreListing.id == item.listing_id).first()
+        if listing and listing.community_id:
+            # Get or create community fund
+            fund = db.query(CommunityFund).filter(CommunityFund.community_id == listing.community_id).first()
+            if not fund:
+                fund = CommunityFund(community_id=listing.community_id)
+                db.add(fund)
+                db.flush()
+            
+            # Calculate commission for this item
+            item_total = item.quantity * item.price
+            commission_amount = item_total * fund.commission_rate
+            
+            # Update fund balance
+            fund.current_balance += commission_amount
+            
+            # Create transaction record
+            transaction = FundTransaction(
+                community_id=listing.community_id,
+                user_id=None,  # System transaction
+                transaction_type=TransactionType.COMMISSION_EARNED,
+                amount=commission_amount,
+                description=f"Commission from sale: {listing.product.name} (Order #{order.id})",
+                reference_id=order.id,
+                reference_type="order"
+            )
+            db.add(transaction)
 
 # Helper function to save uploaded file
 def save_uploaded_file(upload_file: UploadFile, folder: str = "products") -> str:
@@ -96,41 +129,113 @@ def list_public_listings(
                 created_at=lst.created_at,
                 updated_at=lst.updated_at,
                 is_active=lst.is_active,
+                seller_user_id=lst.seller_user_id,
+                community_id=lst.community_id,
                 product_name=lst.product.name,
                 product_category=lst.product.category,
                 product_image_url=lst.product.image_url,
                 unit=lst.product.unit,
-                farmer_name=lst.farmer.full_name if lst.farmer else None,
+                seller_name=lst.seller.full_name if lst.seller else None,
+                community_name=lst.community.name if lst.community else None,
             )
         )
     return results
 
 
-# Farmer: create product (enhanced)
+@router.get("/listings/community/{community_id}", response_model=List[ListingWithProduct])
+def list_community_listings(
+    community_id: int,
+    db: Session = Depends(get_db)
+):
+    query = db.query(StoreListing).filter(
+        StoreListing.is_active == True, 
+        StoreListing.stock_qty > 0,
+        StoreListing.community_id == community_id
+    )
+
+    listings = query.order_by(StoreListing.created_at.desc()).all()
+
+    results: List[ListingWithProduct] = []
+    for lst in listings:
+        results.append(
+            ListingWithProduct(
+                id=lst.id,
+                product_id=lst.product_id,
+                price=lst.price,
+                stock_qty=lst.stock_qty,
+                location=lst.location,
+                min_order_qty=lst.min_order_qty,
+                harvest_date=lst.harvest_date,
+                quality_grade=lst.quality_grade,
+                organic_certified=lst.organic_certified,
+                created_at=lst.created_at,
+                updated_at=lst.updated_at,
+                is_active=lst.is_active,
+                seller_user_id=lst.seller_user_id,
+                community_id=lst.community_id,
+                product_name=lst.product.name,
+                product_category=lst.product.category,
+                product_image_url=lst.product.image_url,
+                unit=lst.product.unit,
+                seller_name=lst.seller.full_name if lst.seller else None,
+                community_name=lst.community.name if lst.community else None,
+            )
+        )
+    return results
+
+
+from ..models.community import CommunityMember
+
+# ... (existing code) ...
+
+# Farmer: create product
 @router.post("/products", response_model=ProductResponse)
-def create_product(payload: ProductCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def create_product(
+    payload: ProductCreate, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
     prod = StoreProduct(
         name=payload.name,
         category=payload.category,
         unit=payload.unit,
         description=payload.description,
-        image_url=payload.image_url
+        image_url=payload.image_url,
+        user_id=current_user.id
     )
     db.add(prod)
     db.commit()
     db.refresh(prod)
     return prod
 
-
-# Farmer: create listing
+# Farmer or Community Member: create listing
 @router.post("/listings", response_model=ListingResponse)
-def create_listing(payload: ListingCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    prod = db.query(StoreProduct).filter(StoreProduct.id == payload.product_id).first()
+def create_listing(
+    payload: ListingCreate, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    prod = db.query(StoreProduct).filter(
+        StoreProduct.id == payload.product_id,
+        StoreProduct.user_id == current_user.id # Security: user can only list their own products
+    ).first()
     if not prod:
-        raise HTTPException(404, "Product not found")
+        raise HTTPException(404, "Product not found or you do not own this product.")
+
+    community_id = payload.community_id
+    if community_id:
+        member = db.query(CommunityMember).filter(
+            CommunityMember.community_id == community_id,
+            CommunityMember.user_id == current_user.id,
+            CommunityMember.is_active == True
+        ).first()
+        if not member:
+            raise HTTPException(403, "You are not a member of this community.")
+
     lst = StoreListing(
         product_id=payload.product_id,
-        farmer_user_id=current_user.id,
+        seller_user_id=current_user.id,
+        community_id=community_id,
         location=payload.location,
         price=payload.price,
         stock_qty=payload.stock_qty,
@@ -150,7 +255,7 @@ def create_listing(payload: ListingCreate, db: Session = Depends(get_db), curren
 # Farmer: update price/stock
 @router.put("/listings/{listing_id}", response_model=ListingResponse)
 def update_listing(listing_id: int, payload: ListingCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    lst = db.query(StoreListing).filter(StoreListing.id == listing_id, StoreListing.farmer_user_id == current_user.id).first()
+    lst = db.query(StoreListing).filter(StoreListing.id == listing_id, StoreListing.seller_user_id == current_user.id).first()
     if not lst:
         raise HTTPException(404, "Listing not found")
     # Track price change
@@ -163,18 +268,29 @@ def update_listing(listing_id: int, payload: ListingCreate, db: Session = Depend
     lst.harvest_date = payload.harvest_date
     lst.quality_grade = payload.quality_grade
     lst.organic_certified = payload.organic_certified
-    lst.updated_at = datetime.utcnow()
+    lst.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(lst)
     return lst
 
 
-# Farmer: my listings
+# Farmer or Community Member: my listings
 @router.get("/listings/mine", response_model=List[ListingWithProduct])
 def my_listings(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # Listings from user directly or from communities they are a member of
+    user_community_ids = [
+        m.community_id for m in db.query(CommunityMember).filter(
+            CommunityMember.user_id == current_user.id,
+            CommunityMember.is_active == True
+        ).all()
+    ]
+    
     listings = (
         db.query(StoreListing)
-        .filter(StoreListing.farmer_user_id == current_user.id)
+        .filter(
+            (StoreListing.seller_user_id == current_user.id) |
+            (StoreListing.community_id.in_(user_community_ids))
+        )
         .order_by(StoreListing.created_at.desc())
         .all()
     )
@@ -192,11 +308,14 @@ def my_listings(db: Session = Depends(get_db), current_user: User = Depends(get_
             created_at=lst.created_at,
             updated_at=lst.updated_at,
             is_active=lst.is_active,
+            seller_user_id=lst.seller_user_id,
+            community_id=lst.community_id,
             product_name=lst.product.name,
             product_category=lst.product.category,
             product_image_url=lst.product.image_url,
             unit=lst.product.unit,
-            farmer_name=current_user.full_name,
+            seller_name=lst.seller.full_name if lst.seller else None,
+            community_name=lst.community.name if lst.community else None,
         )
         for lst in listings
     ]
@@ -246,7 +365,7 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
         lst.stock_qty -= it.quantity
 
     # mock advance payment record
-    pay = StorePayment(order_id=order.id, amount=payload.advance_amount or 0.0, status="paid" if (payload.advance_amount or 0) > 0 else "unpaid", paid_at=datetime.utcnow() if (payload.advance_amount or 0) > 0 else None)
+    pay = StorePayment(order_id=order.id, amount=payload.advance_amount or 0.0, status="paid" if (payload.advance_amount or 0) > 0 else "unpaid", paid_at=datetime.now(timezone.utc) if (payload.advance_amount or 0) > 0 else None)
     db.add(pay)
 
     db.commit()
@@ -264,11 +383,26 @@ def track_orders(phone: str = Query(...), order_id: Optional[int] = Query(None),
     return orders
 
 
-# Farmer: my orders
+# Farmer or Community Member: my orders
 @router.get("/orders", response_model=List[OrderResponse])
 def farmer_orders(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    # orders that include at least one item of current farmer
-    order_ids = [row.order_id for row in db.query(StoreOrderItem.order_id).join(StoreListing).filter(StoreListing.farmer_user_id == current_user.id).distinct().all()]
+    user_community_ids = [
+        m.community_id for m in db.query(CommunityMember).filter(
+            CommunityMember.user_id == current_user.id,
+            CommunityMember.is_active == True
+        ).all()
+    ]
+    
+    order_ids = [
+        row.order_id for row in db.query(StoreOrderItem.order_id)
+        .join(StoreListing)
+        .filter(
+            (StoreListing.seller_user_id == current_user.id) |
+            (StoreListing.community_id.in_(user_community_ids))
+        )
+        .distinct()
+        .all()
+    ]
     if not order_ids:
         return []
     orders = db.query(StoreOrder).filter(StoreOrder.id.in_(order_ids)).order_by(StoreOrder.created_at.desc()).all()
@@ -278,11 +412,11 @@ def farmer_orders(db: Session = Depends(get_db), current_user: User = Depends(ge
 # Farmer: update order status simple flow
 @router.post("/orders/{order_id}/status")
 def update_order_status(order_id: int, status_value: str = Query(..., regex="^(pending|processing|shipped|completed|cancelled)$"), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    order = db.query(StoreOrder).join(StoreOrderItem).join(StoreListing).filter(StoreOrder.id == order_id, StoreListing.farmer_user_id == current_user.id).first()
+    order = db.query(StoreOrder).join(StoreOrderItem).join(StoreListing).filter(StoreOrder.id == order_id, StoreListing.seller_user_id == current_user.id).first()
     if not order:
         raise HTTPException(404, "Order not found")
     order.status = status_value
-    order.updated_at = datetime.utcnow()
+    order.updated_at = datetime.now(timezone.utc)
     db.commit()
     return {"message": "Order status updated"}
 
@@ -293,13 +427,22 @@ def pay_order(order_id: int, amount: float = Query(..., gt=0), db: Session = Dep
     order = db.query(StoreOrder).filter(StoreOrder.id == order_id).first()
     if not order:
         raise HTTPException(404, "Order not found")
+    
+    # Check if payment already exists
+    payment_exists = order.payment is not None
+    
     if not order.payment:
-        payment = StorePayment(order_id=order.id, amount=amount, status="paid", paid_at=datetime.utcnow())
+        payment = StorePayment(order_id=order.id, amount=amount, status="paid", paid_at=datetime.now(timezone.utc))
         db.add(payment)
     else:
         order.payment.amount = amount
         order.payment.status = "paid"
-        order.payment.paid_at = datetime.utcnow()
+        order.payment.paid_at = datetime.now(timezone.utc)
+    
+    # Handle community commission (only for new payments to avoid double-charging)
+    if not payment_exists:
+        handle_community_commission(db, order, amount)
+    
     db.commit()
     db.refresh(order)
     return {"message": "Payment completed", "order_id": order.id}
@@ -309,5 +452,18 @@ def pay_order(order_id: int, amount: float = Query(..., gt=0), db: Session = Dep
 @router.get("/products", response_model=List[ProductResponse])
 def list_products(db: Session = Depends(get_db)):
     return db.query(StoreProduct).order_by(StoreProduct.created_at.desc()).all()
+
+
+# Farmer: get my products
+@router.get("/products/mine", response_model=List[ProductResponse])
+def my_products(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all products created by the current user."""
+    products = db.query(StoreProduct).filter(
+        StoreProduct.user_id == current_user.id
+    ).order_by(StoreProduct.created_at.desc()).all()
+    return products
 
 
