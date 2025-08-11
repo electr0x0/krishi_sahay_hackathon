@@ -18,7 +18,7 @@ class ApiService {
     Cookies.set("auth_token", token, {
       expires: 30,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax", // Changed from "strict" to "lax" for better cross-origin support
     });
   };
 
@@ -32,7 +32,9 @@ class ApiService {
     const url = `${this.baseURL}${endpoint}`;
     const token = this.getToken();
 
-    const defaultHeaders = {};
+    const defaultHeaders = {
+      'Accept': 'application/json',
+    };
 
     // Only set Content-Type if not FormData (let browser set it for FormData)
     if (!(options.body instanceof FormData)) {
@@ -44,6 +46,8 @@ class ApiService {
     }
 
     const config = {
+      mode: 'cors', // Explicitly set CORS mode
+      credentials: 'include', // Include credentials for cross-origin requests
       ...options,
       headers: {
         ...defaultHeaders,
