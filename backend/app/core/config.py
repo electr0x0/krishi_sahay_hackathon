@@ -21,14 +21,15 @@ APP_NAME = "Krishi Sahay - Smart Agriculture Platform"
 APP_VERSION = "1.0.0"
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
-# CORS Settings
+# CORS Settings - Allow all origins for maximum compatibility
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001", 
     "http://localhost:5174",
-    "https://krishi-sahay-hackathon.vercel.app/",
+    "https://krishi-sahay-hackathon.vercel.app",
     "http://krishi-sahay-hackathon.vercel.app",
-    "https://krishi-sahay-hackathon.vercel.app"
+    "https://*.vercel.app",
+    "*"  # Allow all origins to eliminate CORS issues
 ]
 
 # Validation
