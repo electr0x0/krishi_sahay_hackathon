@@ -59,14 +59,12 @@ const Sidebar = () => {
     { href: '/dashboard/community', label: 'সম্প্রদায়', icon: Users },
     { href: '/dashboard/store', label: 'আমার দোকান', icon: ShoppingBag },
     { href: '/dashboard/notifications', label: 'নোটিফিকেশন', icon: Bell },
+    { href: '/dashboard/report/comprehensive', label: 'আমার খামার', icon: ClipboardPlus },
     { href: '/dashboard/profile', label: 'প্রোফাইল', icon: User },
-    { href: '/dashboard/settings', label: 'সেটিংস', icon: Settings },
-    { href: '/dashboard/report', label: 'কৃষি রিপোর্ট', icon: ClipboardPlus },
   ];
 
   const bottomNavItems = [
     { href: '/', label: 'হোম', icon: Home },
-    { href: '/dashboard/help', label: 'সহায়তা', icon: LifeBuoy },
   ];
 
   return (
