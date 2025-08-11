@@ -17,7 +17,7 @@ const SimpleVideoDetection = ({ onSwitchToHistory }) => {
     const token = localStorage.getItem('access_token') || 
                  document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1];
     
-    const response = await fetch(`http://localhost:8000${endpoint}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
       method: 'POST',
       body: formData,
       headers: {

@@ -43,7 +43,7 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
         const headers = getAuthHeaders();
         console.log('Auth headers for history:', headers); // Debug log
         
-        const response = await fetch('http://localhost:8000/api/detection/history?skip=0&limit=10', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/detection/history?skip=0&limit=10`, {
           method: 'GET',
           headers: headers,
         });
@@ -216,7 +216,7 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
                   <div className="flex flex-col items-end space-y-2 ml-4">
                     {item.processed_image_url && (
                       <Image
-                        src={`http://127.0.0.1:8000${item.processed_image_url}`}
+                        src={`${process.env.NEXT_PUBLIC_API_URL}${item.processed_image_url}`}
                         alt="Processed result"
                         width={80}
                         height={80}
@@ -322,7 +322,7 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
                     মূল ছবি
                   </h3>
                   <Image
-                    src={`http://127.0.0.1:8000${selectedItem.original_image_url}`}
+                    src={`${process.env.NEXT_PUBLIC_API_URL}${selectedItem.original_image_url}`}
                     alt="Original image"
                     width={400}
                     height={300}
@@ -336,7 +336,7 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
                       পরীক্ষা করা ছবি
                     </h3>
                     <Image
-                      src={`http://127.0.0.1:8000${selectedItem.processed_image_url}`}
+                      src={`${process.env.NEXT_PUBLIC_API_URL}${selectedItem.processed_image_url}`}
                       alt="Processed image"
                       width={400}
                       height={300}

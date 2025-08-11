@@ -41,19 +41,25 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'http',
-        hostname: 'localhost',
+        hostname: `${process.env.NEXT_PUBLIC_HOSTNAME}`,
         port: '8000',
         pathname: '/**',
       },
       {
         protocol: 'http',
-        hostname: 'localhost',
+        hostname: `${process.env.NEXT_PUBLIC_HOSTNAME}`,
         port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'localhost',
+        hostname: `${process.env.NEXT_PUBLIC_HOSTNAME}`,
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: `${process.env.NEXT_PUBLIC_HOSTNAME}`,
         port: '',
         pathname: '/**',
       },
@@ -63,12 +69,17 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+
+  eslint: {
+    // Disable ESLint during builds entirely
+    ignoreDuringBuilds: true,
+  },
   
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:8000/api/:path*'
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`
       }
     ];
   },

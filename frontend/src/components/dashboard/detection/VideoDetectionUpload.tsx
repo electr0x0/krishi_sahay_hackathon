@@ -151,7 +151,7 @@ const VideoDetectionUpload = ({ onSwitchToHistory }) => {
       formData.append('confidence_threshold', confidenceThreshold.toString());
       formData.append('frame_skip', '5');
 
-      const response = await fetch('http://localhost:8000/api/detection/detect-video', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/detection/detect-video`, {
         method: 'POST',
         body: formData,
         headers: {
@@ -287,7 +287,7 @@ const VideoDetectionUpload = ({ onSwitchToHistory }) => {
       }
 
       // Connect to WebSocket
-      const wsUrl = `ws://localhost:8000/api/detection/stream-camera?confidence_threshold=${confidenceThreshold}`;
+      const wsUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/detection/stream-camera?confidence_threshold=${confidenceThreshold}`;
       
       const ws = new WebSocket(wsUrl);
       setWebsocket(ws);

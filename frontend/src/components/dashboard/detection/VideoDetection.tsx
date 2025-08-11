@@ -70,7 +70,7 @@ const VideoDetection: React.FC<VideoDetectionProps> = ({
       formData.append('file', selectedVideo);
       formData.append('confidence_threshold', confidenceThreshold.toString());
 
-      const response = await fetch('http://localhost:8000/api/detection/detect-video', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/detection/detect-video`, {
         method: 'POST',
         body: formData,
         headers: getAuthHeaders(),
@@ -264,7 +264,7 @@ const VideoDetection: React.FC<VideoDetectionProps> = ({
                 <div className="space-y-2">
                   <h5 className="text-sm font-medium text-gray-700">প্রক্রিয়াজাত ভিডিও</h5>
                   <VideoPlayer
-                    src={`http://localhost:8000/${videoResult.output_path}`}
+                    src={`${process.env.NEXT_PUBLIC_API_URL}${videoResult.output_path}`}
                     title="Processed Video"
                   />
                 </div>

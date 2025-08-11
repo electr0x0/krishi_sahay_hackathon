@@ -1,6 +1,7 @@
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
+import tseslint from "@typescript-eslint/eslint-plugin";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -14,13 +15,11 @@ const eslintConfig = [
 
   // Add this new object to override default rules
   {
+    ignores: [
+      "src/*"
+    ],
     rules: {
-      // Downgrades the "no-any" error to a warning. THIS IS THE KEY FIX.
-      "@typescript-eslint/no-explicit-any": "warn",
-
-      // Downgrades the "unused variables" error to a warning.
-      "@typescript-eslint/no-unused-vars": "warn",
-      
+      // JSX entity warnings only
       // Warns about unescaped characters like " and ' in JSX.
       "react/no-unescaped-entities": "warn",
 

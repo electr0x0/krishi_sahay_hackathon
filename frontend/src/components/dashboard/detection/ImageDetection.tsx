@@ -72,7 +72,7 @@ const ImageDetection: React.FC<ImageDetectionProps> = ({
       formData.append('file', selectedFile);
       formData.append('confidence_threshold', confidenceThreshold.toString());
 
-      const response = await fetch('http://localhost:8000/api/detection/detect', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/detection/detect`, {
         method: 'POST',
         body: formData,
         headers: getAuthHeaders(),
@@ -248,7 +248,7 @@ const ImageDetection: React.FC<ImageDetectionProps> = ({
                     <div className="group relative">
                       <h5 className="text-sm font-medium text-gray-700 mb-2">প্রক্রিয়াজাত ছবি</h5>
                       <img
-                        src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${result.processed_image_url}`}
+                        src={`${process.env.NEXT_PUBLIC_API_URL}${result.processed_image_url}`}
                         alt="Processed with detections"
                         className="w-full h-auto rounded-lg shadow-md transition-transform group-hover:scale-105"
                       />

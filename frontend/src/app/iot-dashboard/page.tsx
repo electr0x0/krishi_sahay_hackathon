@@ -442,14 +442,14 @@ function IoTDashboard() {
       setError(null);
       
       // Fetch latest sensor data
-      const latestResponse = await fetch('http://localhost:8000/api/iot/get-latest-data');
+      const latestResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/iot/get-latest-data`);
       if (!latestResponse.ok) {
         throw new Error(`Failed to fetch latest data: ${latestResponse.status}`);
       }
       const latestData = await latestResponse.json();
       
       // Fetch historical sensor data
-      const historyResponse = await fetch('http://localhost:8000/api/iot/get-data-history?limit=50');
+      const historyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/iot/get-data-history?limit=50`);
       if (!historyResponse.ok) {
         throw new Error(`Failed to fetch history data: ${historyResponse.status}`);
       }

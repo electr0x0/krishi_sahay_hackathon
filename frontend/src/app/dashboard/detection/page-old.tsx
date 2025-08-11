@@ -416,14 +416,14 @@ function DetectionUploadComponent({ onSwitchToHistory }: { onSwitchToHistory: ()
     try {
       // Use the real API call with confidence threshold
       console.log('Sending detection request...', { fileName: selectedFile.name, threshold: confidenceThreshold });
-      console.log('API base URL:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
+      console.log('API base URL:', process.env.NEXT_PUBLIC_API_URL);
       
       // Check if API is reachable first
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('confidence_threshold', confidenceThreshold.toString());
 
-      const response = await fetch('http://localhost:8000/api/detection/detect', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/detection/detect`, {
         method: 'POST',
         body: formData,
         headers: getAuthHeaders(),
@@ -477,7 +477,7 @@ function DetectionUploadComponent({ onSwitchToHistory }: { onSwitchToHistory: ()
       formData.append('file', selectedVideo);
       formData.append('confidence_threshold', confidenceThreshold.toString());
 
-      const response = await fetch('http://localhost:8000/api/detection/detect-video', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/detection/detect-video`, {
         method: 'POST',
         body: formData,
         headers: getAuthHeaders(),
@@ -576,7 +576,7 @@ function DetectionUploadComponent({ onSwitchToHistory }: { onSwitchToHistory: ()
         formData.append('file', new Blob([Uint8Array.from(atob(base64), c => c.charCodeAt(0))], { type: 'image/jpeg' }), 'camera-capture.jpg');
         formData.append('confidence_threshold', confidenceThreshold.toString());
 
-        const response = await fetch('http://localhost:8000/api/detection/detect', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/detection/detect', {
           method: 'POST',
           body: formData,
           headers: getAuthHeaders(),
@@ -864,7 +864,7 @@ function DetectionUploadComponent({ onSwitchToHistory }: { onSwitchToHistory: ()
               <div className="p-4">
                 <div className="relative group">
                   <img
-                    src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${result.processed_image_url}`}
+                    src={`${process.env.NEXT_PUBLIC_API_URL}${result.processed_image_url}`}
                     alt="Processed with detections"
                     className="w-full h-auto rounded-lg shadow-md transition-transform group-hover:scale-105 object-contain"
                     onError={(e) => {
@@ -985,7 +985,7 @@ function DetectionUploadComponent({ onSwitchToHistory }: { onSwitchToHistory: ()
             
             {result.original_image_url && (
               <a
-                href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${result.original_image_url}`}
+                href={`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL}`}${result.original_image_url}`}
                 download
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
@@ -995,7 +995,7 @@ function DetectionUploadComponent({ onSwitchToHistory }: { onSwitchToHistory: ()
             
             {result.processed_image_url && (
               <a
-                href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${result.processed_image_url}`}
+                href={`${process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_API_URL}`}${result.processed_image_url}`}
                 download
                 className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
               >
@@ -1147,7 +1147,7 @@ function DetectionUploadComponent({ onSwitchToHistory }: { onSwitchToHistory: ()
                             style={{ maxHeight: '300px' }}
                           >
                             <source 
-                              src={`http://localhost:8000/${videoResult.output_path}`} 
+                              src={`${process.env.NEXT_PUBLIC_API_URL}${videoResult.output_path}`} 
                               type="video/mp4" 
                             />
                             আপনার ব্রাউজার ভিডিও প্লেব্যাক সমর্থন করে না।
@@ -1341,7 +1341,7 @@ function DetectionUploadComponent({ onSwitchToHistory }: { onSwitchToHistory: ()
                               <div className="relative group">
                                 {capturedImage.result.processed_image_url ? (
                                   <img
-                                    src={`http://localhost:8000${capturedImage.result.processed_image_url}`}
+                                    src={`${process.env.NEXT_PUBLIC_API_URL}${capturedImage.result.processed_image_url}`}
                                     alt="Processed Captured"
                                     className="w-full h-auto rounded-lg shadow-md transition-transform group-hover:scale-105 object-contain"
                                   />
@@ -1372,7 +1372,7 @@ function DetectionUploadComponent({ onSwitchToHistory }: { onSwitchToHistory: ()
                               <h5 className="font-medium text-gray-800 mb-3">ডিটেকশনের ফলাফল</h5>
                               {capturedImage.result.processed_image_url && (
                                 <img
-                                  src={`http://localhost:8000${capturedImage.result.processed_image_url}`}
+                                  src={`${process.env.NEXT_PUBLIC_API_URL}${capturedImage.result.processed_image_url}`}
                                   alt="Processed"
                                   className="w-full h-auto rounded-lg shadow-sm mb-4 max-h-96 object-contain mx-auto"
                                 />
@@ -1449,7 +1449,7 @@ function DetectionUploadComponent({ onSwitchToHistory }: { onSwitchToHistory: ()
                         <div className="flex gap-4 mt-6">
                           {capturedImage.result.processed_image_url && (
                             <a
-                              href={`http://localhost:8000${capturedImage.result.processed_image_url}`}
+                              href={`${process.env.NEXT_PUBLIC_API_URL}${capturedImage.result.processed_image_url}`}
                               download
                               className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
                             >
@@ -1498,7 +1498,7 @@ function DetectionHistoryComponent() {
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/detection/history?skip=0&limit=10', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/detection/history?skip=0&limit=10`, {
           method: 'GET',
           headers: getAuthHeaders(),
         });
@@ -1584,7 +1584,7 @@ function DetectionHistoryComponent() {
                   </span>
                   {item.processed_image_url && (
                     <img
-                      src={`http://localhost:8000${item.processed_image_url}`}
+                      src={`${process.env.NEXT_PUBLIC_API_URL}${item.processed_image_url}`}
                       alt="Processed result"
                       className="w-16 h-16 object-cover rounded border"
                     />

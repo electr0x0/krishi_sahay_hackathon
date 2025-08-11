@@ -480,7 +480,7 @@ export default function DashboardStorePage() {
                   <Card key={listing.id} className="overflow-hidden">
                     {listing.product_image_url ? (
                       <img 
-                        src={`http://localhost:8000${listing.product_image_url}`} 
+                        src={`${process.env.NEXT_PUBLIC_API_URL}${listing.product_image_url}`} 
                         alt={listing.product_name}
                         className="w-full h-48 object-cover"
                       />

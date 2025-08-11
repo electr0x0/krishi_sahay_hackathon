@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
@@ -1196,4 +1196,13 @@ const ChatInterface = () => {
   );
 };
 
-export default ChatInterface;
+// Wrap the chat interface with Suspense to satisfy Next.js requirement
+function ChatInterfacePageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-4 text-sm text-gray-500">Loading chat...</div>}>
+      <ChatInterface />
+    </Suspense>
+  );
+}
+
+export default ChatInterfacePageWrapper;

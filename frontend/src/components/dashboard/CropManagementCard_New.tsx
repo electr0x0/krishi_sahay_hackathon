@@ -96,7 +96,7 @@ export default function CropManagementCard() {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/agendas/', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agendas/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -126,7 +126,7 @@ export default function CropManagementCard() {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/agendas/', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agendas/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -165,7 +165,7 @@ export default function CropManagementCard() {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/agendas/ai-suggestions', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agendas/ai-suggestions`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -196,7 +196,7 @@ export default function CropManagementCard() {
         return;
       }
 
-      const response = await fetch(`http://localhost:8000/api/agendas/${agendaId}/complete`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agendas/${agendaId}/complete`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

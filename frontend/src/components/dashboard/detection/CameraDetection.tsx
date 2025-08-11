@@ -193,7 +193,7 @@ const CameraDetection: React.FC<CameraDetectionProps> = ({
       formData.append('file', blob, 'camera-capture.jpg');
       formData.append('confidence_threshold', confidenceThreshold.toString());
 
-      const detectionResponse = await fetch('http://localhost:8000/api/detection/detect', {
+      const detectionResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/detection/detect`, {
         method: 'POST',
         body: formData,
         headers: getAuthHeaders(),
@@ -397,7 +397,7 @@ const CameraDetection: React.FC<CameraDetectionProps> = ({
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-gray-700">প্রক্রিয়াজাত ছবি</h4>
                     <img
-                      src={`http://localhost:8000${capturedImage.result.processed_image_url}`}
+                      src={`${process.env.NEXT_PUBLIC_API_URL}${capturedImage.result.processed_image_url}`}
                       alt="Processed with detections"
                       className="w-full h-auto rounded-lg shadow-md border"
                     />

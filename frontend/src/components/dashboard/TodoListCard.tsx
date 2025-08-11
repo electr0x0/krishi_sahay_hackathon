@@ -44,7 +44,7 @@ export default function TodoListCard() {
       }
 
       console.log('Fetching today agendas...');
-      const response = await fetch('http://localhost:8000/api/agendas/today', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agendas/today`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -80,7 +80,7 @@ export default function TodoListCard() {
       }
 
       console.log('Generating AI suggestions...');
-      const response = await fetch('http://localhost:8000/api/agendas/ai-suggestions', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agendas/ai-suggestions`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -124,7 +124,7 @@ export default function TodoListCard() {
       }
 
       console.log('Creating agenda:', newAgendaTitle);
-      const response = await fetch('http://localhost:8000/api/agendas/', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agendas/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -167,7 +167,7 @@ export default function TodoListCard() {
       }
 
       console.log('Completing agenda:', agendaId);
-      const response = await fetch(`http://localhost:8000/api/agendas/${agendaId}/complete`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agendas/${agendaId}/complete`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
