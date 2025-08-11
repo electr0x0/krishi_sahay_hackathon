@@ -71,6 +71,8 @@ async def create_comprehensive_farm_data(
     # Handle district field mapping
     if 'district' in create_data:
         create_data['district_new'] = create_data['district']
+        # Remove the original 'district' key to avoid conflicts
+        del create_data['district']
     
     # Auto-populate location data from user profile if not provided
     if not create_data.get('latitude') and current_user.latitude:
@@ -214,7 +216,7 @@ def create_or_update_farm_data(
         existing_farm.farm_name = form_data.farmer_name + " Farm"  # Generate farm name
         existing_farm.farm_type = "crop"  # Default type
         existing_farm.division = "Unknown"  # Default values
-        existing_farm.district = form_data.location
+        existing_farm.district_new = form_data.location  # Use correct field name
         existing_farm.upazila = "Unknown"
         existing_farm.total_area = float(form_data.total_amount.replace('বিঘা', '').replace('একর', '').strip()) if form_data.total_amount else 1.0
         existing_farm.farming_experience = form_data.farming_experience
@@ -234,7 +236,7 @@ def create_or_update_farm_data(
             farm_name=form_data.farmer_name + " Farm",
             farm_type="crop",
             division="Unknown",
-            district=form_data.location,
+            district_new=form_data.location,  # Use correct field name
             upazila="Unknown", 
             total_area=float(form_data.total_amount.replace('বিঘা', '').replace('একর', '').strip()) if form_data.total_amount else 1.0,
             farming_experience=form_data.farming_experience,
@@ -264,7 +266,7 @@ def get_user_farm_data(
     # Convert comprehensive data back to legacy format
     legacy_data = FormDataSchema(
         farmerName=farm_data.farmer_name,
-        location=farm_data.district,
+        location=farm_data.district_new or farm_data.district or "Unknown",  # Use correct field name with fallback
         cropType=farm_data.current_crops or "ধান",
         farmingExperience=farm_data.farming_experience,
         totalAmount=f"{farm_data.total_area} একর",

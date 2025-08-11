@@ -150,9 +150,6 @@ const Header = () => {
     { href: "/how-it-works", label: "কীভাবে কাজ করে" },
     { href: "/impact", label: "প্রভাব" },
     { href: "/iot-dashboard", label: "IoT ড্যাশবোর্ড" },
-    ...(isAuthenticated ? [
-      { href: "/chat", label: "চ্যাট" },
-    ] : []),
   ];
 
   return (

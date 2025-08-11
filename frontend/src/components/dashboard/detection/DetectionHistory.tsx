@@ -221,6 +221,7 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
                         width={80}
                         height={80}
                         className="object-cover rounded border"
+                        unoptimized
                       />
                     )}
                     <button
@@ -327,6 +328,7 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
                     width={400}
                     height={300}
                     className="w-full object-cover rounded border"
+                    unoptimized
                   />
                 </div>
                 {selectedItem.processed_image_url && (
@@ -341,6 +343,7 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
                       width={400}
                       height={300}
                       className="w-full object-cover rounded border"
+                      unoptimized
                     />
                   </div>
                 )}

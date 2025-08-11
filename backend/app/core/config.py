@@ -26,7 +26,9 @@ ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001", 
     "http://localhost:5174",
-    "https://your-frontend-domain.com"
+    "https://krishi-sahay-hackathon.vercel.app/",
+    "http://krishi-sahay-hackathon.vercel.app",
+    "https://krishi-sahay-hackathon.vercel.app"
 ]
 
 # Validation

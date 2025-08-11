@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Disable Next.js Image Optimization globally to avoid _next/image URL issues for external API images
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -39,30 +41,14 @@ const nextConfig: NextConfig = {
         port: '8000',
         pathname: '/**',
       },
-      {
-        protocol: 'http',
-        hostname: `${process.env.NEXT_PUBLIC_HOSTNAME}`,
-        port: '8000',
-        pathname: '/**',
-      },
-      {
-        protocol: 'http',
-        hostname: `${process.env.NEXT_PUBLIC_HOSTNAME}`,
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: `${process.env.NEXT_PUBLIC_HOSTNAME}`,
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: `${process.env.NEXT_PUBLIC_HOSTNAME}`,
-        port: '',
-        pathname: '/**',
-      },
+      // Allow API host from env for Next/Image when used with unoptimized=false
+      ...(process.env.NEXT_PUBLIC_HOSTNAME
+        ? [
+            { protocol: 'http', hostname: process.env.NEXT_PUBLIC_HOSTNAME, port: '8000', pathname: '/**' },
+            { protocol: 'http', hostname: process.env.NEXT_PUBLIC_HOSTNAME, port: '', pathname: '/**' },
+            { protocol: 'https', hostname: process.env.NEXT_PUBLIC_HOSTNAME, port: '', pathname: '/**' },
+          ]
+        : []),
     ],
   },
 

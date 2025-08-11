@@ -239,7 +239,7 @@ const DetectionUpload = () => {
                 <div>
                   <h4 className="font-medium mb-3">প্রক্রিয়াকৃত ছবি</h4>
                   <img
-                    src={`${process.env.NEXT_PUBLIC_API_URL}}${result.processed_image_url}`}
+                    src={`${process.env.NEXT_PUBLIC_API_URL}${result.processed_image_url}`}
                     alt="Processed"
                     className="w-full max-w-2xl mx-auto rounded-lg shadow-md"
                   />
