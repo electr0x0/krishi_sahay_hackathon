@@ -21,7 +21,12 @@
 ## ✨ Key Features
 
 ### 🤖 **AI-Powered Intelligence**
-- **Smart AI Agent** with 10+ specialized tool integrations(get_item_price, get_price_trend,diagnose_crop_disease, get_crop_calendar, get_fertilizer_recommendation,get_current_weather, get_weather_forecast, get_weather_alerts, get_latest_sensor_data, get_sensor_history, get_sensor_alerts)
+- **Smart AI Agent** with 10+ specialized tool integrations(
+  -get_item_price, get_price_trend
+  -diagnose_crop_disease, get_crop_calendar, get_fertilizer_recommendation
+  -get_current_weather, get_weather_forecast, get_weather_alerts
+  -get_latest_sensor_data, get_sensor_history, get_sensor_alerts
+  )
 - **Multi-language Support** with real-time translation
 - **Voice Assistant** with text-to-speech capabilities
 - **Intelligent Crop Recommendations** based on weather and soil data
