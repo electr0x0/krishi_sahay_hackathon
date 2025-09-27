@@ -19,7 +19,7 @@
 ### 📺 Complete Platform Overview
 
 <!-- Option 1: GitHub Video (drag & drop your video in a GitHub issue to get the link) -->
-https://github.com/user-attachments/assets/your-video-upload-id-here
+[https://github.com/user-attachments/assets/your-video-upload-id-here](https://github.com/electr0x0/krishi_sahay_hackathon/blob/mekat/VID_20250928000825336.mp4)
 
 ### 🎬 Key Demo Highlights
 - 🤖 **AI Agent with Tool Integration** - Smart farming assistant with 10+ specialized tools
