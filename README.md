@@ -12,6 +12,24 @@
 
 **Krishi Sahay** is a comprehensive AI-powered smart agriculture platform that revolutionizes farming through cutting-edge technology. Our platform integrates IoT sensors, machine learning, computer vision, and AI agents to provide farmers with intelligent insights, real-time monitoring, and community-driven solutions.
 
+## 🎥 Project Demo
+
+<div align="center">
+  
+### 📺 Complete Platform Overview
+
+<!-- Option 1: GitHub Video (drag & drop your video in a GitHub issue to get the link) -->
+https://github.com/user-attachments/assets/your-video-upload-id-here
+
+### 🎬 Key Demo Highlights
+- 🤖 **AI Agent with Tool Integration** - Smart farming assistant with 10+ specialized tools
+- 🔬 **Real-time Disease Detection** - Image/video analysis with 13 disease classifications  
+- 🌐 **Live IoT Dashboard** - ESP32 sensor data streaming and analytics
+- 🏪 **Marketplace & Community** - Farmer clans, equipment store, and funding platform
+- 🌤️ **Weather Intelligence** - 7-day forecasts with crop recommendations
+
+</div>
+
 ### 🌐 Live Demo
 > **Frontend:** [Live URL - Deploy Link Here]  
 > **Backend API:** [API Documentation - Deploy Link Here]
