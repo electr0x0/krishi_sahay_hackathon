@@ -33,8 +33,8 @@ https://github.com/electr0x0/krishi_sahay_hackathon/blob/mekat/VID_2025092800082
 </div>
 
 ### 🌐 Live Demo
-> **Frontend:** [Live URL - Deploy Link Here]  
-> **Backend API:** [API Documentation - Deploy Link Here]
+> **Frontend:** []  
+> **Backend API:** [AWS]
 
 ---
 
