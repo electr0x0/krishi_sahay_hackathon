@@ -19,6 +19,7 @@ export default function RootLayout({
 }>) {
   const pathname = usePathname();
   const isDashboard = pathname.startsWith('/dashboard');
+  const isAdmin = pathname.startsWith('/admin');
 
   return (
     <html lang="bn">
@@ -26,8 +27,8 @@ export default function RootLayout({
         className={`${notoSansBengali.variable} antialiased font-sans`}
       >
         <AuthProvider>
-          {!isDashboard && <Header />}
-          <main className={!isDashboard ? "pt-16" : ""}>
+          {!isDashboard && !isAdmin && <Header />}
+          <main className={!isDashboard && !isAdmin ? "pt-16" : ""}>
             {children}
           </main>
         </AuthProvider>

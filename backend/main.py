@@ -25,6 +25,9 @@ from app.api import (
     weather_recommendations,
 )
 
+# Import admin routers
+from app.api.admin import dashboard, users, sensors, detections, auth as admin_auth
+
 
 # Create FastAPI app
 app = FastAPI(
@@ -37,10 +40,13 @@ app = FastAPI(
 # Custom middleware to handle CORS preflight requests
 @app.middleware("http")
 async def cors_handler(request: Request, call_next):
+    # Get origin from request header, default to localhost:3001
+    origin = request.headers.get("origin", "http://localhost:3001")
+    
     # Handle preflight requests
     if request.method == "OPTIONS":
         response = Response()
-        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
         response.headers["Access-Control-Allow-Headers"] = "*"
         response.headers["Access-Control-Allow-Credentials"] = "true"
@@ -51,17 +57,22 @@ async def cors_handler(request: Request, call_next):
     response = await call_next(request)
     
     # Add CORS headers to all responses
-    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Origin"] = origin
     response.headers["Access-Control-Allow-Credentials"] = "true"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
     response.headers["Access-Control-Allow-Headers"] = "*"
     
     return response
 
-# Add CORS middleware with maximum permissiveness
+# Add CORS middleware with specific origins (required when using credentials)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001"
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
@@ -121,6 +132,13 @@ app.include_router(weather.router, prefix="/api", tags=["Weather"])
 app.include_router(weather_recommendations.router, prefix="/api/weather", tags=["Weather Recommendations"])
 app.include_router(form_data_router.router, prefix="/api/form-data", tags=["Form Data"])
 app.include_router(agenda.router, prefix="/api", tags=["Agendas"])
+
+# Include admin routers
+app.include_router(admin_auth.router, prefix="/api/admin/auth", tags=["Admin Authentication"])
+app.include_router(dashboard.router, prefix="/api", tags=["Admin Dashboard"])
+app.include_router(users.router, prefix="/api", tags=["Admin Users"])
+app.include_router(sensors.router, prefix="/api", tags=["Admin Sensors"])
+app.include_router(detections.router, prefix="/api", tags=["Admin Detections"])
 
 @app.on_event("startup")
 async def startup_event():
