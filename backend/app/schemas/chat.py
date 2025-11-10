@@ -72,6 +72,7 @@ class ChatMessage(BaseModel):
     voice_duration: Optional[float] = None
     tool_calls: Optional[str] = None
     tool_outputs: Optional[str] = None
+    components: Optional[str] = None  # NEW: Interactive components JSON
     processing_time: Optional[float] = None
     confidence_score: Optional[float] = None
     user_rating: Optional[int] = None

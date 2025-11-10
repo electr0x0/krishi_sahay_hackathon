@@ -185,6 +185,7 @@ async def send_message(
             message_type="text",
             tool_calls=json.dumps(ai_response.get("tool_calls", [])),
             tool_outputs=json.dumps(ai_response.get("tool_outputs", {})), # Store raw tool output
+            components=json.dumps(ai_response.get("components", [])),  # NEW: Save interactive components
             processing_time=ai_response.get("processing_time", 0)
         )
         db.add(ai_message)

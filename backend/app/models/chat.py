@@ -50,6 +50,7 @@ class ChatMessage(Base):
     voice_duration = Column(Float, nullable=True)
     tool_calls = Column(JSON, nullable=True)
     tool_outputs = Column(JSON, nullable=True)
+    components = Column(JSON, nullable=True)  # NEW: Interactive components
     processing_time = Column(Float, nullable=True)
     confidence_score = Column(Float, nullable=True)
     user_rating = Column(Integer, nullable=True)
