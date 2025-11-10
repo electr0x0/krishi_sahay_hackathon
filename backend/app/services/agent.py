@@ -18,8 +18,9 @@ from app.tools import (
     get_user_detection_history, get_detection_insights)
 
 from app.tools.detection_tool import _get_user_detection_history_impl, _get_detection_insights_impl
-from app.prompts.system_prompts import get_system_prompt, get_context_prompt
+from app.prompts.system_prompts import get_dialect_aware_prompt
 from app.services.translation_service import translation_service
+from app.services.dialect_service import dialect_service
 
 
 class AgentState(TypedDict):
@@ -99,15 +100,17 @@ class EnhancedAgentService:
         """Create the agent graph with state management"""
         
         def agent_node(state: AgentState):
-            # Get system prompt based on language
+            # Get language and dialect from state
             language = state.get("language", "bn")
-            system_prompt = get_system_prompt(language)
-            
-            # Add user context if available
             user_context = state.get("user_context", {})
-            if user_context:
-                context_prompt = get_context_prompt(user_context)
-                system_prompt += "\n\n" + context_prompt
+            dialect = user_context.get("dialect") or user_context.get("preferred_dialect")
+            
+            # Get dialect-aware system prompt
+            system_prompt = get_dialect_aware_prompt(
+                language=language,
+                dialect=dialect,
+                user_context=user_context
+            )
             
             # Enhanced instructions for flexible response
             enhanced_prompt = f"""{system_prompt}
@@ -243,16 +246,18 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
         message: str,
         user_context: Optional[Dict[str, Any]] = None,
         session_id: Optional[str] = None,
-        language: str = "bn"
+        language: str = "bn",
+        dialect: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Process user message with context awareness
+        Process user message with context and dialect awareness
         
         Args:
             message: User's message
             user_context: User information and preferences
             session_id: Chat session ID
-            language: Preferred language (bn/en)
+            language: Base language (bn/en/hi/ur)
+            dialect: Specific dialect (bn-syl/bn-ctg/bn-noa/bn-ran)
             
         Returns:
             Response with translated content if needed
@@ -265,26 +270,36 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
         if not user_context:
             user_context = {}
         
-        # Detect message language if auto-translation is needed
-        if language == "auto":
-            detection = await translation_service.detect_language(message)
-            detected_lang = detection.get("language", "bn")
-            language = "bn" if detected_lang in ["bn", "hi"] else "en"
-        
-        # Translate message to English for processing if needed
-        processed_message = message
-        if language == "bn" and user_context.get("auto_translate", False):
-            translation_result = await translation_service.translate_text(
+        # Auto-detect dialect if enabled
+        if user_context.get("auto_detect_dialect", True) or language == "auto":
+            detection_result = dialect_service.auto_detect_and_normalize(
                 text=message,
-                target_language="en",
-                source_language="bn"
+                user_context=user_context
             )
-            if translation_result.get("success", False):
-                processed_message = translation_result.get("translated_text", message)
+            
+            detected_dialect = detection_result["detected_dialect"]
+            normalized_message = detection_result["normalized_text"]
+            detection_confidence = detection_result["confidence"]
+            
+            # Use detected dialect if not explicitly provided
+            if not dialect:
+                dialect = detected_dialect
+            
+            # Update language based on detection
+            if language == "auto":
+                language = detection_result["base_language"]
+        else:
+            normalized_message = message
+            detection_confidence = 1.0
+        
+        # Store dialect in user context
+        user_context["dialect"] = dialect
+        user_context["detected_dialect"] = dialect
+        user_context["detection_confidence"] = detection_confidence
         
         # Create agent state
         state = {
-            "messages": [HumanMessage(content=processed_message)],
+            "messages": [HumanMessage(content=normalized_message)],
             "user_context": user_context,
             "session_id": session_id,
             "language": language
@@ -297,6 +312,15 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
             # Extract response and tool information
             response_message = result["messages"][-1]
             response_content = response_message.content
+            
+            # Handle Gemini's structured content format
+            if isinstance(response_content, list):
+                # Extract text from content blocks
+                text_content = ""
+                for block in response_content:
+                    if isinstance(block, dict) and block.get("type") == "text":
+                        text_content += block.get("text", "")
+                response_content = text_content if text_content else str(response_content)
             
             # Collect tool calls and outputs from all messages
             tool_calls = []
@@ -346,23 +370,27 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
                         print(f"Error executing tool {tool_name}: {e}")
                         tool_outputs[tool_name] = {"error": str(e)}
             
-            # Translate response if needed
-            if language == "bn" and user_context.get("auto_translate", False):
-                translation_result = await translation_service.translate_agricultural_terms(
-                    text=response_content,
-                    target_language="bn"
+            # Translate response if needed (convert to user's dialect)
+            if dialect and user_context.get("auto_translate_response", True):
+                final_response = dialect_service.prepare_response_in_dialect(
+                    ai_response=response_content,
+                    user_dialect=dialect,
+                    include_metadata=False
                 )
-                if translation_result.get("success", False):
-                    response_content = translation_result.get("translated_text", response_content)
+            else:
+                final_response = response_content
             
             # Calculate processing time
             processing_time = time.time() - start_time
             
             # Prepare response
             response = {
-                "content": response_content,
+                "content": final_response,
                 "session_id": session_id,
                 "language": language,
+                "dialect": dialect,
+                "detected_dialect": dialect,
+                "detection_confidence": detection_confidence,
                 "timestamp": datetime.now().isoformat(),
                 "tool_calls": tool_calls,
                 "tool_outputs": tool_outputs,
@@ -374,6 +402,17 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
             
         except Exception as e:
             processing_time = time.time() - start_time
+            
+            # Print full error details for debugging
+            import traceback
+            print(f"\n{'='*60}")
+            print(f"ERROR in process_message:")
+            print(f"Error Type: {type(e).__name__}")
+            print(f"Error Message: {str(e)}")
+            print(f"Traceback:")
+            traceback.print_exc()
+            print(f"{'='*60}\n")
+            
             error_message = "দুঃখিত, একটি সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।" if language == "bn" else "Sorry, an error occurred. Please try again."
             
             return {
@@ -400,16 +439,25 @@ async def run_enhanced_agent(
     query: str,
     user_context: Optional[Dict[str, Any]] = None,
     session_id: Optional[str] = None,
-    language: str = "bn"
+    language: str = "bn",
+    dialect: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Enhanced agent runner with context awareness
+    Enhanced agent runner with dialect awareness
+    
+    Args:
+        query: User query
+        user_context: User context and preferences
+        session_id: Chat session ID
+        language: Base language code
+        dialect: Dialect code
     """
     return await enhanced_agent.process_message(
         message=query,
         user_context=user_context,
         session_id=session_id,
-        language=language
+        language=language,
+        dialect=dialect
     )
 
 
