@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { BarChart2, Bell, Camera, ClipboardPlus, Home, LayoutDashboard, LifeBuoy, LogOut, MessageSquare, Mic, Settings, ShoppingBag, User, Users } from 'lucide-react';
+import { Activity, BarChart2, Bell, Camera, ClipboardPlus, Home, LayoutDashboard, LifeBuoy, LogOut, MessageSquare, Mic, Settings, ShoppingBag, User, Users } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import { cn } from '@/lib/utils';
@@ -56,6 +56,7 @@ const Sidebar = () => {
     { href: '/dashboard/analytics', label: 'বিশ্লেষণ', icon: BarChart2 },
     { href: '/dashboard/chat', label: 'চ্যাট', icon: MessageSquare },
     { href: '/dashboard/voice-chat', label: 'AI এর সাথে কথা বলুন', icon: Mic },
+    { href: '/dashboard/iot', label: 'IoT', icon: Activity },
     { href: '/dashboard/community', label: 'সম্প্রদায়', icon: Users },
     { href: '/dashboard/store', label: 'আমার দোকান', icon: ShoppingBag },
     { href: '/dashboard/notifications', label: 'নোটিফিকেশন', icon: Bell },
