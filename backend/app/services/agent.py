@@ -315,11 +315,52 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
                     ]
                 })
             
-            # Current Weather Component
+            # Current Weather Component - normalize to flat shape expected by frontend
             elif tool_name == "get_current_weather":
+                # tool_data is usually the OpenWeatherMap JSON. Frontend expects a flat structure
+                # with keys like temperature, humidity, wind_speed (km/h), visibility (km), etc.
+                flat_data = tool_data
+                try:
+                    if isinstance(tool_data, dict) and tool_data.get('main'):
+                        main = tool_data.get('main', {})
+                        weather = (tool_data.get('weather') or [{}])[0]
+                        wind = tool_data.get('wind', {}) or {}
+                        sys = tool_data.get('sys', {}) or {}
+
+                        temp = main.get('temp')
+                        feels_like = main.get('feels_like')
+                        humidity = main.get('humidity')
+                        pressure = main.get('pressure')
+                        visibility_m = tool_data.get('visibility')
+
+                        # Convert wind m/s -> km/h for frontend display
+                        wind_speed_ms = wind.get('speed')
+                        wind_kmh = round(float(wind_speed_ms) * 3.6, 1) if wind_speed_ms is not None else None
+
+                        flat_data = {
+                            "location": tool_data.get('name') or sys.get('country'),
+                            "temperature": temp,
+                            "temp": temp,
+                            "feels_like": feels_like,
+                            "feelsLike": feels_like,
+                            "condition": weather.get('main') or weather.get('description'),
+                            "description": weather.get('description'),
+                            "icon": weather.get('icon'),
+                            "humidity": humidity,
+                            "wind_speed": wind_kmh,
+                            "windSpeed": wind_kmh,
+                            "visibility": round(visibility_m / 1000, 1) if visibility_m is not None else None,
+                            "pressure": pressure,
+                            # keep raw data for debugging or downstream uses
+                            "raw": tool_data
+                        }
+                except Exception:
+                    # on any unexpected shape, fall back to original tool_data
+                    flat_data = tool_data
+
                 components.append({
                     "type": "current_weather",
-                    "data": tool_data,
+                    "data": flat_data,
                     "actions": [
                         {"label": "আবহাওয়া সতর্কতা সেট করুন", "action": "set_weather_alert", "icon": "bell"},
                         {"label": "৭-দিনের পূর্বাভাস দেখুন", "action": "view_7day_forecast", "icon": "calendar"}
