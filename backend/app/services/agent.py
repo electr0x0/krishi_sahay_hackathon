@@ -18,8 +18,9 @@ from app.tools import (
     get_user_detection_history, get_detection_insights)
 
 from app.tools.detection_tool import _get_user_detection_history_impl, _get_detection_insights_impl
-from app.prompts.system_prompts import get_system_prompt, get_context_prompt
+from app.prompts.system_prompts import get_dialect_aware_prompt
 from app.services.translation_service import translation_service
+from app.services.dialect_service import dialect_service
 
 
 class AgentState(TypedDict):
@@ -99,22 +100,37 @@ class EnhancedAgentService:
         """Create the agent graph with state management"""
         
         def agent_node(state: AgentState):
-            # Get system prompt based on language
+            # Get language and dialect from state
             language = state.get("language", "bn")
-            system_prompt = get_system_prompt(language)
-            
-            # Add user context if available
             user_context = state.get("user_context", {})
-            if user_context:
-                context_prompt = get_context_prompt(user_context)
-                system_prompt += "\n\n" + context_prompt
+            dialect = user_context.get("dialect") or user_context.get("preferred_dialect")
+            
+            # Get dialect-aware system prompt
+            system_prompt = get_dialect_aware_prompt(
+                language=language,
+                dialect=dialect,
+                user_context=user_context
+            )
             
             # Enhanced instructions for flexible response
+            location_info = ""
+            if user_context.get("location"):
+                loc = user_context["location"]
+                if loc.get("district"):
+                    location_info = f"\n📍 USER LOCATION: The user is from {loc['district']} district."
+                    if loc.get("lat") and loc.get("lon"):
+                        location_info += f" Coordinates: {loc['lat']}, {loc['lon']}"
+                    location_info += "\n- When asking for weather, prices, or location-specific info, you already have their location."
+                    location_info += "\n- DO NOT ask the user for their location - use the weather tools without location parameter."
+            
             enhanced_prompt = f"""{system_prompt}
+{location_info}
 
 RESPONSE FLEXIBILITY GUIDELINES:
 🔧 Tool Usage Strategy:
 - Use specialized tools when you need real-time data (weather, prices, disease diagnosis)
+- For weather queries, you already have the user's location - call the tool directly
+- Don't ask users for location when you already have it in the context
 - Don't force tool usage for general agricultural knowledge questions
 - Combine tool data with your expertise for comprehensive answers
 
@@ -125,7 +141,7 @@ RESPONSE FLEXIBILITY GUIDELINES:
 - Explain agricultural concepts, crop management, etc.
 
 🎯 Decision Framework:
-- Need current weather? → Use weather tools
+- Need current weather? → Use weather tools (location already available)
 - Need market prices? → Use pricing tools  
 - Need disease diagnosis? → Use crop tools
 - General farming advice? → Use your knowledge directly
@@ -157,23 +173,32 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
             return {"messages": [response]}
         
         def custom_tool_node(state: AgentState):
-            """Custom tool execution that provides user context to detection tools"""
+            """Custom tool execution that provides user context to detection tools and location to weather tools"""
             messages = state.get("messages", [])
             user_context = state.get("user_context", {})
             user_id = user_context.get("user_id")
+            user_location = user_context.get("location", {})
             
             # Find the last AI message with tool calls
             last_message = messages[-1] if messages else None
             if not last_message or not hasattr(last_message, 'tool_calls') or not last_message.tool_calls:
                 return {"messages": []}
             
-            # Check if any tool calls are detection tools that need user context
+            # Weather tools that need location data
+            weather_tools = ["get_current_weather", "get_weather_forecast", "get_weather_alerts"]
+            
+            # Check if any tool calls need special handling
             has_detection_tools = any(
                 tool_call["name"] in ["get_user_detection_history", "get_detection_insights"] 
                 for tool_call in last_message.tool_calls
             )
             
-            if has_detection_tools and user_id:
+            has_weather_tools = any(
+                tool_call["name"] in weather_tools
+                for tool_call in last_message.tool_calls
+            )
+            
+            if (has_detection_tools and user_id) or (has_weather_tools and user_location):
                 # Handle detection tools manually with user context
                 tool_results = []
                 
@@ -182,11 +207,33 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
                     tool_args = tool_call.get("args", {})
                     
                     try:
+                        # Handle detection tools with user_id
                         if tool_name == "get_user_detection_history":
                             limit = tool_args.get("limit", 5)
                             result = _get_user_detection_history_impl(user_id, limit)
                         elif tool_name == "get_detection_insights":
                             result = _get_detection_insights_impl(user_id)
+                        # Handle weather tools with user location
+                        elif tool_name in weather_tools:
+                            # Inject user's location if not provided in the tool call
+                            if not tool_args.get("lat") and not tool_args.get("location"):
+                                if user_location.get("lat") and user_location.get("lon"):
+                                    tool_args["lat"] = user_location["lat"]
+                                    tool_args["lon"] = user_location["lon"]
+                                elif user_location.get("district"):
+                                    tool_args["location"] = user_location["district"]
+                            
+                            # Find and execute the weather tool
+                            tool_func = None
+                            for tool in self.tools:
+                                if tool.name == tool_name:
+                                    tool_func = tool
+                                    break
+                            
+                            if tool_func:
+                                result = tool_func.invoke(tool_args)
+                            else:
+                                result = f"Tool {tool_name} not found"
                         else:
                             # For non-detection tools, still need to execute them manually
                             # Find the tool function and execute it
@@ -238,21 +285,190 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
         
         return graph.compile()
     
+    def _build_components_from_tools(self, tool_calls: List[Dict], tool_outputs: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Build interactive UI components from tool outputs"""
+        components = []
+        
+        for tool_call in tool_calls:
+            tool_name = tool_call.get("name", "")
+            tool_data = tool_outputs.get(tool_name)
+            
+            if not tool_data:
+                continue
+            
+            # Parse tool data if it's a string
+            if isinstance(tool_data, str):
+                try:
+                    tool_data = json.loads(tool_data)
+                except json.JSONDecodeError:
+                    # If it's plain text, wrap it
+                    tool_data = {"text": tool_data}
+            
+            # Weather Forecast Component
+            if tool_name == "get_weather_forecast":
+                components.append({
+                    "type": "weather_forecast",
+                    "data": tool_data,
+                    "actions": [
+                        {"label": "সেচ করার সময়সূচী যোগ করুন", "action": "schedule_irrigation", "icon": "droplet"},
+                        {"label": "বিস্তারিত রিপোর্ট দেখুন", "action": "view_weather_details", "icon": "file-text"}
+                    ]
+                })
+            
+            # Current Weather Component - normalize to flat shape expected by frontend
+            elif tool_name == "get_current_weather":
+                # tool_data is usually the OpenWeatherMap JSON. Frontend expects a flat structure
+                # with keys like temperature, humidity, wind_speed (km/h), visibility (km), etc.
+                flat_data = tool_data
+                try:
+                    if isinstance(tool_data, dict) and tool_data.get('main'):
+                        main = tool_data.get('main', {})
+                        weather = (tool_data.get('weather') or [{}])[0]
+                        wind = tool_data.get('wind', {}) or {}
+                        sys = tool_data.get('sys', {}) or {}
+
+                        temp = main.get('temp')
+                        feels_like = main.get('feels_like')
+                        humidity = main.get('humidity')
+                        pressure = main.get('pressure')
+                        visibility_m = tool_data.get('visibility')
+
+                        # Convert wind m/s -> km/h for frontend display
+                        wind_speed_ms = wind.get('speed')
+                        wind_kmh = round(float(wind_speed_ms) * 3.6, 1) if wind_speed_ms is not None else None
+
+                        flat_data = {
+                            "location": tool_data.get('name') or sys.get('country'),
+                            "temperature": temp,
+                            "temp": temp,
+                            "feels_like": feels_like,
+                            "feelsLike": feels_like,
+                            "condition": weather.get('main') or weather.get('description'),
+                            "description": weather.get('description'),
+                            "icon": weather.get('icon'),
+                            "humidity": humidity,
+                            "wind_speed": wind_kmh,
+                            "windSpeed": wind_kmh,
+                            "visibility": round(visibility_m / 1000, 1) if visibility_m is not None else None,
+                            "pressure": pressure,
+                            # keep raw data for debugging or downstream uses
+                            "raw": tool_data
+                        }
+                except Exception:
+                    # on any unexpected shape, fall back to original tool_data
+                    flat_data = tool_data
+
+                components.append({
+                    "type": "current_weather",
+                    "data": flat_data,
+                    "actions": [
+                        {"label": "আবহাওয়া সতর্কতা সেট করুন", "action": "set_weather_alert", "icon": "bell"},
+                        {"label": "৭-দিনের পূর্বাভাস দেখুন", "action": "view_7day_forecast", "icon": "calendar"}
+                    ]
+                })
+            
+            # Disease Detection Component
+            elif tool_name == "diagnose_crop_disease":
+                components.append({
+                    "type": "disease_detection",
+                    "data": tool_data,
+                    "actions": [
+                        {"label": "চিকিৎসা কিনুন", "action": "buy_treatment", "icon": "shopping-cart"},
+                        {"label": "বিশেষজ্ঞের সাথে যোগাযোগ করুন", "action": "contact_expert", "icon": "phone"},
+                        {"label": "একই সমস্যার অন্যদের দেখুন", "action": "view_similar_cases", "icon": "users"}
+                    ]
+                })
+            
+            # Market Price Component
+            elif tool_name in ["get_item_price", "get_price_trend"]:
+                components.append({
+                    "type": "market_price",
+                    "data": tool_data,
+                    "actions": [
+                        {"label": "বিক্রয়ের জন্য তালিকাভুক্ত করুন", "action": "list_for_sale", "icon": "tag"},
+                        {"label": "মূল্য সতর্কতা সেট করুন", "action": "set_price_alert", "icon": "bell"},
+                        {"label": "বাজারের প্রবণতা দেখুন", "action": "view_price_trend", "icon": "trending-up"}
+                    ]
+                })
+            
+            # IoT Sensor Data Component
+            elif tool_name in ["get_latest_sensor_data", "get_sensor_history"]:
+                components.append({
+                    "type": "sensor_data",
+                    "data": tool_data,
+                    "actions": [
+                        {"label": "সীমা সতর্কতা সেট করুন", "action": "set_threshold_alert", "icon": "alert-triangle"},
+                        {"label": "ঐতিহাসিক ডেটা দেখুন", "action": "view_sensor_history", "icon": "bar-chart"},
+                        {"label": "সেন্সর কনফিগার করুন", "action": "configure_sensor", "icon": "settings"}
+                    ]
+                })
+            
+            # Sensor Alerts Component
+            elif tool_name == "get_sensor_alerts":
+                components.append({
+                    "type": "sensor_alerts",
+                    "data": tool_data,
+                    "actions": [
+                        {"label": "সব পরীক্ষা করা হিসাবে চিহ্নিত করুন", "action": "mark_all_read", "icon": "check-circle"},
+                        {"label": "জরুরী সতর্কতা দেখুন", "action": "view_critical_only", "icon": "alert-circle"}
+                    ]
+                })
+            
+            # Crop Calendar Component
+            elif tool_name == "get_crop_calendar":
+                components.append({
+                    "type": "crop_calendar",
+                    "data": tool_data,
+                    "actions": [
+                        {"label": "ক্যালেন্ডারে যোগ করুন", "action": "add_to_calendar", "icon": "calendar-plus"},
+                        {"label": "অনুস্মারক সেট করুন", "action": "set_reminders", "icon": "bell"},
+                        {"label": "PDF ডাউনলোড করুন", "action": "download_calendar_pdf", "icon": "download"}
+                    ]
+                })
+            
+            # Fertilizer Recommendation Component
+            elif tool_name == "get_fertilizer_recommendation":
+                components.append({
+                    "type": "fertilizer_recommendation",
+                    "data": tool_data,
+                    "actions": [
+                        {"label": "সার কিনুন", "action": "buy_fertilizer", "icon": "shopping-cart"},
+                        {"label": "ডোজ ক্যালকুলেটর", "action": "calculate_dosage", "icon": "calculator"},
+                        {"label": "এজেন্ডায় যোগ করুন", "action": "add_to_agenda", "icon": "list-plus"}
+                    ]
+                })
+            
+            # Detection History/Insights Component
+            elif tool_name in ["get_user_detection_history", "get_detection_insights"]:
+                components.append({
+                    "type": "detection_insights",
+                    "data": tool_data,
+                    "actions": [
+                        {"label": "বিস্তারিত রিপোর্ট দেখুন", "action": "view_detailed_report", "icon": "file-text"},
+                        {"label": "PDF রপ্তানি করুন", "action": "export_pdf", "icon": "download"},
+                        {"label": "সুপারিশ পান", "action": "get_recommendations", "icon": "lightbulb"}
+                    ]
+                })
+        
+        return components
+    
     async def process_message(
         self,
         message: str,
         user_context: Optional[Dict[str, Any]] = None,
         session_id: Optional[str] = None,
-        language: str = "bn"
+        language: str = "bn",
+        dialect: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Process user message with context awareness
+        Process user message with context and dialect awareness
         
         Args:
             message: User's message
             user_context: User information and preferences
             session_id: Chat session ID
-            language: Preferred language (bn/en)
+            language: Base language (bn/en/hi/ur)
+            dialect: Specific dialect (bn-syl/bn-ctg/bn-noa/bn-ran)
             
         Returns:
             Response with translated content if needed
@@ -265,26 +481,36 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
         if not user_context:
             user_context = {}
         
-        # Detect message language if auto-translation is needed
-        if language == "auto":
-            detection = await translation_service.detect_language(message)
-            detected_lang = detection.get("language", "bn")
-            language = "bn" if detected_lang in ["bn", "hi"] else "en"
-        
-        # Translate message to English for processing if needed
-        processed_message = message
-        if language == "bn" and user_context.get("auto_translate", False):
-            translation_result = await translation_service.translate_text(
+        # Auto-detect dialect if enabled
+        if user_context.get("auto_detect_dialect", True) or language == "auto":
+            detection_result = dialect_service.auto_detect_and_normalize(
                 text=message,
-                target_language="en",
-                source_language="bn"
+                user_context=user_context
             )
-            if translation_result.get("success", False):
-                processed_message = translation_result.get("translated_text", message)
+            
+            detected_dialect = detection_result["detected_dialect"]
+            normalized_message = detection_result["normalized_text"]
+            detection_confidence = detection_result["confidence"]
+            
+            # Use detected dialect if not explicitly provided
+            if not dialect:
+                dialect = detected_dialect
+            
+            # Update language based on detection
+            if language == "auto":
+                language = detection_result["base_language"]
+        else:
+            normalized_message = message
+            detection_confidence = 1.0
+        
+        # Store dialect in user context
+        user_context["dialect"] = dialect
+        user_context["detected_dialect"] = dialect
+        user_context["detection_confidence"] = detection_confidence
         
         # Create agent state
         state = {
-            "messages": [HumanMessage(content=processed_message)],
+            "messages": [HumanMessage(content=normalized_message)],
             "user_context": user_context,
             "session_id": session_id,
             "language": language
@@ -297,6 +523,15 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
             # Extract response and tool information
             response_message = result["messages"][-1]
             response_content = response_message.content
+            
+            # Handle Gemini's structured content format
+            if isinstance(response_content, list):
+                # Extract text from content blocks
+                text_content = ""
+                for block in response_content:
+                    if isinstance(block, dict) and block.get("type") == "text":
+                        text_content += block.get("text", "")
+                response_content = text_content if text_content else str(response_content)
             
             # Collect tool calls and outputs from all messages
             tool_calls = []
@@ -346,26 +581,34 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
                         print(f"Error executing tool {tool_name}: {e}")
                         tool_outputs[tool_name] = {"error": str(e)}
             
-            # Translate response if needed
-            if language == "bn" and user_context.get("auto_translate", False):
-                translation_result = await translation_service.translate_agricultural_terms(
-                    text=response_content,
-                    target_language="bn"
+            # Translate response if needed (convert to user's dialect)
+            if dialect and user_context.get("auto_translate_response", True):
+                final_response = dialect_service.prepare_response_in_dialect(
+                    ai_response=response_content,
+                    user_dialect=dialect,
+                    include_metadata=False
                 )
-                if translation_result.get("success", False):
-                    response_content = translation_result.get("translated_text", response_content)
+            else:
+                final_response = response_content
             
             # Calculate processing time
             processing_time = time.time() - start_time
             
+            # Build interactive components from tool outputs
+            components = self._build_components_from_tools(tool_calls, tool_outputs)
+            
             # Prepare response
             response = {
-                "content": response_content,
+                "content": final_response,
                 "session_id": session_id,
                 "language": language,
+                "dialect": dialect,
+                "detected_dialect": dialect,
+                "detection_confidence": detection_confidence,
                 "timestamp": datetime.now().isoformat(),
                 "tool_calls": tool_calls,
                 "tool_outputs": tool_outputs,
+                "components": components,  # NEW: Interactive components
                 "processing_time": processing_time,
                 "success": True
             }
@@ -374,6 +617,17 @@ Always prioritize helpful, practical advice for Bangladeshi farmers."""
             
         except Exception as e:
             processing_time = time.time() - start_time
+            
+            # Print full error details for debugging
+            import traceback
+            print(f"\n{'='*60}")
+            print(f"ERROR in process_message:")
+            print(f"Error Type: {type(e).__name__}")
+            print(f"Error Message: {str(e)}")
+            print(f"Traceback:")
+            traceback.print_exc()
+            print(f"{'='*60}\n")
+            
             error_message = "দুঃখিত, একটি সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।" if language == "bn" else "Sorry, an error occurred. Please try again."
             
             return {
@@ -400,16 +654,25 @@ async def run_enhanced_agent(
     query: str,
     user_context: Optional[Dict[str, Any]] = None,
     session_id: Optional[str] = None,
-    language: str = "bn"
+    language: str = "bn",
+    dialect: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Enhanced agent runner with context awareness
+    Enhanced agent runner with dialect awareness
+    
+    Args:
+        query: User query
+        user_context: User context and preferences
+        session_id: Chat session ID
+        language: Base language code
+        dialect: Dialect code
     """
     return await enhanced_agent.process_message(
         message=query,
         user_context=user_context,
         session_id=session_id,
-        language=language
+        language=language,
+        dialect=dialect
     )
 
 

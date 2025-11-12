@@ -22,8 +22,8 @@ const LoginForm = ({ onToggleMode, onSuccess }) => {
   const onSubmit = async (data) => {
     try {
       setError(null);
-      await login(data);
-      onSuccess?.();
+      const result = await login(data);
+      onSuccess?.(result.user); // Pass user data to onSuccess callback
     } catch (error) {
       setError(error instanceof Error ? error.message : 'লগইন করতে সমস্যা হয়েছে');
     }

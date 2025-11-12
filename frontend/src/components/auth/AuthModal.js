@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 
@@ -14,6 +16,8 @@ const AuthModal = ({
 }) => {
   const [mode, setMode] = useState(initialMode);
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -36,8 +40,16 @@ const AuthModal = ({
     setMode(mode === 'login' ? 'register' : 'login');
   };
 
-  const handleSuccess = () => {
+  const handleSuccess = (userData) => {
     onClose();
+    
+    // Role-based redirect after successful login
+    // Use userData from callback since it's immediately available
+    if (userData && userData.email === 'admin@krishisahay.com') {
+      router.push('/admin');
+    } else {
+      router.push('/dashboard');
+    }
   };
 
   if (!isOpen || !mounted) return null;

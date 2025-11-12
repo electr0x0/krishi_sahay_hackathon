@@ -29,8 +29,8 @@ const RegisterForm = ({ onToggleMode, onSuccess }) => {
         return;
       }
 
-      await registerUser(data);
-      onSuccess?.();
+      const result = await registerUser(data);
+      onSuccess?.(result.user); // Pass user data to onSuccess callback
     } catch (error) {
       setError(error instanceof Error ? error.message : 'নিবন্ধন করতে সমস্যা হয়েছে');
     }

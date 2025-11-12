@@ -6,6 +6,7 @@ class ChatSessionCreate(BaseModel):
     title: Optional[str] = None
     session_type: str = "general"
     language: str = "bn"
+    dialect: Optional[str] = None  # Dialect code (bn-syl, bn-ctg, etc.)
     location_context: Optional[Dict[str, Any]] = None
     crop_context: Optional[List[str]] = None
     season_context: Optional[str] = None
@@ -14,6 +15,7 @@ class ChatSessionUpdate(BaseModel):
     title: Optional[str] = None
     session_type: Optional[str] = None
     language: Optional[str] = None
+    dialect: Optional[str] = None
     location_context: Optional[Dict[str, Any]] = None
     crop_context: Optional[List[str]] = None
     season_context: Optional[str] = None
@@ -27,6 +29,7 @@ class ChatSession(BaseModel):
     title: str
     session_type: str
     language: str
+    dialect: Optional[str] = None
     location_context: Optional[str] = None
     crop_context: Optional[str] = None
     season_context: Optional[str] = None
@@ -45,6 +48,7 @@ class ChatSession(BaseModel):
 class ChatMessageCreate(BaseModel):
     content: str
     language: Optional[str] = None
+    dialect: Optional[str] = None  # User's dialect
     message_type: str = "text"  # text, voice, image
     image_file: Optional[str] = None
     attachments: Optional[List[str]] = None
@@ -58,6 +62,8 @@ class ChatMessage(BaseModel):
     content: str
     original_content: Optional[str] = None
     language: str
+    detected_dialect: Optional[str] = None  # Auto-detected dialect
+    dialect_confidence: Optional[float] = None  # Detection confidence
     role: str
     message_type: str
     image_file: Optional[str] = None
@@ -66,6 +72,7 @@ class ChatMessage(BaseModel):
     voice_duration: Optional[float] = None
     tool_calls: Optional[str] = None
     tool_outputs: Optional[str] = None
+    components: Optional[str] = None  # NEW: Interactive components JSON
     processing_time: Optional[float] = None
     confidence_score: Optional[float] = None
     user_rating: Optional[int] = None

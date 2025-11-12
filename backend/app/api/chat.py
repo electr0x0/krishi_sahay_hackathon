@@ -35,6 +35,7 @@ async def create_chat_session(
         title=session_data.title or "নতুন কথোপকথন",
         session_type=session_data.session_type,
         language=session_data.language,
+        dialect=session_data.dialect,
         location_context=json.dumps(session_data.location_context) if session_data.location_context else None,
         crop_context=json.dumps(session_data.crop_context) if session_data.crop_context else None,
         season_context=session_data.season_context
@@ -139,6 +140,10 @@ async def send_message(
     user_context = {
         "user_id": current_user.id,
         "language": session.language,
+        "dialect": session.dialect or message_data.dialect,
+        "preferred_dialect": getattr(current_user, 'preferred_dialect', None),
+        "auto_detect_dialect": getattr(current_user, 'auto_detect_dialect', True),
+        "region": getattr(current_user, 'region', None),
         "location": {
             "district": current_user.district,
             "lat": current_user.latitude, 
@@ -147,24 +152,40 @@ async def send_message(
     }
     
     try:
-        # Get AI response and tool outputs
+        # Get AI response and tool outputs with dialect support
         ai_response = await run_enhanced_agent(
             query=message_data.content,
             user_context=user_context,
             session_id=session_id,
-            language=session.language
+            language=session.language,
+            dialect=user_context.get("dialect")
         )
         
         # Save AI response
+        # Extract content - handle both string and array formats from AI response
+        ai_content = ai_response.get("content", "Sorry, I couldn't generate a response.")
+        if isinstance(ai_content, list):
+            # If content is an array (Gemini format), extract text from first text block
+            for block in ai_content:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    ai_content = block.get("text", "")
+                    break
+            # If still a list, convert to string
+            if isinstance(ai_content, list):
+                ai_content = str(ai_content)
+        
         ai_message = ChatMessage(
             session_id=session.id,
             message_id=str(uuid.uuid4()),
-            content=ai_response.get("content", "Sorry, I couldn't generate a response."),
+            content=ai_content,
             language=session.language,
+            detected_dialect=ai_response.get("detected_dialect"),
+            dialect_confidence=ai_response.get("detection_confidence"),
             role="assistant",
             message_type="text",
             tool_calls=json.dumps(ai_response.get("tool_calls", [])),
             tool_outputs=json.dumps(ai_response.get("tool_outputs", {})), # Store raw tool output
+            components=json.dumps(ai_response.get("components", [])),  # NEW: Save interactive components
             processing_time=ai_response.get("processing_time", 0)
         )
         db.add(ai_message)

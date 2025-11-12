@@ -48,7 +48,8 @@ export const AuthProvider = ({ children }) => {
       const userData = await api.getCurrentUser();
       setUser(userData);
       
-      return response;
+      // Return user data along with response for redirect logic
+      return { ...response, user: userData };
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -66,7 +67,8 @@ export const AuthProvider = ({ children }) => {
       const newUserData = await api.getCurrentUser();
       setUser(newUserData);
       
-      return response;
+      // Return user data along with response for redirect logic
+      return { ...response, user: newUserData };
     } catch (error) {
       console.error('Registration error:', error);
       throw error;

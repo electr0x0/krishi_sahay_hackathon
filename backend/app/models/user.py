@@ -32,6 +32,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
     verification_token = Column(String)
+    role = Column(String, default="user")  # user, premium, moderator, admin
 
     farm_data = relationship("FarmData", back_populates="owner")
     

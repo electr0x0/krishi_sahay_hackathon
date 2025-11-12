@@ -27,6 +27,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import api from '@/lib/api.js';
 import { Button } from '@/components/ui/button';
+import ComponentRenderer from '@/components/chat/ComponentRenderer';
 
 // Import highlight.js styles for code syntax highlighting
 import 'highlight.js/styles/github.css';
@@ -547,7 +548,9 @@ const ChatInterface = () => {
     try {
       setCurrentSession(session);
       const history = await api.getChatHistory(session.session_id);
-      setMessages(history || []);
+      // Parse components in all messages
+      const parsedHistory = (history || []).map(msg => parseMessageComponents(msg));
+      setMessages(parsedHistory);
     } catch (error) {
       console.error('Failed to load chat history:', error);
       setMessages([]);
@@ -573,29 +576,48 @@ const ChatInterface = () => {
     }
   };
 
-  // Function to create typing effect for AI responses
+  // Function to create typing effect for AI responses (DISABLED FOR INSTANT DISPLAY)
   const typeMessage = async (messageContent, messageId) => {
-    setIsTyping(true);
-    setTypingMessageId(messageId);
-    setTypingMessage('');
-    
-    const words = messageContent.split(' ');
-    let currentText = '';
-    
-    for (let i = 0; i < words.length; i++) {
-      currentText += (i > 0 ? ' ' : '') + words[i];
-      setTypingMessage(currentText);
-      
-      // Fast typing speed - 50ms per word
-      await new Promise(resolve => setTimeout(resolve, 50));
-    }
-    
-    // Small pause before completing the message
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
+    // INSTANT MODE: No typing animation, just show the message immediately
     setIsTyping(false);
     setTypingMessage('');
     setTypingMessageId(null);
+    // Message appears instantly without any delay
+  };
+
+  // Helper function to parse message components from JSON string
+  const parseMessageComponents = (message) => {
+    if (!message) return message;
+    
+    // Parse components if it's a string
+    if (message.components && typeof message.components === 'string') {
+      try {
+        message.components = JSON.parse(message.components);
+      } catch (e) {
+        console.error('Failed to parse components:', e);
+        message.components = [];
+      }
+    }
+    
+    // Parse tool_outputs if it's a string
+    if (message.tool_outputs && typeof message.tool_outputs === 'string') {
+      try {
+        message.tool_outputs = JSON.parse(message.tool_outputs);
+      } catch (e) {
+        console.error('Failed to parse tool_outputs:', e);
+      }
+    }
+    
+    // Parse tool_calls if it's a string
+    if (message.tool_calls && typeof message.tool_calls === 'string') {
+      try {
+        message.tool_calls = JSON.parse(message.tool_calls);
+      } catch (e) {
+        console.error('Failed to parse tool_calls:', e);
+      }
+    }
+    
+    return message;
   };
 
   const sendMessage = async (messageText, isVoice = false) => {
@@ -626,28 +648,32 @@ const ChatInterface = () => {
 
       setIsLoading(false);
 
+      // Parse components in both messages
+      const parsedUserMessage = parseMessageComponents(response.user_message);
+      const parsedAiMessage = parseMessageComponents(response.ai_message);
+
       // Add user message first (without AI response yet)
       setMessages(prev => {
         const withoutTemp = prev.filter(msg => msg.message_id !== userMessage.message_id);
-        return [...withoutTemp, response.user_message];
+        return [...withoutTemp, parsedUserMessage];
       });
 
       // Start typing effect for AI response
       const aiMessageWithTyping = {
-        ...response.ai_message,
+        ...parsedAiMessage,
         isTyping: true
       };
       
       setMessages(prev => [...prev, aiMessageWithTyping]);
 
       // Start the typing animation
-      await typeMessage(response.ai_message.content, response.ai_message.message_id);
+      await typeMessage(parsedAiMessage.content, parsedAiMessage.message_id);
 
       // Replace with final message
       setMessages(prev => 
         prev.map(msg => 
-          msg.message_id === response.ai_message.message_id 
-            ? { ...response.ai_message, isTyping: false }
+          msg.message_id === parsedAiMessage.message_id 
+            ? { ...parsedAiMessage, isTyping: false }
             : msg
         )
       );
@@ -683,6 +709,105 @@ const ChatInterface = () => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  // Handle component actions
+  const handleComponentAction = async (action: string, componentType: string, data: any) => {
+    console.log('Component action triggered:', { action, componentType, data });
+    
+    // Handle different actions
+    switch (action) {
+      case 'schedule_irrigation':
+        // TODO: Open irrigation scheduling modal/form
+        setInputText('সেচ করার সময়সূচী তৈরি করুন');
+        break;
+        
+      case 'view_weather_details':
+        setInputText('বিস্তারিত আবহাওয়া রিপোর্ট দেখান');
+        break;
+        
+      case 'set_weather_alert':
+        setInputText('আবহাওয়া সতর্কতা সেট করুন');
+        break;
+        
+      case 'view_7day_forecast':
+        setInputText('৭ দিনের আবহাওয়া পূর্বাভাস দেখান');
+        break;
+        
+      case 'buy_treatment':
+        // TODO: Navigate to store with disease treatment filter
+        setInputText(`${data.disease || 'এই রোগের'} চিকিৎসার জন্য ওষুধ কোথায় পাওয়া যাবে?`);
+        break;
+        
+      case 'contact_expert':
+        setInputText('কৃষি বিশেষজ্ঞের সাথে যোগাযোগ করতে চাই');
+        break;
+        
+      case 'view_similar_cases':
+        setInputText(`${data.disease || 'এই রোগ'} সম্পর্কে অন্যান্য কৃষকদের অভিজ্ঞতা দেখান`);
+        break;
+        
+      case 'list_for_sale':
+        setInputText('আমার পণ্য বিক্রির জন্য তালিকাভুক্ত করতে চাই');
+        break;
+        
+      case 'set_price_alert':
+        setInputText('মূল্য সতর্কতা সেট করুন');
+        break;
+        
+      case 'view_price_trend':
+        setInputText('বাজার মূল্যের প্রবণতা দেখান');
+        break;
+        
+      case 'set_threshold_alert':
+        setInputText('সেন্সর সীমা সতর্কতা কনফিগার করুন');
+        break;
+        
+      case 'view_sensor_history':
+        setInputText('সেন্সর ডেটার ইতিহাস দেখান');
+        break;
+        
+      case 'configure_sensor':
+        setInputText('সেন্সর সেটিংস পরিবর্তন করুন');
+        break;
+        
+      case 'add_to_calendar':
+        setInputText('এই কাজটি আমার ক্যালেন্ডারে যোগ করুন');
+        break;
+        
+      case 'set_reminders':
+        setInputText('অনুস্মারক সেট করুন');
+        break;
+        
+      case 'download_calendar_pdf':
+        // TODO: Generate and download PDF
+        console.log('Downloading calendar PDF...');
+        break;
+        
+      case 'buy_fertilizer':
+        setInputText('সার কোথায় কিনতে পারি?');
+        break;
+        
+      case 'calculate_dosage':
+        setInputText('আমার জমির জন্য সঠিক পরিমাণ হিসাব করুন');
+        break;
+        
+      case 'add_to_agenda':
+        setInputText('এই কাজটি আমার এজেন্ডায় যোগ করুন');
+        break;
+        
+      case 'view_detailed_report':
+      case 'export_pdf':
+        setInputText('বিস্তারিত রিপোর্ট তৈরি করুন');
+        break;
+        
+      case 'get_recommendations':
+        setInputText('এই তথ্যের উপর ভিত্তি করে সুপারিশ দিন');
+        break;
+        
+      default:
+        console.warn('Unknown action:', action);
     }
   };
 
@@ -913,7 +1038,7 @@ const ChatInterface = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.01, duration: 0.15 }}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
                 >
                   <div className={`flex items-start max-w-[80%] ${
@@ -1018,11 +1143,21 @@ const ChatInterface = () => {
                           
                           {/* Tool outputs display - only show after typing is complete */}
                           {!(message.isTyping && isTyping && typingMessageId === message.message_id) && (
-                            <ToolOutputDisplay 
-                              toolOutputs={message.tool_outputs}
-                              toolCalls={message.tool_calls}
-                              language={language}
-                            />
+                            <>
+                              <ToolOutputDisplay 
+                                toolOutputs={message.tool_outputs}
+                                toolCalls={message.tool_calls}
+                                language={language}
+                              />
+                              
+                              {/* Interactive Components */}
+                              {message.components && message.components.length > 0 && (
+                                <ComponentRenderer 
+                                  components={message.components}
+                                  onAction={handleComponentAction}
+                                />
+                              )}
+                            </>
                           )}
                         </div>
                       )}
@@ -1065,9 +1200,9 @@ const ChatInterface = () => {
                             opacity: [0.5, 1, 0.5]
                           }}
                           transition={{ 
-                            duration: 1.5, 
+                            duration: 0.6, 
                             repeat: Infinity,
-                            delay: 0.2
+                            delay: 0.1
                           }}
                         />
                         <motion.div 
@@ -1077,9 +1212,9 @@ const ChatInterface = () => {
                             opacity: [0.5, 1, 0.5]
                           }}
                           transition={{ 
-                            duration: 1.5, 
+                            duration: 0.6, 
                             repeat: Infinity,
-                            delay: 0.4
+                            delay: 0.2
                           }}
                         />
                       </div>
@@ -1091,7 +1226,7 @@ const ChatInterface = () => {
                           opacity: [0.7, 1, 0.7]
                         }}
                         transition={{ 
-                          duration: 2, 
+                          duration: 1, 
                           repeat: Infinity 
                         }}
                       >

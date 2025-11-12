@@ -109,7 +109,10 @@ const UserProfile = () => {
             <p className="text-xs text-gray-500">{userInfo?.email || ''}</p>
           </div>
           
-          <Link href="/dashboard" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition-colors">
+          <Link 
+            href={userInfo?.email === 'admin@krishisahay.com' ? '/admin' : '/dashboard'} 
+            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition-colors"
+          >
             <LayoutDashboard className="w-4 h-4 mr-2" />
             ড্যাশবোর্ড
           </Link>
@@ -140,7 +143,7 @@ const UserProfile = () => {
 // Main Header Component
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const pathname = usePathname();
 
   const navigationItems = [
@@ -195,9 +198,9 @@ const Header = () => {
             {isAuthenticated && (
               <motion.div whileHover={{ y: -2 }}>
                 <Link
-                  href="/dashboard"
+                  href={(user as any)?.email === 'admin@krishisahay.com' ? '/admin' : '/dashboard'}
                   className={`flex items-center text-gray-700 hover:text-green-600 font-medium transition-colors duration-200 ${
-                    pathname.startsWith('/dashboard') ? 'text-green-600' : ''
+                    (pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) ? 'text-green-600' : ''
                   }`}
                 >
                   <LayoutDashboard className="w-4 h-4 mr-2" />
@@ -245,10 +248,11 @@ const Header = () => {
             ))}
             {isAuthenticated && (
                <Link
-               href="/dashboard"
+               href={(user as any)?.email === 'admin@krishisahay.com' ? '/admin' : '/dashboard'}
                className={`flex items-center text-gray-700 hover:text-green-600 font-medium transition-colors duration-200 ${
-                 pathname.startsWith('/dashboard') ? 'text-green-600' : ''
+                 (pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) ? 'text-green-600' : ''
                }`}
+               onClick={() => setIsMobileMenuOpen(false)}
              >
                <LayoutDashboard className="w-4 h-4 mr-2" />
                ড্যাশবোর্ড

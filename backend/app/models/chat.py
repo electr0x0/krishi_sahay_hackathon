@@ -13,6 +13,7 @@ class ChatSession(Base):
     title = Column(String(500), default="নতুন কথোপকথন")
     session_type = Column(String(50), default="general")
     language = Column(String(10), default="bn")
+    dialect = Column(String(10), nullable=True)  # bn-syl, bn-ctg, bn-noa
     location_context = Column(JSON, nullable=True)
     crop_context = Column(JSON, nullable=True)
     season_context = Column(String(50), nullable=True)
@@ -38,6 +39,9 @@ class ChatMessage(Base):
     content = Column(Text)
     original_content = Column(Text, nullable=True)
     language = Column(String(10), default="bn")
+    dialect = Column(String(10), nullable=True)  # bn-syl, bn-ctg, bn-noa
+    detected_dialect = Column(String(10), nullable=True)  # Auto-detected dialect
+    dialect_confidence = Column(Float, nullable=True)  # Detection confidence
     role = Column(String(20), default="user")  # user, assistant
     message_type = Column(String(20), default="text")  # text, voice, image
     image_file = Column(String(500), nullable=True)
@@ -46,6 +50,7 @@ class ChatMessage(Base):
     voice_duration = Column(Float, nullable=True)
     tool_calls = Column(JSON, nullable=True)
     tool_outputs = Column(JSON, nullable=True)
+    components = Column(JSON, nullable=True)  # NEW: Interactive components
     processing_time = Column(Float, nullable=True)
     confidence_score = Column(Float, nullable=True)
     user_rating = Column(Integer, nullable=True)
