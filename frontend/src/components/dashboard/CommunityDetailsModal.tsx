@@ -38,6 +38,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { HelpTooltip } from './HelpTooltip';
+import CommunityAIChat from './CommunityAIChat';
+import { Bot } from 'lucide-react';
 
 
 interface CommunityDetailsModalProps {
@@ -62,6 +65,14 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
   const [showEventDetails, setShowEventDetails] = useState(false);
   const [alert, setAlert] = useState<{type: 'success' | 'error' | 'warning'; message: string} | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [showAIChat, setShowAIChat] = useState(false);
+
+  // Restrict tab access for non-members
+  useEffect(() => {
+    if (!isUserMember && !['overview', 'members'].includes(activeTab)) {
+      setActiveTab('overview');
+    }
+  }, [isUserMember, activeTab]);
 
 
   // Load chat messages
@@ -172,12 +183,12 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
     }
   };
 
-  // Load chat when tab changes to chat
+  // Load chat when tab changes to chat (only for members)
   useEffect(() => {
-    if (activeTab === 'chat') {
+    if (activeTab === 'chat' && isUserMember) {
       loadChatMessages();
     }
-  }, [activeTab, community?.id]);
+  }, [activeTab, community?.id, isUserMember]);
 
   // Handle help request actions
   const handleAcceptHelp = async (messageId: any) => {
@@ -327,7 +338,7 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        className={`fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 ${showAIChat ? 'pr-[450px]' : ''} transition-all duration-300`}
         onClick={onClose}
       >
         <motion.div
@@ -357,26 +368,68 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
                   <p className="text-gray-600">{community.location}, {community.area}</p>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" onClick={onClose}>
-                <X className="w-5 h-5" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowAIChat(!showAIChat)}
+                  className={showAIChat ? 'bg-green-50 border-green-300' : ''}
+                >
+                  <Bot className="w-4 h-4 mr-1" />
+                  AI সহায়ক
+                </Button>
+                <Button variant="ghost" size="sm" onClick={onClose}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main Content */}
               <div className="lg:col-span-2">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-6">
-                    <TabsTrigger value="overview">সংক্ষিপ্ত</TabsTrigger>
-                    <TabsTrigger value="members">সদস্য</TabsTrigger>
-                    <TabsTrigger value="chat">আলোচনা</TabsTrigger>
-                    <TabsTrigger value="tracker">ট্র্যাকার</TabsTrigger>
-                    <TabsTrigger value="store">স্টোর</TabsTrigger>
-                    <TabsTrigger value="funds">তহবিল</TabsTrigger>
+                  <TabsList className={`grid w-full ${isUserMember ? 'grid-cols-6' : 'grid-cols-2'}`}>
+                    <TabsTrigger value="overview" className="flex items-center gap-1">
+                      সংক্ষিপ্ত
+                      <HelpTooltip content="সম্প্রদায়ের মূল তথ্য, নিয়ম এবং যোগদানের শর্ত দেখুন" />
+                    </TabsTrigger>
+                    <TabsTrigger value="members" className="flex items-center gap-1">
+                      সদস্য
+                      <HelpTooltip content="সম্প্রদায়ের সব সদস্যদের তালিকা দেখুন" />
+                    </TabsTrigger>
+                    {isUserMember && (
+                      <>
+                        <TabsTrigger value="chat" className="flex items-center gap-1">
+                          আলোচনা
+                          <HelpTooltip content="সদস্যদের সাথে কথা বলুন, সাহায্য চান বা ইভেন্ট তৈরি করুন" />
+                        </TabsTrigger>
+                        <TabsTrigger value="tracker" className="flex items-center gap-1">
+                          ট্র্যাকার
+                          <HelpTooltip content="সাহায্যের অনুরোধ এবং ইভেন্টগুলো দেখুন এবং ট্র্যাক করুন" />
+                        </TabsTrigger>
+                        <TabsTrigger value="store" className="flex items-center gap-1">
+                          স্টোর
+                          <HelpTooltip content="কৃষি যন্ত্রপাতি, বীজ, সার ইত্যাদি কিনুন বা বিক্রি করুন" />
+                        </TabsTrigger>
+                        <TabsTrigger value="funds" className="flex items-center gap-1">
+                          তহবিল
+                          <HelpTooltip content="সম্প্রদায়ের তহবিলে দান করুন, ঋণ নিন বা বিনিয়োগ করুন" />
+                        </TabsTrigger>
+                      </>
+                    )}
                   </TabsList>
 
                   {/* Overview Tab */}
                   <TabsContent value="overview" className="space-y-6">
+                    {!isUserMember && (
+                      <Card className="bg-green-50 border-green-200">
+                        <CardContent className="p-4">
+                          <p className="text-sm text-green-800">
+                            <strong>💡 টিপ:</strong> সম্প্রদায়ে যোগ দিলে আপনি আলোচনা, ট্র্যাকার, স্টোর এবং তহবিল ব্যবহার করতে পারবেন। যোগ দিতে নিচের "যোগ দিন" বাটনে ক্লিক করুন।
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
                     <Card>
                       <CardHeader>
                         <CardTitle>সম্প্রদায় সম্পর্কে</CardTitle>
@@ -577,8 +630,16 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
                     </Card>
                   </TabsContent>
 
-                  {/* Chat Tab */}
+                  {/* Chat Tab - Members Only */}
+                  {isUserMember && (
                   <TabsContent value="chat" className="space-y-4">
+                    <Card className="bg-blue-50 border-blue-200">
+                      <CardContent className="p-4">
+                        <p className="text-sm text-blue-800">
+                          <strong>💬 আলোচনা কী?</strong> এখানে আপনি সম্প্রদায়ের সদস্যদের সাথে কথা বলতে পারেন, প্রশ্ন করতে পারেন, বা পরামর্শ নিতে পারেন। সাহায্য চাইতে বা ইভেন্ট তৈরি করতে নিচের বাটন ব্যবহার করুন।
+                        </p>
+                      </CardContent>
+                    </Card>
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -791,8 +852,10 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
                       </CardContent>
                     </Card>
                   </TabsContent>
+                  )}
 
-                  {/* Tracker Tab - Clash of Clans Style */}
+                  {/* Tracker Tab - Members Only */}
+                  {isUserMember && (
                   <TabsContent value="tracker" className="space-y-4">
                     <div className="grid gap-4">
                       {/* Active Help Requests */}
@@ -1003,14 +1066,21 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
                       </Card>
                     </div>
                   </TabsContent>
+                  )}
 
+                  {/* Store Tab - Members Only */}
+                  {isUserMember && (
                   <TabsContent value="store">
                     <CommunityStore communityId={community.id} />
                   </TabsContent>
+                  )}
 
+                  {/* Funds Tab - Members Only */}
+                  {isUserMember && (
                   <TabsContent value="funds">
                     <CommunityFunds communityId={community.id} />
                   </TabsContent>
+                  )}
 
                 </Tabs>
               </div>
@@ -1128,7 +1198,7 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setShowHelpRequestForm(false)}
         >
           <motion.div
@@ -1207,7 +1277,7 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setShowEventForm(false)}
         >
           <motion.div
@@ -1351,7 +1421,7 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4"
+          className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-60 p-4"
           onClick={() => setShowEventDetails(false)}
         >
           <motion.div
@@ -1434,6 +1504,13 @@ const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, canJoin, i
           </motion.div>
         </motion.div>
       )}
+
+      {/* AI Chat Side Panel */}
+      <CommunityAIChat
+        community={community}
+        isOpen={showAIChat}
+        onClose={() => setShowAIChat(false)}
+      />
     </AnimatePresence>
   );
 };

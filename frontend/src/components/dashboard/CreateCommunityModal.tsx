@@ -82,7 +82,7 @@ const CreateCommunityModal = ({ onClose, onSubmit }: CreateCommunityModalProps) 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         onClick={onClose}
       >
         <motion.div
@@ -108,11 +108,21 @@ const CreateCommunityModal = ({ onClose, onSubmit }: CreateCommunityModalProps) 
               </Button>
             </div>
 
+            {/* Help Card */}
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>💡 সম্প্রদায় কী?</strong> সম্প্রদায় হলো কৃষকদের একটি দল যেখানে সবাই একে অপরের সাথে কথা বলতে পারে, সাহায্য করতে পারে, এবং একসাথে কাজ করতে পারে। যেমন: আপনার এলাকার সব ধান চাষীরা একসাথে একটি সম্প্রদায় তৈরি করতে পারে।
+              </p>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Basic Information */}
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="name">সম্প্রদায়ের নাম *</Label>
+                  <Label htmlFor="name">
+                    সম্প্রদায়ের নাম *
+                    <span className="text-xs text-gray-500 ml-2 font-normal">(যেমন: রংপুর ধান চাষী সম্প্রদায়)</span>
+                  </Label>
                   <Input
                     id="name"
                     value={formData.name}
@@ -123,12 +133,15 @@ const CreateCommunityModal = ({ onClose, onSubmit }: CreateCommunityModalProps) 
                 </div>
 
                 <div>
-                  <Label htmlFor="description">বিবরণ *</Label>
+                  <Label htmlFor="description">
+                    বিবরণ *
+                    <span className="text-xs text-gray-500 ml-2 font-normal">(এই সম্প্রদায় কী নিয়ে কাজ করবে লিখুন)</span>
+                  </Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="আপনার সম্প্রদায় সম্পর্কে লিখুন..."
+                    placeholder="যেমন: আমরা ধান চাষীদের জন্য একটি সম্প্রদায় যেখানে সবাই একে অপরের সাথে পরামর্শ করতে পারে এবং সাহায্য করতে পারে..."
                     rows={3}
                     required
                   />
@@ -225,7 +238,10 @@ const CreateCommunityModal = ({ onClose, onSubmit }: CreateCommunityModalProps) 
                 </div>
 
                 <div>
-                  <Label htmlFor="visibility">দৃশ্যমানতা</Label>
+                  <Label htmlFor="visibility">
+                    দৃশ্যমানতা
+                    <span className="text-xs text-gray-500 ml-2 font-normal">(সর্বজনীন = সবাই দেখতে পাবে, ব্যক্তিগত = শুধু আমন্ত্রিতরা)</span>
+                  </Label>
                   <Select
                     value={formData.isPublic ? 'public' : 'private'}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, isPublic: value === 'public' }))}
@@ -234,8 +250,8 @@ const CreateCommunityModal = ({ onClose, onSubmit }: CreateCommunityModalProps) 
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="public">সর্বজনীন</SelectItem>
-                      <SelectItem value="private">ব্যক্তিগত</SelectItem>
+                      <SelectItem value="public">সর্বজনীন (সবাই যোগ দিতে পারবে)</SelectItem>
+                      <SelectItem value="private">ব্যক্তিগত (শুধু আমন্ত্রিতরা)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -244,7 +260,10 @@ const CreateCommunityModal = ({ onClose, onSubmit }: CreateCommunityModalProps) 
               {/* Rules */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label>নিয়মাবলী</Label>
+                  <Label>
+                    নিয়মাবলী
+                    <span className="text-xs text-gray-500 ml-2 font-normal">(যেমন: সবাইকে সম্মান করতে হবে)</span>
+                  </Label>
                   <Button type="button" variant="outline" size="sm" onClick={addRule}>
                     নিয়ম যোগ করুন
                   </Button>
@@ -275,7 +294,10 @@ const CreateCommunityModal = ({ onClose, onSubmit }: CreateCommunityModalProps) 
               {/* Requirements */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label>যোগদানের শর্তাবলী</Label>
+                  <Label>
+                    যোগদানের শর্তাবলী
+                    <span className="text-xs text-gray-500 ml-2 font-normal">(যেমন: ধান চাষ করতে হবে, বা কমপক্ষে ১ বছর অভিজ্ঞতা)</span>
+                  </Label>
                   <Button type="button" variant="outline" size="sm" onClick={addRequirement}>
                     শর্ত যোগ করুন
                   </Button>
