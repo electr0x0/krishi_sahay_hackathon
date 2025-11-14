@@ -73,43 +73,8 @@ const DetectionPage = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Enhanced Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
-        {/* Animated gradient orbs */}
-        <motion.div 
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-green-400/20 to-emerald-400/10 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            x: [0, 30, 0],
-            y: [0, -20, 0],
-          }}
-          transition={{
-            duration: 12,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <motion.div 
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-teal-400/20 to-cyan-400/10 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.3, 1],
-            x: [0, -30, 0],
-            y: [0, 30, 0],
-          }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1
-          }}
-        />
-        
-        {/* Leaf pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 10c10 0 15 10 15 20s-5 20-15 20-15-10-15-20 5-20 15-20z' fill='%2310b981' fill-opacity='1'/%3E%3C/svg%3E")`,
-          backgroundSize: '60px 60px'
-        }} />
-      </div>
+      {/* Clean Background */}
+      <div className="absolute inset-0 bg-gray-50"></div>
 
       <div className="relative z-10 p-6">
         <motion.div
@@ -128,13 +93,13 @@ const DetectionPage = () => {
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-              className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 rounded-3xl shadow-2xl mb-4"
+              className="inline-flex items-center justify-center w-20 h-20 bg-green-600 rounded-3xl shadow-lg mb-4"
             >
               <Leaf className="w-10 h-10 text-white" />
             </motion.div>
 
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-3">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
                 উদ্ভিদের রোগ সনাক্তকরণ
               </h1>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -146,7 +111,7 @@ const DetectionPage = () => {
             <div className="flex items-center justify-center space-x-6 pt-4">
               <motion.div 
                 whileHover={{ scale: 1.05 }}
-                className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-green-200/50 shadow-md"
+                className="flex items-center space-x-2 bg-white backdrop-blur-sm px-4 py-2 rounded-xl border border-green-200 shadow-md"
               >
                 <CheckCircle2 className="w-5 h-5 text-green-600" />
                 <div className="text-left">
@@ -157,7 +122,7 @@ const DetectionPage = () => {
               
               <motion.div 
                 whileHover={{ scale: 1.05 }}
-                className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-blue-200/50 shadow-md"
+                className="flex items-center space-x-2 bg-white backdrop-blur-sm px-4 py-2 rounded-xl border border-blue-200 shadow-md"
               >
                 <ScanLine className="w-5 h-5 text-blue-600" />
                 <div className="text-left">
@@ -168,9 +133,9 @@ const DetectionPage = () => {
 
               <motion.div 
                 whileHover={{ scale: 1.05 }}
-                className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-purple-200/50 shadow-md"
+                className="flex items-center space-x-2 bg-white backdrop-blur-sm px-4 py-2 rounded-xl border border-gray-200 shadow-md"
               >
-                <Sparkles className="w-5 h-5 text-purple-600" />
+                <Sparkles className="w-5 h-5 text-green-600" />
                 <div className="text-left">
                   <p className="text-xs text-gray-500">সময়</p>
                   <p className="text-sm font-bold text-gray-800">&lt;2 সেকেন্ড</p>
@@ -183,29 +148,13 @@ const DetectionPage = () => {
           <motion.div
             variants={cardVariants}
             transition={{ delay: 0.1 }}
-            className="relative bg-white/70 backdrop-blur-xl border-0 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden rounded-3xl"
+            className="relative bg-white border-l-4 border-green-600 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-2xl"
           >
-            {/* Animated gradient background */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50"
-              animate={{
-                backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
-              }}
-              transition={{
-                duration: 20,
-                repeat: Infinity,
-                ease: 'linear',
-              }}
-              style={{
-                backgroundSize: '200% 200%',
-              }}
-            />
-
             <div className="relative z-10 p-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
                 <div className="flex items-center space-x-3">
                   <motion.div
-                    className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg"
+                    className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center shadow-lg"
                     whileHover={{ scale: 1.1, rotate: 5 }}
                     transition={{ type: "spring", stiffness: 400 }}
                   >
@@ -220,7 +169,7 @@ const DetectionPage = () => {
                 {/* Confidence Threshold Setting */}
                 <motion.div 
                   whileHover={{ scale: 1.02 }}
-                  className="flex items-center space-x-3 bg-white/80 backdrop-blur-sm px-4 py-3 rounded-xl border border-gray-200 shadow-md"
+                  className="flex items-center space-x-3 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200 shadow-sm"
                 >
                   <Settings className="w-5 h-5 text-gray-600" />
                   <div className="flex items-center space-x-2">
@@ -234,7 +183,7 @@ const DetectionPage = () => {
                       step="0.05"
                       value={confidenceThreshold}
                       onChange={(e) => setConfidenceThreshold(parseFloat(e.target.value))}
-                      className="w-24 accent-green-500"
+                      className="w-24 accent-green-600"
                     />
                     <span className="text-sm font-bold text-green-600 min-w-[3rem] text-center bg-green-50 px-2 py-1 rounded-lg">
                       {Math.round(confidenceThreshold * 100)}%
@@ -248,12 +197,14 @@ const DetectionPage = () => {
                   const Icon = config.icon;
                   const isActive = detectionMode === mode;
                   
-                  const gradients = {
-                    image: 'from-blue-500 to-cyan-500',
-                    video: 'from-purple-500 to-pink-500',
-                    camera: 'from-green-500 to-emerald-500',
-                    history: 'from-orange-500 to-red-500',
+                  const colors = {
+                    image: { bg: 'bg-blue-600', border: 'border-blue-600', icon: 'bg-blue-600' },
+                    video: { bg: 'bg-green-600', border: 'border-green-600', icon: 'bg-green-600' },
+                    camera: { bg: 'bg-green-600', border: 'border-green-600', icon: 'bg-green-600' },
+                    history: { bg: 'bg-blue-600', border: 'border-blue-600', icon: 'bg-blue-600' },
                   };
+                  
+                  const modeColor = colors[mode as keyof typeof colors];
                   
                   return (
                     <motion.button
@@ -268,16 +219,16 @@ const DetectionPage = () => {
                     >
                       <div className={`p-5 rounded-2xl border-2 transition-all duration-300 text-left h-full ${
                         isActive
-                          ? 'border-transparent bg-gradient-to-br ' + gradients[mode as keyof typeof gradients] + ' text-white shadow-2xl'
-                          : 'border-gray-200/50 bg-white/80 backdrop-blur-sm hover:border-gray-300 hover:bg-white hover:shadow-xl'
+                          ? `border-transparent ${modeColor.bg} text-white shadow-lg`
+                          : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
                       }`}>
                         {/* Icon */}
                         <div className="flex items-center justify-between mb-3">
                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                             isActive 
-                              ? 'bg-white/20 backdrop-blur-sm' 
-                              : 'bg-gradient-to-br ' + gradients[mode as keyof typeof gradients]
-                          } shadow-lg`}>
+                              ? 'bg-white/20' 
+                              : modeColor.icon
+                          } shadow-md`}>
                             <Icon className={`w-6 h-6 ${isActive ? 'text-white' : 'text-white'}`} />
                           </div>
                           
@@ -301,15 +252,6 @@ const DetectionPage = () => {
                         <p className={`text-sm ${isActive ? 'text-white/90' : 'text-gray-600'}`}>
                           {config.description}
                         </p>
-
-                        {/* Shine effect */}
-                        {!isActive && (
-                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none transform -skew-x-12" 
-                            style={{ 
-                              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-                            }} 
-                          />
-                        )}
                       </div>
                     </motion.button>
                   );

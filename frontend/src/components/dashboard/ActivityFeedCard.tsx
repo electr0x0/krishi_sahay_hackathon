@@ -52,8 +52,8 @@ const activities: ActivityItem[] = [
     description: 'ধান গাছ ৮০% বৃদ্ধি পেয়েছে',
     time: '১ দিন আগে',
     icon: TrendingUp,
-    color: 'text-emerald-600',
-    bgColor: 'bg-emerald-100'
+    color: 'text-green-600',
+    bgColor: 'bg-green-100'
   },
   {
     id: '5',
@@ -69,34 +69,17 @@ const activities: ActivityItem[] = [
 
 export default function ActivityFeedCard() {
   return (
-    <div className="relative bg-white/70 backdrop-blur-xl border-0 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden rounded-3xl">
-      {/* Animated background gradient */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-slate-50/50 via-gray-50/30 to-zinc-50/50 opacity-60"
-        animate={{
-          backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: 'linear',
-        }}
-        style={{
-          backgroundSize: '200% 200%',
-        }}
-      />
+    <div className="relative bg-white border-l-4 border-blue-600 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-2xl">
 
       <div className="relative z-10 p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
-            <motion.div
-              className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg"
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              transition={{ type: "spring", stiffness: 400 }}
+            <div
+              className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-md"
             >
               <Activity className="w-5 h-5 text-white" />
-            </motion.div>
+            </div>
             <div>
               <h3 className="text-lg font-bold text-gray-800">সাম্প্রতিক কার্যক্রম</h3>
               <p className="text-xs text-gray-500">আজকের সকল কার্যক্রম</p>
@@ -124,7 +107,7 @@ export default function ActivityFeedCard() {
                 whileHover={{ x: 5, scale: 1.02 }}
                 className="relative"
               >
-                <div className="flex items-start space-x-4 p-4 bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 hover:border-gray-300 hover:shadow-lg transition-all duration-200">
+                <div className="flex items-start space-x-4 p-4 bg-white rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-md transition-all duration-200">
                   {/* Icon */}
                   <div className={`w-10 h-10 ${activity.bgColor} rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm`}>
                     <Icon className={`w-5 h-5 ${activity.color}`} />
@@ -148,7 +131,7 @@ export default function ActivityFeedCard() {
 
                 {/* Connector line (except for last item) */}
                 {index < activities.length - 1 && (
-                  <div className="absolute left-9 top-[60px] w-0.5 h-4 bg-gradient-to-b from-gray-300 to-transparent" />
+                  <div className="absolute left-9 top-[60px] w-0.5 h-4 bg-gray-200" />
                 )}
               </motion.div>
             );

@@ -149,7 +149,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, className = '' })
       </video>
 
       {/* Custom Controls */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         {/* Progress Bar */}
         <div className="mb-3">
           <input

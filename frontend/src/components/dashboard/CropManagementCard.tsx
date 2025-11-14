@@ -242,36 +242,18 @@ export default function CropManagementCard() {
   const pendingAgendas = selectedDateAgendas.filter(a => a.status !== 'completed');
 
   return (
-    <Card className="relative bg-white/70 backdrop-blur-xl border-0 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden rounded-3xl">
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 via-emerald-50/30 to-teal-50/50" />
-      
-      {/* Floating decorative elements */}
-      <motion.div
-        className="absolute top-0 right-0 w-40 h-40 bg-green-300/20 rounded-full blur-3xl"
-        animate={{
-          scale: [1, 1.2, 1],
-          x: [0, 20, 0],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
+    <Card className="relative bg-white border-l-4 border-green-600 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-2xl">
       
       <CardHeader className="pb-4 pt-5 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <motion.div 
-              className="p-2.5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg"
-              whileHover={{ scale: 1.1, rotate: 360 }}
-              transition={{ duration: 0.6 }}
+            <div 
+              className="p-2.5 bg-green-600 rounded-xl shadow-md"
             >
               <Calendar className="w-6 h-6 text-white" />
-            </motion.div>
+            </div>
             <div>
-              <h3 className="text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              <h3 className="text-lg font-bold text-gray-900">
                 {language === 'bn' ? 'ফসল ব্যবস্থাপনা ক্যালেন্ডার' : 'Crop Management Calendar'}
               </h3>
               <p className="text-xs text-gray-600 font-medium">
@@ -282,7 +264,7 @@ export default function CropManagementCard() {
           <div className="flex items-center space-x-2">
             <motion.button
               onClick={() => setLanguage(prev => prev === 'bn' ? 'en' : 'bn')}
-              className="px-3 py-1.5 text-xs bg-white/80 hover:bg-white border border-gray-200 rounded-xl transition-all duration-200 font-medium"
+              className="px-3 py-1.5 text-xs bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-all duration-200 font-medium"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -294,7 +276,7 @@ export default function CropManagementCard() {
 
       <CardContent className="space-y-5 relative z-10">
         {/* Enhanced Calendar Header */}
-        <div className="flex items-center justify-between bg-white/60 backdrop-blur-sm p-3 rounded-2xl border border-gray-200">
+        <div className="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-200">
           <motion.h4 
             className="text-base font-bold text-gray-800"
             key={currentDate.getMonth()}
@@ -309,7 +291,7 @@ export default function CropManagementCard() {
           <div className="flex space-x-2">
             <motion.button
               onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
-              className="p-2 hover:bg-green-100 rounded-xl transition-colors border border-gray-200 bg-white/80"
+              className="p-2 hover:bg-green-100 rounded-lg transition-colors border border-gray-200 bg-white"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -317,7 +299,7 @@ export default function CropManagementCard() {
             </motion.button>
             <motion.button
               onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
-              className="p-2 hover:bg-green-100 rounded-xl transition-colors border border-gray-200 bg-white/80"
+              className="p-2 hover:bg-green-100 rounded-lg transition-colors border border-gray-200 bg-white"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -327,7 +309,7 @@ export default function CropManagementCard() {
         </div>
 
         {/* Enhanced Calendar Grid */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 p-5 shadow-lg">
+        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
           <div className="grid grid-cols-7 gap-2 mb-3">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
               <div key={day} className="p-2 text-center text-xs font-bold text-gray-600 bg-green-50 rounded-lg">
@@ -353,10 +335,10 @@ export default function CropManagementCard() {
                   onClick={() => setSelectedDate(date)}
                   className={`
                     relative p-3 text-sm rounded-xl transition-all duration-200 font-medium shadow-sm
-                    ${isSelected ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/30' : 
-                      isToday ? 'bg-gradient-to-br from-blue-100 to-cyan-100 text-blue-800 border-2 border-blue-300' :
-                      hasAgendas ? 'bg-gradient-to-br from-yellow-50 to-amber-50 text-yellow-800 border border-yellow-200' :
-                      isCurrentMonth ? 'hover:bg-gradient-to-br hover:from-gray-50 hover:to-gray-100 text-gray-800 border border-transparent hover:border-gray-200' : 
+                    ${isSelected ? 'bg-green-600 text-white shadow-md' : 
+                      isToday ? 'bg-green-100 text-green-800 border-2 border-green-300' :
+                      hasAgendas ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' :
+                      isCurrentMonth ? 'hover:bg-gray-50 text-gray-800 border border-transparent hover:border-gray-200' : 
                       'text-gray-400 hover:bg-gray-50 border border-transparent'}
                   `}
                 >
