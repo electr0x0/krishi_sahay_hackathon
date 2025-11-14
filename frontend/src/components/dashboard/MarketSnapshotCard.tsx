@@ -33,8 +33,7 @@ export default function MarketSnapshotCard() {
   };
 
   return (
-    <Card className="relative h-full bg-white/70 backdrop-blur-sm shadow-lg border-l-4 border-l-blue-500 hover:shadow-xl transition-shadow duration-300 overflow-hidden">
-      <ShineBorder shineColor={theme === "dark" ? "white" : "#3b82f6"} />
+    <Card className="relative h-full bg-white border-l-4 border-blue-600 shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -54,7 +53,7 @@ export default function MarketSnapshotCard() {
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs border-blue-200 text-blue-700 bg-blue-50">
               Live
             </Badge>
           </div>
@@ -82,7 +81,7 @@ export default function MarketSnapshotCard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="p-3 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-200"
+                className="p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -126,7 +125,7 @@ export default function MarketSnapshotCard() {
               >
                 <button 
                   onClick={() => router.push('/dashboard/market')}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center justify-center w-full py-2 rounded-lg hover:bg-blue-50 transition-colors"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center w-full py-2 rounded-lg hover:bg-blue-50 transition-colors"
                 >
                   আরো দাম দেখুন
                   <BarChart3 className="w-4 h-4 ml-1" />

@@ -7,7 +7,6 @@ import { motion } from "framer-motion";
 import { User, LogOut, Settings, Menu, X, Sprout, ChevronDown, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext.jsx";
 import AuthModal from "@/components/auth/AuthModal.js";
-import MobileNavigation from "@/components/navigation/MobileNavigation";
 
 // Interactive Button Component
 const InteractiveHoverButton = ({ text, href, onClick, variant = "primary" }: {
@@ -267,9 +266,6 @@ const Header = () => {
           </div>
         </motion.div>
       </div>
-
-      {/* Mobile Navigation */}
-      <MobileNavigation />
     </motion.header>
   );
 };

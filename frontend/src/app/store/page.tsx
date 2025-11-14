@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 import api from '@/lib/api'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -21,7 +23,15 @@ import {
   Phone,
   MapPinIcon,
   CreditCard,
-  Users
+  Users,
+  X,
+  ChevronRight,
+  Truck,
+  Shield,
+  Clock,
+  ArrowRight,
+  ChevronDown,
+  Info
 } from 'lucide-react'
 
 function MiniTrend({ points }: { points: { recorded_at: string, price: number }[] }) {
@@ -48,6 +58,7 @@ export default function StorePage() {
   const [trends, setTrends] = useState<Record<number, any[]>>({})
   const [cart, setCart] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [expandedCard, setExpandedCard] = useState<number | null>(null)
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('')
@@ -210,52 +221,139 @@ export default function StorePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">কৃষি বাজার</h1>
-              <p className="text-gray-600 mt-1">কৃষকদের কাছ থেকে সরাসরি তাজা পণ্য</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50/20 to-gray-50">
+      {/* Hero Header */}
+      <div className="relative bg-gradient-to-r from-green-600 to-green-700 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/images/pattern.svg')] opacity-10"></div>
+        <div className="relative max-w-7xl mx-auto px-4 py-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-between"
+          >
+            <div className="flex-1">
+              <motion.h1 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-4xl md:text-5xl font-bold mb-3"
+              >
+                কৃষি বাজার
+              </motion.h1>
+              <motion.p 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-green-50 text-lg mb-6"
+              >
+                কৃষকদের কাছ থেকে সরাসরি তাজা ও প্রাকৃতিক পণ্য
+              </motion.p>
+              
+              {/* Trust Badges */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-wrap gap-4"
+              >
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+                  <Truck className="w-4 h-4" />
+                  <span className="text-sm">দ্রুত ডেলিভারি</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+                  <Shield className="w-4 h-4" />
+                  <span className="text-sm">১০০% তাজা গ্যারান্টি</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+                  <Leaf className="w-4 h-4" />
+                  <span className="text-sm">জৈব সার্টিফাইড</span>
+                </div>
+              </motion.div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <ShoppingCart className="w-6 h-6 text-gray-600" />
-                {cart.length > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {cart.length}
-                  </span>
-                )}
-              </div>
-              <Button asChild className="bg-green-600 hover:bg-green-700">
-                <a href="/store/track">অর্ডার ট্র্যাক করুন</a>
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center gap-4"
+            >
+              {/* Cart Badge */}
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="relative cursor-pointer"
+              >
+                <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl hover:bg-white/20 transition-all">
+                  <ShoppingCart className="w-7 h-7" />
+                  <AnimatePresence>
+                    {cart.length > 0 && (
+                      <motion.span 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        className="absolute -top-1 -right-1 bg-yellow-400 text-green-900 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg"
+                      >
+                        {cart.length}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+              
+              <Button 
+                asChild 
+                className="bg-white text-green-700 hover:bg-green-50 shadow-lg font-semibold"
+              >
+                <a href="/store/track" className="flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  অর্ডার ট্র্যাক করুন
+                  <ArrowRight className="w-4 h-4" />
+                </a>
               </Button>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Filters Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-4">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="lg:col-span-1"
+          >
+            <Card className="sticky top-4 border-0 shadow-lg">
               <CardContent className="p-6 space-y-6">
-                <div>
-                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <Filter className="w-5 h-5" />
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-lg flex items-center gap-2 text-gray-900">
+                    <Filter className="w-5 h-5 text-green-600" />
                     ফিল্টার
                   </h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-xs text-gray-500 hover:text-green-600"
+                    onClick={() => {
+                      setSearchQuery('')
+                      setSelectedCategory('all')
+                      setSelectedLocation('')
+                      setPriceRange({ min: '', max: '' })
+                      setShowOrganic(false)
+                      setShowCommunityOnly(false)
+                    }}
+                  >
+                    রিসেট
+                  </Button>
                 </div>
 
                 {/* Search */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">পণ্য খুঁজুন</label>
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">পণ্য খুঁজুন</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all bg-white"
                       placeholder="পণ্য খুঁজুন..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
@@ -265,9 +363,9 @@ export default function StorePage() {
 
                 {/* Category */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">ধরন</label>
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">ধরন</label>
                   <select
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-green-500 bg-white transition-all"
                     value={selectedCategory}
                     onChange={e => setSelectedCategory(e.target.value)}
                   >
@@ -287,9 +385,9 @@ export default function StorePage() {
 
                 {/* Location */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">এলাকা</label>
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">এলাকা</label>
                   <select
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-green-500 bg-white transition-all"
                     value={selectedLocation}
                     onChange={e => setSelectedLocation(e.target.value)}
                   >
@@ -307,190 +405,332 @@ export default function StorePage() {
 
                 {/* Price Range */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">দাম সীমা (৳)</label>
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">দাম সীমা (৳)</label>
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       type="number"
                       placeholder="সর্বনিম্ন"
-                      className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                      className="border border-gray-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-green-500 bg-white transition-all"
                       value={priceRange.min}
                       onChange={e => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
                     />
                     <input
                       type="number"
                       placeholder="সর্বোচ্চ"
-                      className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                      className="border border-gray-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-green-500 bg-white transition-all"
                       value={priceRange.max}
                       onChange={e => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
                     />
                   </div>
                 </div>
 
-                {/* Organic Filter */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="organic-filter"
-                    checked={showOrganic}
-                    onChange={e => setShowOrganic(e.target.checked)}
-                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
-                  />
-                  <label htmlFor="organic-filter" className="text-sm font-medium flex items-center gap-1">
-                    <Leaf className="w-4 h-4 text-green-600" />
-                    শুধু জৈব
+                {/* Filters */}
+                <div className="space-y-3 pt-2 border-t border-gray-100">
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">বিশেষ ফিল্টার</label>
+                  
+                  {/* Organic Filter */}
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={showOrganic}
+                        onChange={e => setShowOrganic(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-green-600 transition-all"></div>
+                      <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-all peer-checked:translate-x-5"></div>
+                    </div>
+                    <span className="text-sm font-medium flex items-center gap-2 group-hover:text-green-600 transition-colors">
+                      <Leaf className="w-4 h-4 text-green-600" />
+                      শুধু জৈব পণ্য
+                    </span>
+                  </label>
+
+                  {/* Community Filter */}
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={showCommunityOnly}
+                        onChange={e => setShowCommunityOnly(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-green-600 transition-all"></div>
+                      <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-all peer-checked:translate-x-5"></div>
+                    </div>
+                    <span className="text-sm font-medium flex items-center gap-2 group-hover:text-green-600 transition-colors">
+                      <Users className="w-4 h-4 text-green-600" />
+                      কমিউনিটি পণ্য
+                    </span>
                   </label>
                 </div>
-
-                {/* Community Filter */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="community-filter"
-                    checked={showCommunityOnly}
-                    onChange={e => setShowCommunityOnly(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <label htmlFor="community-filter" className="text-sm font-medium flex items-center gap-1">
-                    <Users className="w-4 h-4 text-blue-600" />
-                    শুধু কমিউনিটি পণ্য
-                  </label>
-                </div>
-
-                {/* Clear Filters */}
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => {
-                    setSearchQuery('')
-                    setSelectedCategory('all')
-                    setSelectedLocation('')
-                    setPriceRange({ min: '', max: '' })
-                    setShowOrganic(false)
-                    setShowCommunityOnly(false)
-                  }}
-                >
-                  সব ফিল্টার মুছুন
-                </Button>
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="lg:col-span-3"
+          >
             <Tabs defaultValue="products" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="products" className="flex items-center gap-2">
+              <TabsList className="grid w-full grid-cols-2 bg-white p-1 shadow-sm border-0">
+                <TabsTrigger 
+                  value="products" 
+                  className="flex items-center gap-2 data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-lg transition-all"
+                >
                   <Package className="w-4 h-4" />
-                  পণ্যসমূহ ({filteredListings.length})
+                  <span className="font-semibold">পণ্যসমূহ</span>
+                  <Badge variant="secondary" className="ml-1 bg-green-100 text-green-700 data-[state=active]:bg-white data-[state=active]:text-green-700">
+                    {filteredListings.length}
+                  </Badge>
                 </TabsTrigger>
-                <TabsTrigger value="cart" className="flex items-center gap-2">
+                <TabsTrigger 
+                  value="cart" 
+                  className="flex items-center gap-2 data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-lg transition-all"
+                >
                   <ShoppingCart className="w-4 h-4" />
-                  ঝুড়ি ({cart.length})
+                  <span className="font-semibold">ঝুড়ি</span>
+                  <Badge variant="secondary" className="ml-1 bg-green-100 text-green-700 data-[state=active]:bg-white data-[state=active]:text-green-700">
+                    {cart.length}
+                  </Badge>
                 </TabsTrigger>
               </TabsList>
 
               {/* Products Tab */}
               <TabsContent value="products">
                 {loading ? (
-                  <div className="flex items-center justify-center h-64">
-                    <div className="text-lg">পণ্য লোড হচ্ছে...</div>
-                  </div>
-                ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {filteredListings.map(listing => (
-                      <Card key={listing.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                        <div className="relative">
-                          {listing.product_image_url ? (
-                            <img 
-                              src={`${process.env.NEXT_PUBLIC_API_URL}${listing.product_image_url}`} 
-                              alt={listing.product_name}
-                              className="w-full h-48 object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-                              <div className="text-center text-gray-400">
-                                <Package className="w-12 h-12 mx-auto mb-2" />
-                                <span className="text-sm">No Image</span>
-                              </div>
-                            </div>
-                          )}
-                          <div className="absolute top-2 left-2 flex flex-col gap-1">
-                            {listing.organic_certified && (
-                              <Badge className="bg-green-600">
-                                <Leaf className="w-3 h-3 mr-1" />
-                                জৈব
-                              </Badge>
-                            )}
-                            {listing.community_id && (
-                              <Badge className="bg-blue-600">
-                                <Users className="w-3 h-3 mr-1" />
-                                কমিউনিটি
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <CardContent className="p-4">
-                          <div className="space-y-3">
-                            {/* Header */}
-                            <div>
-                              <h3 className="font-semibold text-lg text-gray-900">{listing.product_name}</h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="outline" className="text-xs">
-                                  {listing.product_category}
-                                </Badge>
-                                {listing.quality_grade && (
-                                  <Badge variant="outline" className="text-xs flex items-center gap-1">
-                                    <Award className="w-3 h-3" />
-                                    গ্রেড {listing.quality_grade}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Price & Trend */}
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <div className="text-2xl font-bold text-green-600">
-                                  ৳{Number(listing.price).toFixed(2)}
-                                  <span className="text-sm text-gray-600 font-normal">/{listing.unit}</span>
-                                </div>
-                                <MiniTrend points={trends[listing.id] || []} />
-                              </div>
-                              <div className="text-right text-sm text-gray-600">
-                                <div>মজুদ: {Number(listing.stock_qty).toFixed(1)} {listing.unit}</div>
-                                <div>সর্বনিম্ন: {Number(listing.min_order_qty).toFixed(1)} {listing.unit}</div>
-                              </div>
-                            </div>
-
-                            {/* Location & Farmer */}
-                            <div className="space-y-1 text-sm text-gray-600">
-                              <div className="flex items-center gap-1">
-                                <MapPin className="w-4 h-4" />
-                                <span>{listing.location}</span>
-                              </div>
-                              {listing.farmer_name && (
-                                <div>কৃষক: {listing.farmer_name}</div>
-                              )}
-                              {listing.harvest_date && (
-                                <div>ফসল তোলা: {new Date(listing.harvest_date).toLocaleDateString()}</div>
-                              )}
-                            </div>
-
-                            {/* Add to Cart */}
-                            <Button 
-                              onClick={() => addToCart(listing)}
-                              className="w-full bg-green-600 hover:bg-green-700"
-                              disabled={listing.stock_qty <= 0}
-                            >
-                              <Plus className="w-4 h-4 mr-2" />
-                              {listing.stock_qty <= 0 ? 'স্টক নেই' : 'ঝুড়িতে যোগ করুন'}
-                            </Button>
-                          </div>
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                      <Card key={i} className="overflow-hidden border-0 shadow-lg">
+                        <div className="w-full h-56 bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse"></div>
+                        <CardContent className="p-4 space-y-3">
+                          <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
+                          <div className="h-4 bg-gray-100 rounded w-2/3 animate-pulse"></div>
+                          <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
                         </CardContent>
                       </Card>
                     ))}
                   </div>
+                ) : filteredListings.length === 0 ? (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-16"
+                  >
+                    <Package className="w-20 h-20 mx-auto mb-4 text-gray-300" />
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">কোন পণ্য পাওয়া যায়নি</h3>
+                    <p className="text-gray-500 mb-6">অনুগ্রহ করে আপনার ফিল্টার পরিবর্তন করুন</p>
+                    <Button 
+                      onClick={() => {
+                        setSearchQuery('')
+                        setSelectedCategory('all')
+                        setSelectedLocation('')
+                        setPriceRange({ min: '', max: '' })
+                        setShowOrganic(false)
+                        setShowCommunityOnly(false)
+                      }}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      সব ফিল্টার মুছুন
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                  >
+                    {filteredListings.map((listing, index) => (
+                      <motion.div
+                        key={listing.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                      >
+                        <Card className="group overflow-hidden hover:shadow-xl transition-all duration-500 border border-gray-200/60 hover:border-green-300 bg-white h-full flex flex-col">
+                          {/* Image Section */}
+                          <div className="relative overflow-hidden aspect-square">
+                            {listing.product_image_url ? (
+                              <div className="relative w-full h-full">
+                                <Image 
+                                  src={`${process.env.NEXT_PUBLIC_API_URL}${listing.product_image_url}`} 
+                                  alt={listing.product_name}
+                                  fill
+                                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+                                <Package className="w-16 h-16 text-gray-300" />
+                              </div>
+                            )}
+                            
+                            {/* Minimal Badges */}
+                            <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
+                              <div className="flex flex-col gap-1.5">
+                                {listing.organic_certified && (
+                                  <div className="inline-flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm">
+                                    <Leaf className="w-3 h-3 text-green-600" />
+                                    <span className="text-xs font-medium text-green-700">জৈব</span>
+                                  </div>
+                                )}
+                                {listing.community_id && (
+                                  <div className="inline-flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm">
+                                    <Users className="w-3 h-3 text-blue-600" />
+                                    <span className="text-xs font-medium text-blue-700">কমিউনিটি</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {listing.quality_grade && (
+                                <div className="inline-flex items-center gap-1 bg-yellow-500 text-white px-2.5 py-1 rounded-full shadow-sm">
+                                  <Award className="w-3 h-3" />
+                                  <span className="text-xs font-semibold">{listing.quality_grade}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Stock Warning */}
+                            {listing.stock_qty > 0 && listing.stock_qty < 10 && (
+                              <div className="absolute bottom-3 left-3">
+                                <div className="inline-flex items-center gap-1 bg-orange-500 text-white px-3 py-1 rounded-full shadow-md">
+                                  <Clock className="w-3 h-3" />
+                                  <span className="text-xs font-semibold">স্টক সীমিত</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Content Section */}
+                          <CardContent className="p-4 flex-1 flex flex-col">
+                            {/* Category */}
+                            <div className="mb-1.5">
+                              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                {listing.product_category}
+                              </span>
+                            </div>
+
+                            {/* Product Name */}
+                            <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
+                              {listing.product_name}
+                            </h3>
+
+                            {/* Price */}
+                            <div className="mb-3">
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-3xl font-bold text-gray-900">
+                                  ৳{Number(listing.price).toFixed(0)}
+                                </span>
+                                {Number(listing.price) % 1 !== 0 && (
+                                  <span className="text-lg font-semibold text-gray-600">
+                                    .{(Number(listing.price) % 1).toFixed(2).split('.')[1]}
+                                  </span>
+                                )}
+                                <span className="text-sm text-gray-500 ml-1">
+                                  / {listing.unit}
+                                </span>
+                              </div>
+                              {trends[listing.id] && trends[listing.id].length > 1 && (
+                                <div className="mt-1">
+                                  <MiniTrend points={trends[listing.id]} />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Compact Info */}
+                            <div className="mb-3 space-y-1.5 text-sm">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-500">মজুদ</span>
+                                <span className="font-semibold text-gray-900">
+                                  {Number(listing.stock_qty).toFixed(0)} {listing.unit}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-500">সর্বনিম্ন</span>
+                                <span className="font-semibold text-gray-900">
+                                  {Number(listing.min_order_qty).toFixed(0)} {listing.unit}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* View Details Toggle */}
+                            <button
+                              onClick={() => setExpandedCard(expandedCard === listing.id ? null : listing.id)}
+                              className="flex items-center justify-between w-full text-xs text-green-700 hover:text-green-800 font-medium py-2 px-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors mb-3"
+                            >
+                              <span className="flex items-center gap-1.5">
+                                <Info className="w-3.5 h-3.5" />
+                                বিস্তারিত তথ্য
+                              </span>
+                              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedCard === listing.id ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Expandable Details */}
+                            <AnimatePresence>
+                              {expandedCard === listing.id && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="overflow-hidden mb-3"
+                                >
+                                  <div className="space-y-2 pt-2 pb-3 border-t border-gray-100">
+                                    <div className="flex items-center gap-2 text-xs">
+                                      <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                      <span className="text-gray-600 truncate">{listing.location}</span>
+                                    </div>
+                                    {listing.farmer_name && (
+                                      <div className="flex items-center gap-2 text-xs">
+                                        <Users className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                        <span className="text-gray-600 truncate">{listing.farmer_name}</span>
+                                      </div>
+                                    )}
+                                    {listing.harvest_date && (
+                                      <div className="flex items-center gap-2 text-xs">
+                                        <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                        <span className="text-gray-600">
+                                          {new Date(listing.harvest_date).toLocaleDateString('bn-BD')}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+
+                            {/* Action Button */}
+                            <div className="mt-auto">
+                              <Button 
+                                onClick={() => addToCart(listing)}
+                                className={`w-full font-semibold py-5 rounded-lg transition-all duration-300 ${
+                                  listing.stock_qty <= 0 
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed hover:bg-gray-100' 
+                                    : 'bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md'
+                                }`}
+                                disabled={listing.stock_qty <= 0}
+                              >
+                                {listing.stock_qty <= 0 ? (
+                                  <span className="flex items-center justify-center gap-2">
+                                    <X className="w-4 h-4" />
+                                    স্টক নেই
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center justify-center gap-2">
+                                    <ShoppingCart className="w-4 h-4" />
+                                    ঝুড়িতে যোগ করুন
+                                  </span>
+                                )}
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </motion.div>
                 )}
               </TabsContent>
 
@@ -499,73 +739,130 @@ export default function StorePage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Cart Items */}
                   <div className="lg:col-span-2">
-                    <Card>
+                    <Card className="border-0 shadow-lg">
                       <CardContent className="p-6">
-                        <h3 className="font-semibold text-lg mb-4">কেনাকাটার ঝুড়ি</h3>
+                        <div className="flex items-center justify-between mb-6">
+                          <h3 className="font-bold text-xl text-gray-900">কেনাকাটার ঝুড়ি</h3>
+                          {cart.length > 0 && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => setCart([])}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              সব মুছুন
+                            </Button>
+                          )}
+                        </div>
+                        
                         {cart.length === 0 ? (
-                          <div className="text-center py-8 text-gray-500">
-                            <ShoppingCart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                            <p>আপনার ঝুড়ি খালি</p>
-                          </div>
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="text-center py-16"
+                          >
+                            <div className="bg-gray-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
+                              <ShoppingCart className="w-12 h-12 text-gray-300" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-gray-700 mb-2">আপনার ঝুড়ি খালি</h3>
+                            <p className="text-gray-500 mb-6">পণ্য যোগ করতে &ldquo;পণ্যসমূহ&rdquo; ট্যাবে যান</p>
+                          </motion.div>
                         ) : (
                           <div className="space-y-4">
-                            {cart.map(item => (
-                              <div key={item.listing_id} className="flex items-center gap-4 p-4 border rounded-lg">
-                                <div className="flex-1">
-                                  <h4 className="font-medium">{item.product_name}</h4>
-                                  <p className="text-sm text-gray-600">
-                                    ৳{item.price}/{item.unit} • {item.farmer_name}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    সর্বনিম্ন অর্ডার: {item.min_order_qty} {item.unit}
-                                  </p>
-                                </div>
-                                
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => updateCartQuantity(item.listing_id, item.quantity - 1)}
-                                  >
-                                    <Minus className="w-4 h-4" />
-                                  </Button>
-                                  <span className="w-12 text-center">{item.quantity}</span>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => updateCartQuantity(item.listing_id, item.quantity + 1)}
-                                  >
-                                    <Plus className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                                
-                                <div className="text-right">
-                                  <div className="font-semibold">৳{Number(item.price * item.quantity).toFixed(2)}</div>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => updateCartQuantity(item.listing_id, 0)}
-                                    className="text-red-600 hover:text-red-700"
-                                  >
-                                    মুছুন
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
+                            <AnimatePresence>
+                              {cart.map((item, index) => (
+                                <motion.div
+                                  key={item.listing_id}
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  exit={{ opacity: 0, x: 20 }}
+                                  transition={{ delay: index * 0.05 }}
+                                  className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all"
+                                >
+                                  <div className="flex items-center gap-4">
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="font-bold text-gray-900 text-lg mb-1 truncate">
+                                        {item.product_name}
+                                      </h4>
+                                      <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                                        <div className="flex items-center gap-1">
+                                          <span className="font-semibold text-green-700">৳{item.price}</span>
+                                          <span className="text-gray-400">/{item.unit}</span>
+                                        </div>
+                                        <span className="text-gray-300">•</span>
+                                        <div className="flex items-center gap-1">
+                                          <Users className="w-3.5 h-3.5" />
+                                          <span className="truncate">{item.farmer_name}</span>
+                                        </div>
+                                      </div>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        সর্বনিম্ন অর্ডার: {item.min_order_qty} {item.unit}
+                                      </p>
+                                    </div>
+                                    
+                                    {/* Quantity Controls */}
+                                    <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-1">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => updateCartQuantity(item.listing_id, item.quantity - 1)}
+                                        className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                                      >
+                                        <Minus className="w-4 h-4" />
+                                      </Button>
+                                      <span className="w-12 text-center font-semibold text-gray-900">
+                                        {item.quantity}
+                                      </span>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => updateCartQuantity(item.listing_id, item.quantity + 1)}
+                                        className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600"
+                                      >
+                                        <Plus className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                    
+                                    {/* Price & Remove */}
+                                    <div className="text-right">
+                                      <div className="font-bold text-xl text-green-700 mb-1">
+                                        ৳{Number(item.price * item.quantity).toFixed(2)}
+                                      </div>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => updateCartQuantity(item.listing_id, 0)}
+                                        className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 text-xs"
+                                      >
+                                        <X className="w-3 h-3 mr-1" />
+                                        মুছুন
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </AnimatePresence>
                             
-                            <div className="border-t pt-4">
-                              <div className="space-y-2">
-                                <div className="flex justify-between text-lg font-semibold">
-                                  <span>মোট:</span>
-                                  <span>৳{Number(getTotalPrice()).toFixed(2)}</span>
+                            {/* Summary */}
+                            <div className="border-t border-gray-200 pt-4 mt-6 space-y-3">
+                              <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl p-4 space-y-2">
+                                <div className="flex justify-between text-sm text-gray-600">
+                                  <span>সাবটোটাল</span>
+                                  <span className="font-semibold">৳{Number(getTotalPrice()).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm text-gray-600">
-                                  <span>সুপারিশকৃত অগ্রিম (৫%):</span>
-                                  <span>৳{calculateAdvancePayment().toFixed(2)}</span>
+                                  <span>সুপারিশকৃত অগ্রিম (৫%)</span>
+                                  <span className="font-semibold">৳{calculateAdvancePayment().toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between text-sm text-gray-600">
-                                  <span>অবশিষ্ট:</span>
-                                  <span>৳{(getTotalPrice() - calculateAdvancePayment()).toFixed(2)}</span>
+                                <div className="flex justify-between text-sm text-gray-600 pb-3 border-b border-green-200">
+                                  <span>ডেলিভারির সময় পরিশোধ</span>
+                                  <span className="font-semibold">৳{(getTotalPrice() - calculateAdvancePayment()).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-2">
+                                  <span className="text-lg font-bold text-gray-900">মোট</span>
+                                  <span className="text-3xl font-bold text-green-700">
+                                    ৳{Number(getTotalPrice()).toFixed(2)}
+                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -577,104 +874,328 @@ export default function StorePage() {
 
                   {/* Checkout */}
                   <div className="lg:col-span-1">
-                    <Card>
-                      <CardContent className="p-6">
-                        <h3 className="font-semibold text-lg mb-4">চেকআউট</h3>
-                        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                          <p className="text-xs text-blue-700">
-                            💡 <strong>অগ্রিম পেমেন্ট:</strong> সাধারণত মোট মূল্যের ৫% অগ্রিম পেমেন্ট করা হয়। 
-                            বাকি টাকা ডেলিভারির সময় পরিশোধ করতে হবে।
-                          </p>
+                    <div className="sticky top-4 space-y-4">
+                      {/* Order Summary Card */}
+                      {cart.length > 0 && (
+                        <Card className="border-0 shadow-lg overflow-hidden">
+                          <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
+                            <h3 className="font-bold text-lg text-white flex items-center gap-2">
+                              <ShoppingCart className="w-5 h-5" />
+                              অর্ডার সারসংক্ষেপ
+                            </h3>
+                          </div>
+                          <CardContent className="p-6">
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600">মোট পণ্য</span>
+                                <span className="font-semibold text-gray-900">{cart.length}টি</span>
+                              </div>
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600">মোট পরিমাণ</span>
+                                <span className="font-semibold text-gray-900">
+                                  {cart.reduce((sum, item) => sum + item.quantity, 0)} ইউনিট
+                                </span>
+                              </div>
+                              <div className="border-t border-gray-200 pt-3">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-gray-700 font-medium">সাবটোটাল</span>
+                                  <span className="text-xl font-bold text-gray-900">
+                                    ৳{Number(getTotalPrice()).toFixed(2)}
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              {/* Payment Breakdown */}
+                              <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-lg p-3 space-y-2 border border-green-100">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <CreditCard className="w-4 h-4 text-green-700" />
+                                  <span className="text-xs font-semibold text-green-900">পেমেন্ট বিভাজন</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs">
+                                  <span className="text-green-700">অগ্রিম (৫%)</span>
+                                  <span className="font-semibold text-green-900">
+                                    ৳{calculateAdvancePayment().toFixed(2)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs">
+                                  <span className="text-green-700">ডেলিভারিতে</span>
+                                  <span className="font-semibold text-green-900">
+                                    ৳{(getTotalPrice() - calculateAdvancePayment()).toFixed(2)}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Delivery Info */}
+                              <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                                <div className="flex items-start gap-2">
+                                  <Truck className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                  <div>
+                                    <p className="text-xs font-semibold text-blue-900 mb-1">
+                                      ডেলিভারি সময়
+                                    </p>
+                                    <p className="text-xs text-blue-700">
+                                      ২-৩ কর্মদিবসের মধ্যে ডেলিভারি হবে
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Checkout Form Card */}
+                      <Card className="border-0 shadow-lg overflow-hidden">
+                        <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-4">
+                          <h3 className="font-bold text-lg text-white flex items-center gap-2">
+                            <Package className="w-5 h-5" />
+                            চেকআউট তথ্য
+                          </h3>
                         </div>
-                        <div className="space-y-4">
-                          <div>
-                            <label className="block text-sm font-medium mb-2">পূর্ণ নাম *</label>
-                            <input
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
-                              placeholder="আপনার পূর্ণ নাম"
-                              value={checkoutData.customer_name}
-                              onChange={e => setCheckoutData(prev => ({ ...prev, customer_name: e.target.value }))}
-                            />
+                        
+                        <CardContent className="p-6">
+                          {/* Security Banner */}
+                          <div className="mb-6 p-4 bg-gradient-to-br from-blue-50 via-blue-50/80 to-blue-100/50 rounded-xl border border-blue-200">
+                            <div className="flex gap-3">
+                              <div className="bg-blue-600 rounded-full p-2 h-fit">
+                                <Shield className="w-5 h-5 text-white" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-blue-900 mb-1.5">
+                                  ১০০% নিরাপদ পেমেন্ট
+                                </p>
+                                <p className="text-xs text-blue-700 leading-relaxed">
+                                  আপনার তথ্য সম্পূর্ণ সুরক্ষিত। সাধারণত মোট মূল্যের ৫% অগ্রিম পেমেন্ট করতে হয় এবং বাকি টাকা ডেলিভারির সময় পরিশোধ করতে হবে।
+                                </p>
+                              </div>
+                            </div>
                           </div>
-
-                          <div>
-                            <label className="block text-sm font-medium mb-2">ফোন নম্বর *</label>
-                            <div className="relative">
-                              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          
+                          <div className="space-y-5">
+                            {/* Name Input */}
+                            <div>
+                              <label className="flex items-center gap-2 text-sm font-bold mb-2.5 text-gray-900">
+                                <Users className="w-4 h-4 text-green-600" />
+                                পূর্ণ নাম
+                                <span className="text-red-500">*</span>
+                              </label>
                               <input
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                placeholder="+৮৮০ ১XXX-XXXXXX"
-                                value={checkoutData.phone}
-                                onChange={e => setCheckoutData(prev => ({ ...prev, phone: e.target.value }))}
+                                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white hover:border-gray-300 text-gray-900 placeholder:text-gray-400"
+                                placeholder="আপনার পূর্ণ নাম লিখুন"
+                                value={checkoutData.customer_name}
+                                onChange={e => setCheckoutData(prev => ({ ...prev, customer_name: e.target.value }))}
                               />
                             </div>
-                          </div>
 
-                          <div>
-                            <label className="block text-sm font-medium mb-2">ডেলিভারি ঠিকানা *</label>
-                            <div className="relative">
-                              <MapPinIcon className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                              <textarea
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                rows={3}
-                                placeholder="আপনার সম্পূর্ণ ঠিকানা"
-                                value={checkoutData.address}
-                                onChange={e => setCheckoutData(prev => ({ ...prev, address: e.target.value }))}
-                              />
+                            {/* Phone Input */}
+                            <div>
+                              <label className="flex items-center gap-2 text-sm font-bold mb-2.5 text-gray-900">
+                                <Phone className="w-4 h-4 text-green-600" />
+                                ফোন নম্বর
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <div className="relative">
+                                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                                  <Phone className="w-4 h-4 text-gray-400" />
+                                  <span className="text-gray-400 text-sm">+৮৮০</span>
+                                </div>
+                                <input
+                                  className="w-full pl-20 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white hover:border-gray-300 text-gray-900 placeholder:text-gray-400"
+                                  placeholder="১XXX-XXXXXX"
+                                  value={checkoutData.phone}
+                                  onChange={e => setCheckoutData(prev => ({ ...prev, phone: e.target.value }))}
+                                />
+                              </div>
+                              <p className="mt-1.5 text-xs text-gray-500 flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                ডেলিভারি আপডেটের জন্য ব্যবহৃত হবে
+                              </p>
                             </div>
-                          </div>
 
-                          <div>
-                            <label className="block text-sm font-medium mb-2">অগ্রিম পেমেন্ট (ঐচ্ছিক)</label>
-                            <div className="relative">
-                              <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                              <input
-                                type="number"
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                placeholder="৳০.০০"
-                                value={checkoutData.advance_amount}
-                                onChange={e => setCheckoutData(prev => ({ ...prev, advance_amount: parseFloat(e.target.value) || 0 }))}
-                              />
+                            {/* Address Input */}
+                            <div>
+                              <label className="flex items-center gap-2 text-sm font-bold mb-2.5 text-gray-900">
+                                <MapPinIcon className="w-4 h-4 text-green-600" />
+                                ডেলিভারি ঠিকানা
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <div className="relative">
+                                <MapPinIcon className="absolute left-4 top-3 w-4 h-4 text-gray-400" />
+                                <textarea
+                                  className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white hover:border-gray-300 resize-none text-gray-900 placeholder:text-gray-400"
+                                  rows={3}
+                                  placeholder="বাড়ি নং, রোড নং, এলাকা, থানা, জেলা"
+                                  value={checkoutData.address}
+                                  onChange={e => setCheckoutData(prev => ({ ...prev, address: e.target.value }))}
+                                />
+                              </div>
+                              <p className="mt-1.5 text-xs text-gray-500 flex items-center gap-1">
+                                <MapPinIcon className="w-3 h-3" />
+                                সম্পূর্ণ ঠিকানা দিন যাতে ডেলিভারি সহজ হয়
+                              </p>
                             </div>
-                            <div className="flex items-center justify-between mt-2">
-                              <p className="text-xs text-gray-500">সুপারিশকৃত অগ্রিম: ৳{calculateAdvancePayment().toFixed(2)} (মোটের ৫%)</p>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setCheckoutData(prev => ({ ...prev, advance_amount: calculateAdvancePayment() }))}
-                                className={`text-xs ${checkoutData.advance_amount === calculateAdvancePayment() ? 'bg-green-100 text-green-800 border-green-300' : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'}`}
-                                disabled={checkoutData.advance_amount === calculateAdvancePayment()}
+
+                            {/* Advance Payment */}
+                            <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-4 border-2 border-dashed border-gray-300">
+                              <label className="flex items-center gap-2 text-sm font-bold mb-3 text-gray-900">
+                                <CreditCard className="w-4 h-4 text-green-600" />
+                                অগ্রিম পেমেন্ট
+                                <span className="text-xs font-normal text-gray-500">(ঐচ্ছিক)</span>
+                              </label>
+                              <div className="relative">
+                                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">
+                                  ৳
+                                </span>
+                                <input
+                                  type="number"
+                                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white text-gray-900 placeholder:text-gray-400 font-semibold"
+                                  placeholder="০.০০"
+                                  value={checkoutData.advance_amount || ''}
+                                  onChange={e => setCheckoutData(prev => ({ ...prev, advance_amount: parseFloat(e.target.value) || 0 }))}
+                                />
+                              </div>
+                              
+                              {/* Quick Apply */}
+                              <div className="mt-3 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="bg-green-100 rounded-full p-1.5">
+                                    <TrendingUp className="w-3.5 h-3.5 text-green-700" />
+                                  </div>
+                                  <div>
+                                    <p className="text-xs font-semibold text-gray-700">
+                                      সুপারিশকৃত পরিমাণ
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      ৳{calculateAdvancePayment().toFixed(2)} (৫% অগ্রিম)
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() => setCheckoutData(prev => ({ ...prev, advance_amount: calculateAdvancePayment() }))}
+                                  className={`text-xs h-8 px-3 font-semibold transition-all ${
+                                    checkoutData.advance_amount === calculateAdvancePayment() 
+                                      ? 'bg-green-600 text-white hover:bg-green-700' 
+                                      : 'bg-white border-2 border-green-600 text-green-700 hover:bg-green-50'
+                                  }`}
+                                  disabled={checkoutData.advance_amount === calculateAdvancePayment()}
+                                >
+                                  {checkoutData.advance_amount === calculateAdvancePayment() ? (
+                                    <span className="flex items-center gap-1">
+                                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                                      </svg>
+                                      প্রয়োগকৃত
+                                    </span>
+                                  ) : 'প্রয়োগ করুন'}
+                                </Button>
+                              </div>
+                            </div>
+
+                            {/* Place Order Button */}
+                            <motion.div
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className="pt-2"
+                            >
+                              <Button 
+                                onClick={placeOrder} 
+                                className="w-full bg-gradient-to-r from-green-600 via-green-600 to-green-700 hover:from-green-700 hover:via-green-700 hover:to-green-800 text-white font-bold py-6 rounded-xl shadow-xl hover:shadow-2xl transition-all text-base relative overflow-hidden group"
+                                disabled={cart.length === 0 || checkoutLoading || !checkoutData.customer_name || !checkoutData.phone || !checkoutData.address}
                               >
-                                {checkoutData.advance_amount === calculateAdvancePayment() ? 'প্রয়োগকৃত ✓' : 'প্রয়োগ করুন'}
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                                {checkoutLoading ? (
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <span>অর্ডার প্রসেস হচ্ছে...</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-center gap-2 relative z-10">
+                                    <ShoppingCart className="w-5 h-5" />
+                                    <span>
+                                      {cart.length === 0 
+                                        ? 'ঝুড়ি খালি' 
+                                        : !checkoutData.customer_name || !checkoutData.phone || !checkoutData.address
+                                        ? 'তথ্য পূরণ করুন'
+                                        : `অর্ডার নিশ্চিত করুন • ৳${Number(getTotalPrice()).toFixed(2)}`
+                                      }
+                                    </span>
+                                  </div>
+                                )}
                               </Button>
+                            </motion.div>
+
+                            {/* Success Message */}
+                            <AnimatePresence>
+                              {orderResult && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                  className="p-4 bg-gradient-to-br from-green-50 via-green-100/50 to-green-50 border-2 border-green-300 rounded-xl shadow-md"
+                                >
+                                  <div className="flex items-start gap-3">
+                                    <div className="bg-green-600 text-white rounded-full p-2 shadow-lg">
+                                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="font-bold text-green-900 mb-1 text-base">
+                                        অর্ডার সফল হয়েছে! 🎉
+                                      </p>
+                                      <p className="text-green-800 text-sm mb-2">
+                                        অর্ডার নম্বর: <span className="font-bold">#{orderResult.id}</span>
+                                      </p>
+                                      <p className="text-xs text-green-700">
+                                        আপনার ফোনে শীঘ্রই কনফার্মেশন পাবেন
+                                      </p>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+
+                            {/* Security Features */}
+                            <div className="pt-4 border-t border-gray-200">
+                              <p className="text-xs font-semibold text-gray-700 mb-3">আমরা নিশ্চিত করি:</p>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="flex items-start gap-2">
+                                  <div className="bg-green-100 rounded-full p-1">
+                                    <Shield className="w-3 h-3 text-green-600" />
+                                  </div>
+                                  <span className="text-xs text-gray-600">তাজা পণ্য</span>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                  <div className="bg-green-100 rounded-full p-1">
+                                    <Truck className="w-3 h-3 text-green-600" />
+                                  </div>
+                                  <span className="text-xs text-gray-600">দ্রুত ডেলিভারি</span>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                  <div className="bg-green-100 rounded-full p-1">
+                                    <CreditCard className="w-3 h-3 text-green-600" />
+                                  </div>
+                                  <span className="text-xs text-gray-600">নিরাপদ পেমেন্ট</span>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                  <div className="bg-green-100 rounded-full p-1">
+                                    <Clock className="w-3 h-3 text-green-600" />
+                                  </div>
+                                  <span className="text-xs text-gray-600">২৪/৭ সাপোর্ট</span>
+                                </div>
+                              </div>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">ডেমো পেমেন্ট - যেকোনো পরিমাণ</p>
                           </div>
-
-                          <Button 
-                            onClick={placeOrder} 
-                            className="w-full bg-green-600 hover:bg-green-700"
-                            disabled={cart.length === 0 || checkoutLoading}
-                          >
-                            {checkoutLoading ? 'অর্ডার দেওয়া হচ্ছে...' : 
-                              `অর্ডার দিন • ৳${Number(getTotalPrice()).toFixed(2)}${checkoutData.advance_amount > 0 ? ` (অগ্রিম: ৳${checkoutData.advance_amount.toFixed(2)})` : ''}`
-                            }
-                          </Button>
-
-                          {orderResult && (
-                            <div className="text-sm text-green-700 p-3 bg-green-50 rounded-lg">
-                              ✅ অর্ডার #{orderResult.id} সফলভাবে দেওয়া হয়েছে!
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
             </Tabs>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

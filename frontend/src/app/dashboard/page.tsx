@@ -49,58 +49,44 @@ export default function Dashboard() {
         animate="visible"
         className="space-y-6"
       >
-        {/* Welcome Section with Bangladesh theme */}
+        {/* Welcome Section - Clean Professional Design */}
         <motion.div 
           variants={cardVariants}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="relative bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-3xl p-8 overflow-hidden shadow-2xl"
+          className="bg-white border-l-4 border-green-600 rounded-2xl p-8 shadow-lg relative overflow-hidden"
         >
-          {/* Bangladesh flag inspired pattern */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-green-700/20 rounded-full blur-3xl" />
-          
-          {/* Rice paddy pattern */}
-          <div className="absolute inset-0 opacity-10" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0c-5.523 0-10 4.477-10 10v10h20V10c0-5.523-4.477-10-10-10zm0 40c5.523 0 10-4.477 10-10V20H10v10c0 5.523 4.477 10 10 10z' fill='%23ffffff' fill-opacity='1'/%3E%3C/svg%3E")`,
+          {/* Subtle background pattern */}
+          <div className="absolute inset-0 opacity-5" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2316a34a' fill-opacity='1'%3E%3Cpath d='M30 0c-5.523 0-10 4.477-10 10v10h20V10c0-5.523-4.477-10-10-10z'/%3E%3C/g%3E%3C/svg%3E")`,
           }} />
           
-          <div className="relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center space-x-3 mb-4"
-            >
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                <Sparkles className="w-7 h-7 text-white" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-14 h-14 bg-green-600 rounded-xl flex items-center justify-center shadow-md">
+                <Sparkles className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white drop-shadow-lg">
+                <h1 className="text-3xl font-bold text-gray-900">
                   স্বাগতম, আপনার কৃষি ড্যাশবোর্ডে
                 </h1>
-                <p className="text-green-50 text-sm mt-1">
+                <p className="text-gray-600 text-sm mt-1">
                   আপনার ফসল ও কৃষি কার্যক্রম পরিচালনা করুন একটি স্থান থেকেই 🌾
                 </p>
               </div>
-            </motion.div>
+            </div>
             
             {/* Quick actions */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="flex flex-wrap gap-3"
-            >
-              <button className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl text-sm font-medium transition-all duration-200 border border-white/20 hover:border-white/40">
-                🌤️ আবহাওয়া দেখুন
+            <div className="flex gap-2">
+              <button className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-sm font-medium transition-colors duration-200 border border-blue-200">
+                🌤️ আবহাওয়া
               </button>
-              <button className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl text-sm font-medium transition-all duration-200 border border-white/20 hover:border-white/40">
+              <button className="px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm font-medium transition-colors duration-200 border border-green-200">
                 📊 বিশ্লেষণ
               </button>
-              <button className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl text-sm font-medium transition-all duration-200 border border-white/20 hover:border-white/40">
+              <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors duration-200 shadow-sm">
                 🤖 AI সহায়তা
               </button>
-            </motion.div>
+            </div>
           </div>
         </motion.div>
         
@@ -143,31 +129,14 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Critical Alerts - Top Priority with glow effect */}
+        {/* Critical Alerts */}
         <motion.div 
           variants={cardVariants} 
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="relative"
         >
-          <motion.div
-            animate={{
-              boxShadow: [
-                '0 0 20px rgba(239, 68, 68, 0.3)',
-                '0 0 40px rgba(239, 68, 68, 0.5)',
-                '0 0 20px rgba(239, 68, 68, 0.3)',
-              ],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            className="rounded-2xl"
-          >
-            <Suspense fallback={<LoadingCard height="h-32" />}>
-              <CriticalAlertsCard />
-            </Suspense>
-          </motion.div>
+          <Suspense fallback={<LoadingCard height="h-32" />}>
+            <CriticalAlertsCard />
+          </Suspense>
         </motion.div>
 
         {/* Main Grid */}

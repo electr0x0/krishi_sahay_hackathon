@@ -78,48 +78,48 @@ const generateHistoryData = (count: number): SensorData[] => {
   return data;
 };
 
-// Enhanced Card Component
+// Enhanced Card Component - Mobile Optimized
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 shadow-lg ${className}`}>
+  <div className={`bg-white/80 backdrop-blur-sm rounded-lg sm:rounded-xl border border-gray-200/50 shadow-lg ${className}`}>
     {children}
   </div>
 );
 
 const CardHeader = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`px-6 py-4 ${className}`}>
+  <div className={`px-3 py-2.5 sm:px-6 sm:py-4 ${className}`}>
     {children}
   </div>
 );
 
 const CardContent = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`px-6 pb-6 ${className}`}>
+  <div className={`px-3 pb-3 sm:px-6 sm:pb-6 ${className}`}>
     {children}
   </div>
 );
 
 const CardTitle = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>
+  <h3 className={`text-sm sm:text-lg font-semibold text-gray-900 ${className}`}>
     {children}
   </h3>
 );
 
 const CardDescription = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <p className={`text-sm text-gray-600 mt-1 ${className}`}>
+  <p className={`text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1 ${className}`}>
     {children}
   </p>
 );
 
-// Progress Component
+// Progress Component - Mobile Optimized
 const Progress = ({ value, className = "" }: { value: number; className?: string }) => (
-  <div className={`w-full bg-gray-200 rounded-full h-2 ${className}`}>
+  <div className={`w-full bg-gray-200 rounded-full h-1.5 sm:h-2 ${className}`}>
     <div 
-      className="bg-gradient-to-r from-emerald-500 to-green-500 h-2 rounded-full transition-all duration-300"
+      className="bg-gradient-to-r from-emerald-500 to-green-500 h-1.5 sm:h-2 rounded-full transition-all duration-300"
       style={{ width: `${Math.min(value, 100)}%` }}
     />
   </div>
 );
 
-// Badge Component
+// Badge Component - Mobile Optimized
 const Badge = ({ 
   children, 
   variant = "default", 
@@ -136,13 +136,13 @@ const Badge = ({
   };
   
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${variants[variant]} ${className}`}>
+    <span className={`inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium border ${variants[variant]} ${className}`}>
       {children}
     </span>
   );
 };
 
-// Button Component
+// Button Component - Mobile Optimized
 const Button = ({ 
   children, 
   onClick, 
@@ -165,7 +165,7 @@ const Button = ({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${variants[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+      className={`inline-flex items-center gap-1 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${variants[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
     >
       {children}
     </button>
@@ -189,7 +189,7 @@ const DataFormatter = {
   }
 };
 
-// Enhanced Sensor Card component
+// Enhanced Sensor Card component - Mobile Optimized
 const SensorCard = ({ 
   title, 
   value, 
@@ -239,51 +239,53 @@ const SensorCard = ({
   return (
     <div className="transform transition-all duration-300 hover:scale-105 hover:-translate-y-1">
       <Card className={`h-full border-none shadow-xl ${colors.bg}`}>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2 sm:pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium text-gray-600">
+            <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">
               {title}
             </CardTitle>
-            <Icon className={`h-5 w-5 ${colors.icon}`} />
+            <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${colors.icon}`} />
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="space-y-4">
-            <div className="flex items-baseline space-x-2">
-              <span className="text-3xl font-bold text-gray-900">
+          <div className="space-y-2 sm:space-y-4">
+            <div className="flex items-baseline space-x-1 sm:space-x-2">
+              <span className="text-xl sm:text-3xl font-bold text-gray-900">
                 {value?.toFixed(1) || '0.0'}
               </span>
-              <span className="text-lg text-gray-500">{unit}</span>
+              <span className="text-sm sm:text-lg text-gray-500">{unit}</span>
             </div>
             
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
+            <div className="space-y-1 sm:space-y-2">
+              <div className="flex justify-between text-[10px] sm:text-sm">
                 <span className="text-gray-500">Progress</span>
                 <span className="font-medium">{percentage.toFixed(0)}%</span>
               </div>
-              <Progress value={percentage} className="h-2" />
+              <Progress value={percentage} />
             </div>
             
             {trend !== undefined && TrendIcon && (
-              <div className="flex items-center space-x-1">
-                <TrendIcon className={`h-4 w-4 ${colors.trend}`} />
-                <span className={`text-sm font-medium ${colors.trend}`}>
+              <div className="flex items-center space-x-0.5 sm:space-x-1">
+                <TrendIcon className={`h-3 w-3 sm:h-4 sm:w-4 ${colors.trend}`} />
+                <span className={`text-[10px] sm:text-sm font-medium ${colors.trend}`}>
                   {Math.abs(trend).toFixed(1)}% vs last hour
                 </span>
               </div>
             )}
             
-            <div className="flex items-center justify-between text-xs text-gray-500">
+            <div className="flex items-center justify-between text-[9px] sm:text-xs text-gray-500">
               <span>Max: {max}{unit}</span>
               {isHealthy ? (
                 <Badge variant="default">
-                  <CheckCircle className="h-3 w-3" />
-                  Healthy
+                  <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                  <span className="hidden sm:inline">Healthy</span>
+                  <span className="sm:hidden">OK</span>
                 </Badge>
               ) : (
                 <Badge variant="outline">
-                  <AlertCircle className="h-3 w-3" />
-                  Monitor
+                  <AlertCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                  <span className="hidden sm:inline">Monitor</span>
+                  <span className="sm:hidden">⚠</span>
                 </Badge>
               )}
             </div>
@@ -294,7 +296,7 @@ const SensorCard = ({
   );
 };
 
-// Enhanced Status indicator component
+// Enhanced Status indicator component - Mobile Optimized
 const DeviceStatusCard = ({ 
   status, 
   lastUpdate,
@@ -313,66 +315,69 @@ const DeviceStatusCard = ({
   
   return (
     <Card className="border-none shadow-xl bg-gradient-to-br from-white to-gray-50">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2 sm:pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center space-x-2">
+          <CardTitle className="text-sm sm:text-lg flex items-center space-x-1.5 sm:space-x-2">
             {isOnline ? (
-              <Wifi className="h-5 w-5 text-emerald-600" />
+              <Wifi className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
             ) : (
-              <WifiOff className="h-5 w-5 text-red-500" />
+              <WifiOff className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
             )}
             <span>Device Status</span>
           </CardTitle>
           {!isRealData && (
             <Badge variant="outline">
-              <AlertCircle className="h-3 w-3" />
-              Fallback Data
+              <AlertCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              <span className="hidden sm:inline">Fallback Data</span>
+              <span className="sm:hidden">Demo</span>
             </Badge>
           )}
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div className="space-y-1 sm:space-y-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               {isOnline ? (
                 <Badge variant="default">
-                  <CheckCircle className="h-3 w-3" />
-                  Online
+                  <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                  <span className="hidden sm:inline">Online</span>
+                  <span className="sm:hidden">ON</span>
                 </Badge>
               ) : (
                 <Badge variant="destructive">
-                  <AlertCircle className="h-3 w-3" />
-                  Offline
+                  <AlertCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                  <span className="hidden sm:inline">Offline</span>
+                  <span className="sm:hidden">OFF</span>
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-gray-500">
-              Connection Status
+            <p className="text-[10px] sm:text-sm text-gray-500">
+              Status
             </p>
           </div>
           
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4 text-blue-500" />
-              <span className="font-semibold text-gray-900">
-                {minutesAgo < 1 ? 'Just now' : `${minutesAgo}m ago`}
+          <div className="space-y-1 sm:space-y-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />
+              <span className="text-xs sm:text-base font-semibold text-gray-900">
+                {minutesAgo < 1 ? 'Now' : `${minutesAgo}m`}
               </span>
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-[10px] sm:text-sm text-gray-500">
               Last Update
             </p>
           </div>
           
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Zap className="h-4 w-4 text-amber-500" />
-              <span className="font-semibold text-gray-900">
+          <div className="space-y-1 sm:space-y-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
+              <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-amber-500" />
+              <span className="text-xs sm:text-base font-semibold text-gray-900">
                 {dataCount24h}
               </span>
             </div>
-            <p className="text-sm text-gray-500">
-              Readings (24h)
+            <p className="text-[10px] sm:text-sm text-gray-500">
+              24h Reads
             </p>
           </div>
         </div>
@@ -381,7 +386,7 @@ const DeviceStatusCard = ({
   );
 };
 
-// Statistics Overview Component
+// Statistics Overview Component - Mobile Optimized
 const StatisticsCard = ({ historyData }: { historyData: SensorHistoryResponse | undefined }) => {
   if (!historyData?.data || historyData.data.length === 0) return null;
   
@@ -392,33 +397,36 @@ const StatisticsCard = ({ historyData }: { historyData: SensorHistoryResponse | 
   const avgWaterLevel = data.reduce((sum, item) => sum + (item.water_level_percent || 0), 0) / data.length;
   
   const stats = [
-    { label: "Avg Temperature", value: avgTemp.toFixed(1), unit: "°C", color: "text-amber-600" },
-    { label: "Avg Humidity", value: avgHumidity.toFixed(1), unit: "%", color: "text-blue-600" },
-    { label: "Avg Soil Moisture", value: avgSoilMoisture.toFixed(1), unit: "%", color: "text-emerald-600" },
-    { label: "Avg Water Level", value: avgWaterLevel.toFixed(1), unit: "%", color: "text-cyan-600" }
+    { label: "Temp", fullLabel: "Avg Temperature", value: avgTemp.toFixed(1), unit: "°C", color: "text-amber-600" },
+    { label: "Humid", fullLabel: "Avg Humidity", value: avgHumidity.toFixed(1), unit: "%", color: "text-blue-600" },
+    { label: "Soil", fullLabel: "Avg Soil Moisture", value: avgSoilMoisture.toFixed(1), unit: "%", color: "text-emerald-600" },
+    { label: "Water", fullLabel: "Avg Water Level", value: avgWaterLevel.toFixed(1), unit: "%", color: "text-cyan-600" }
   ];
   
   return (
     <Card className="border-none shadow-xl bg-gradient-to-br from-emerald-50/50 to-green-50/30">
       <CardHeader>
-        <CardTitle className="text-lg flex items-center space-x-2">
-          <Activity className="h-5 w-5 text-emerald-600" />
+        <CardTitle className="text-sm sm:text-lg flex items-center space-x-1.5 sm:space-x-2">
+          <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
           <span>24-Hour Averages</span>
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="hidden sm:block">
           Statistical overview from your recent sensor readings
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
           {stats.map((stat, index) => (
-            <div key={index} className="text-center space-y-2">
-              <p className="text-sm text-gray-500">{stat.label}</p>
-              <div className="space-y-1">
-                <p className={`text-2xl font-bold ${stat.color}`}>
+            <div key={index} className="text-center space-y-1 sm:space-y-2">
+              <p className="text-[10px] sm:text-sm text-gray-500">
+                <span className="sm:hidden">{stat.label}</span>
+                <span className="hidden sm:inline">{stat.fullLabel}</span>
+              </p>
+              <div className="space-y-0.5 sm:space-y-1">
+                <p className={`text-lg sm:text-2xl font-bold ${stat.color}`}>
                   {stat.value}
                 </p>
-                <p className="text-sm text-gray-500">{stat.unit}</p>
+                <p className="text-[10px] sm:text-sm text-gray-500">{stat.unit}</p>
               </div>
             </div>
           ))}
@@ -535,27 +543,28 @@ function IoTDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
-      {/* Header */}
+      {/* Header - Mobile Optimized */}
       <div className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
-                IoT Sensor Dashboard
+            <div className="space-y-0.5 sm:space-y-1">
+              <h1 className="text-lg sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+                IoT Dashboard
               </h1>
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
-                <p>Real-time agricultural sensor monitoring</p>
+              <div className="flex items-center space-x-2 sm:space-x-4 text-[10px] sm:text-sm text-gray-600">
+                <p className="hidden sm:block">Real-time agricultural sensor monitoring</p>
+                <p className="sm:hidden">Live Monitoring</p>
                 {lastRefreshTime && (
-                  <span>•</span>
-                )}
-                {lastRefreshTime && (
-                  <p>Last updated: {lastRefreshTime.toLocaleTimeString()}</p>
+                  <>
+                    <span className="hidden sm:inline">•</span>
+                    <p className="hidden sm:block">Last updated: {lastRefreshTime.toLocaleTimeString()}</p>
+                  </>
                 )}
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-1.5 sm:space-x-3">
               {!refreshing && (
-                <div className="text-sm text-gray-500">
+                <div className="text-[10px] sm:text-sm text-gray-500 hidden sm:block">
                   Next refresh in {nextRefreshIn}s
                 </div>
               )}
@@ -563,31 +572,31 @@ function IoTDashboard() {
                 onClick={handleRefresh}
                 disabled={refreshing}
                 variant="outline"
-                className="space-x-2"
+                className="space-x-1"
               >
-                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+                <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Error Banner */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Error Banner - Mobile Optimized */}
         {showErrorBanner && (
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <Card className="border-red-200 bg-red-50 border-none shadow-xl">
-              <CardContent className="py-4">
-                <div className="flex items-center space-x-3">
-                  <AlertCircle className="h-5 w-5 text-red-500" />
-                  <div className="flex-1">
-                    <p className="text-red-800 font-medium">Connection Error</p>
-                    <p className="text-red-600 text-sm">Unable to fetch live sensor data. Using fallback data for demonstration.</p>
+              <CardContent className="py-3 sm:py-4">
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-red-800 font-medium text-xs sm:text-base">Connection Error</p>
+                    <p className="text-red-600 text-[10px] sm:text-sm">Unable to fetch live data. Using demo data.</p>
                   </div>
-                  <Button onClick={handleRefresh} variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
-                    <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                    Retry
+                  <Button onClick={handleRefresh} variant="outline" className="border-red-300 text-red-700 hover:bg-red-100 flex-shrink-0">
+                    <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                    <span className="hidden sm:inline sm:ml-2">Retry</span>
                   </Button>
                 </div>
               </CardContent>
@@ -595,13 +604,13 @@ function IoTDashboard() {
           </div>
         )}
 
-        {/* Loading State */}
+        {/* Loading State - Mobile Optimized */}
         {!latestData && !error && (
-          <div className="flex items-center justify-center py-12">
-            <Card className="p-8 border-none shadow-xl">
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto animate-spin" />
-                <p className="text-gray-600">Loading sensor data...</p>
+          <div className="flex items-center justify-center py-8 sm:py-12">
+            <Card className="p-6 sm:p-8 border-none shadow-xl">
+              <div className="text-center space-y-3 sm:space-y-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto animate-spin" />
+                <p className="text-gray-600 text-sm sm:text-base">Loading sensor data...</p>
               </div>
             </Card>
           </div>
@@ -610,7 +619,7 @@ function IoTDashboard() {
         {latestData && (
           <>
             {/* Status Card */}
-            <div className="mb-8">
+            <div className="mb-4 sm:mb-8">
               <DeviceStatusCard 
                 status={latestData.device_status} 
                 lastUpdate={latestData.received_at}
@@ -621,13 +630,13 @@ function IoTDashboard() {
 
             {/* Statistics Overview */}
             {historyData && historyData.data && historyData.data.length > 0 && (
-              <div className="mb-8">
+              <div className="mb-4 sm:mb-8">
                 <StatisticsCard historyData={historyData} />
               </div>
             )}
 
-            {/* Sensor Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Sensor Cards Grid - Mobile Optimized */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8">
               <SensorCard
                 title="Temperature"
                 value={DataFormatter.validateSensorValue(latestData.temperature_c)}
@@ -666,41 +675,43 @@ function IoTDashboard() {
               />
             </div>
 
-            {/* Charts */}
+            {/* Charts - Mobile Optimized */}
             {chartData.length > 0 && (
               <Card className="border-none shadow-xl bg-gradient-to-br from-white to-gray-50/50">
                 <CardHeader>
-                  <CardTitle className="text-xl flex items-center space-x-2">
-                    <Activity className="h-5 w-5 text-emerald-600" />
+                  <CardTitle className="text-base sm:text-xl flex items-center space-x-1.5 sm:space-x-2">
+                    <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
                     <span>Sensor History</span>
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="hidden sm:block">
                     Last 50 readings from your IoT sensors
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-8">
+                <CardContent className="space-y-4 sm:space-y-8">
                   {/* Temperature and Humidity Chart */}
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                      <div className="flex space-x-2">
-                        <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <div className="space-y-2 sm:space-y-4">
+                    <h4 className="text-sm sm:text-lg font-semibold text-gray-900 flex items-center space-x-1.5 sm:space-x-2">
+                      <div className="flex space-x-1 sm:space-x-2">
+                        <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-amber-500"></div>
+                        <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-blue-500"></div>
                       </div>
-                      <span>Temperature & Humidity</span>
+                      <span>Temp & Humidity</span>
                     </h4>
-                    <div className="h-80 w-full">
+                    <div className="h-48 sm:h-80 w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                        <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
                           <XAxis 
                             dataKey="time" 
-                            tick={{ fontSize: 12, fill: "#6b7280" }}
+                            tick={{ fontSize: 9 }}
                             tickLine={{ stroke: "#6b7280" }}
                             interval="preserveStartEnd"
+                            className="sm:text-xs"
                           />
                           <YAxis 
-                            tick={{ fontSize: 12, fill: "#6b7280" }}
+                            tick={{ fontSize: 9 }}
                             tickLine={{ stroke: "#6b7280" }}
+                            className="sm:text-xs"
                           />
                           <Tooltip 
                             labelFormatter={(label) => `Time: ${label}`}
@@ -712,23 +723,24 @@ function IoTDashboard() {
                               backgroundColor: "white",
                               border: "1px solid #e5e7eb",
                               borderRadius: "8px",
-                              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+                              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                              fontSize: "11px"
                             }}
                           />
                           <Line 
                             type="monotone" 
                             dataKey="temperature" 
                             stroke="#f59e0b" 
-                            strokeWidth={3}
-                            dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
+                            strokeWidth={2}
+                            dot={{ fill: '#f59e0b', strokeWidth: 1, r: 2 }}
                             name="temperature"
                           />
                           <Line 
                             type="monotone" 
                             dataKey="humidity" 
                             stroke="#3b82f6" 
-                            strokeWidth={3}
-                            dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                            strokeWidth={2}
+                            dot={{ fill: '#3b82f6', strokeWidth: 1, r: 2 }}
                             name="humidity"
                           />
                         </LineChart>
@@ -737,27 +749,29 @@ function IoTDashboard() {
                   </div>
 
                   {/* Soil and Water Chart */}
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                      <div className="flex space-x-2">
-                        <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                        <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
+                  <div className="space-y-2 sm:space-y-4">
+                    <h4 className="text-sm sm:text-lg font-semibold text-gray-900 flex items-center space-x-1.5 sm:space-x-2">
+                      <div className="flex space-x-1 sm:space-x-2">
+                        <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-emerald-500"></div>
+                        <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-cyan-500"></div>
                       </div>
-                      <span>Soil Moisture & Water Level</span>
+                      <span>Soil & Water</span>
                     </h4>
-                    <div className="h-80 w-full">
+                    <div className="h-48 sm:h-80 w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                        <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
                           <XAxis 
                             dataKey="time" 
-                            tick={{ fontSize: 12, fill: "#6b7280" }}
+                            tick={{ fontSize: 9 }}
                             tickLine={{ stroke: "#6b7280" }}
                             interval="preserveStartEnd"
+                            className="sm:text-xs"
                           />
                           <YAxis 
-                            tick={{ fontSize: 12, fill: "#6b7280" }}
+                            tick={{ fontSize: 9 }}
                             tickLine={{ stroke: "#6b7280" }}
+                            className="sm:text-xs"
                           />
                           <Tooltip 
                             labelFormatter={(label) => `Time: ${label}`}
@@ -769,7 +783,8 @@ function IoTDashboard() {
                               backgroundColor: "white",
                               border: "1px solid #e5e7eb",
                               borderRadius: "8px",
-                              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+                              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                              fontSize: "11px"
                             }}
                           />
                           <Area 

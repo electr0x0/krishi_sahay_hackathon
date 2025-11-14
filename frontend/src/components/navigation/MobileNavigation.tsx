@@ -29,7 +29,7 @@ const MobileNavigation = () => {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-green-600 text-white rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-green-700 transition-colors duration-300"
+        className="md:hidden fixed bottom-6 right-6 w-14 h-14 mt-2 bg-green-600 text-white rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-green-700 transition-colors duration-300"
       >
         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>

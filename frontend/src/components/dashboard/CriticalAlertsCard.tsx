@@ -85,7 +85,7 @@ export default function CriticalAlertsCard() {
   };
 
   return (
-    <Card className="h-full bg-white/70 backdrop-blur-sm shadow-lg border-l-4 border-l-red-500 hover:shadow-xl transition-shadow duration-300">
+    <Card className="h-full bg-white border-l-4 border-red-600 shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="pb-2 pt-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -97,7 +97,7 @@ export default function CriticalAlertsCard() {
               <p className="text-xs text-gray-500">গুরুত্বপূর্ণ বিজ্ঞপ্তি</p>
             </div>
           </div>
-          <Badge variant="outline" className="text-xs px-1 py-0">
+          <Badge variant="outline" className="text-xs px-2 py-1 border-gray-300">
             {loading ? 'লোড হচ্ছে...' : `${alerts.length} টি`}
           </Badge>
         </div>
@@ -145,7 +145,7 @@ export default function CriticalAlertsCard() {
                   transition={{ duration: 0.3 }}
                   className="group"
                 >
-                  <div className="p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 hover:border-red-200 hover:shadow-md transition-all duration-200">
+                  <div className="p-4 bg-white rounded-lg border border-gray-200 hover:border-red-300 hover:shadow-md transition-all duration-200">
                     <div className="flex items-start space-x-3">
                       <div className={`p-2 rounded-lg ${getSeverityColor(alert.severity, alert.type)} flex-shrink-0`}>
                         {getAlertIcon(alert.type)}

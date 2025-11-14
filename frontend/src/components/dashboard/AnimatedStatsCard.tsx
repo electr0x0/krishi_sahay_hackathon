@@ -19,39 +19,34 @@ interface AnimatedStatsCardProps {
 
 const colorVariants = {
   green: {
-    bg: 'from-green-500 to-emerald-600',
-    light: 'from-green-50 to-emerald-50',
+    bg: 'bg-green-600',
+    light: 'bg-green-50',
     text: 'text-green-600',
     border: 'border-green-200',
-    shadow: 'shadow-green-500/20',
   },
   blue: {
-    bg: 'from-blue-500 to-cyan-600',
-    light: 'from-blue-50 to-cyan-50',
+    bg: 'bg-blue-600',
+    light: 'bg-blue-50',
     text: 'text-blue-600',
     border: 'border-blue-200',
-    shadow: 'shadow-blue-500/20',
   },
   orange: {
-    bg: 'from-orange-500 to-amber-600',
-    light: 'from-orange-50 to-amber-50',
+    bg: 'bg-orange-600',
+    light: 'bg-orange-50',
     text: 'text-orange-600',
     border: 'border-orange-200',
-    shadow: 'shadow-orange-500/20',
   },
   purple: {
-    bg: 'from-purple-500 to-violet-600',
-    light: 'from-purple-50 to-violet-50',
+    bg: 'bg-purple-600',
+    light: 'bg-purple-50',
     text: 'text-purple-600',
     border: 'border-purple-200',
-    shadow: 'shadow-purple-500/20',
   },
   red: {
-    bg: 'from-red-500 to-rose-600',
-    light: 'from-red-50 to-rose-50',
+    bg: 'bg-red-600',
+    light: 'bg-red-50',
     text: 'text-red-600',
     border: 'border-red-200',
-    shadow: 'shadow-red-500/20',
   },
 };
 
@@ -94,18 +89,10 @@ export default function AnimatedStatsCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5 }}
       whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 border ${colors.border} shadow-lg hover:shadow-xl ${colors.shadow} transition-all duration-300 overflow-hidden group`}
+      className={`relative bg-white rounded-2xl p-6 border ${colors.border} shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group`}
     >
-      {/* Background gradient overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${colors.light} opacity-50`} />
-      
-      {/* Animated background pattern */}
-      <motion.div
-        className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2316a34a' fill-opacity='1'%3E%3Cpath d='M0 0h20v20H0V0zm10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14z'/%3E%3C/g%3E%3C/svg%3E")`,
-        }}
-      />
+      {/* Background */}
+      <div className={`absolute inset-0 ${colors.light} opacity-40`} />
       
       {/* Content */}
       <div className="relative z-10 flex items-start justify-between">
@@ -140,23 +127,17 @@ export default function AnimatedStatsCard({
           )}
         </div>
         
-        {/* Icon with gradient background */}
+        {/* Icon */}
         <motion.div
-          className={`w-14 h-14 rounded-xl bg-gradient-to-br ${colors.bg} flex items-center justify-center shadow-lg ${colors.shadow}`}
+          className={`w-14 h-14 rounded-xl ${colors.bg} flex items-center justify-center shadow-md`}
           initial={{ rotate: -180, scale: 0 }}
           animate={{ rotate: 0, scale: 1 }}
           transition={{ delay: delay + 0.1, type: 'spring', stiffness: 200 }}
-          whileHover={{ rotate: 360, transition: { duration: 0.6 } }}
+          whileHover={{ scale: 1.1, transition: { duration: 0.2 } }}
         >
           <Icon className="w-7 h-7 text-white" />
         </motion.div>
       </div>
-      
-      {/* Shine effect on hover */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
-        style={{ skewX: '-20deg' }}
-      />
     </motion.div>
   );
 }

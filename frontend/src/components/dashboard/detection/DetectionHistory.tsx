@@ -381,16 +381,16 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
               {selectedItem.growth_stage && (
                 <div className="mb-6">
                   <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-purple-600" />
+                    <Sparkles className="w-5 h-5 text-green-600" />
                     AI বিস্তারিত বিশ্লেষণ
                   </h3>
-                  <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 rounded-xl p-5 border border-purple-200 space-y-4">
+                  <div className="bg-white rounded-xl p-5 border-l-4 border-green-600 shadow-md space-y-4">
                     {/* Growth Stage & Health Score */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {selectedItem.growth_stage && (
-                        <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-purple-200">
+                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <div className="flex items-start gap-2">
-                            <TrendingUp className="w-4 h-4 text-purple-600 mt-1 flex-shrink-0" />
+                            <TrendingUp className="w-4 h-4 text-green-600 mt-1 flex-shrink-0" />
                             <div className="flex-1">
                               <h5 className="font-semibold text-gray-900 text-sm mb-1">বৃদ্ধির পর্যায়</h5>
                               <p className="text-sm text-gray-700">{selectedItem.growth_stage}</p>
@@ -400,17 +400,17 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
                       )}
                       
                       {selectedItem.plant_health_score !== undefined && (
-                        <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-purple-200">
+                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <div className="flex items-start gap-2">
-                            <Activity className="w-4 h-4 text-green-600 mt-1 flex-shrink-0" />
+                            <Activity className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
                             <div className="flex-1">
                               <h5 className="font-semibold text-gray-900 text-sm mb-2">স্বাস্থ্য স্কোর</h5>
                               <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
                                 <div
                                   className={`h-full rounded-full ${
-                                    selectedItem.plant_health_score >= 75 ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
-                                    selectedItem.plant_health_score >= 50 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' :
-                                    'bg-gradient-to-r from-red-500 to-rose-500'
+                                    selectedItem.plant_health_score >= 75 ? 'bg-green-600' :
+                                    selectedItem.plant_health_score >= 50 ? 'bg-blue-600' :
+                                    'bg-red-600'
                                   }`}
                                   style={{ width: `${selectedItem.plant_health_score}%` }}
                                 />
@@ -426,7 +426,7 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
 
                     {/* Disease Analysis */}
                     {selectedItem.ai_disease_analysis && (
-                      <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-purple-200">
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                         <h5 className="font-semibold text-gray-900 text-sm mb-2">রোগের বিশ্লেষণ</h5>
                         <div className="detection-markdown">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -438,7 +438,7 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
 
                     {/* Treatment Recommendations */}
                     {selectedItem.treatment_recommendations && (
-                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-300">
+                      <div className="bg-green-50 rounded-lg p-4 border border-green-300">
                         <h5 className="font-semibold text-gray-900 text-sm mb-2">চিকিৎসার সুপারিশ</h5>
                         <div className="detection-markdown">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -450,7 +450,7 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
 
                     {/* Preventive Measures */}
                     {selectedItem.preventive_measures && (
-                      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-4 border border-blue-300">
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-300">
                         <h5 className="font-semibold text-gray-900 text-sm mb-2">প্রতিরোধমূলক ব্যবস্থা</h5>
                         <div className="detection-markdown">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -463,14 +463,14 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
                     {/* Expected Recovery & Additional Info */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {selectedItem.expected_recovery_time && (
-                        <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-purple-200">
+                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <h5 className="font-semibold text-gray-900 text-sm mb-1">প্রত্যাশিত সুস্থ হওয়ার সময়</h5>
                           <p className="text-sm text-gray-700">{selectedItem.expected_recovery_time}</p>
                         </div>
                       )}
                       
                       {selectedItem.severity_assessment && (
-                        <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-purple-200">
+                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <h5 className="font-semibold text-gray-900 text-sm mb-1">তীব্রতা মূল্যায়ন</h5>
                           <p className="text-sm text-gray-700">{selectedItem.severity_assessment}</p>
                         </div>
