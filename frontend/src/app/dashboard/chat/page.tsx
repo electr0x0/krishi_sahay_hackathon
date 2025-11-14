@@ -824,35 +824,83 @@ const ChatInterface = () => {
 
   return (
     <div className="h-screen border-2 rounded-3xl bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex relative overflow-hidden">
-      {/* Background decoration */}
+      {/* Enhanced Background decoration with farming patterns */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-green-200/30 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-emerald-200/30 rounded-full blur-3xl"></div>
+        {/* Animated gradient orbs */}
+        <motion.div 
+          className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-green-300 to-emerald-400 opacity-20 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 90, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div 
+          className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-emerald-300 to-teal-400 opacity-20 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.3, 1],
+            rotate: [0, -90, 0],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        
+        {/* Rice paddy pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 15 L30 0 M30 45 L30 60 M15 30 L0 30 M45 30 L60 30' stroke='%2316a34a' stroke-width='2' fill='none'/%3E%3C/svg%3E")`,
+          backgroundSize: '60px 60px'
+        }} />
       </div>
-      {/* Sidebar */}
-      <div className={`${showSidebar ? 'w-80' : 'w-16'} bg-white/80 backdrop-blur-md border-r border-gray-100 transition-all duration-300 flex-shrink-0 shadow-sm relative z-10`}>
-        <div className="p-4">
-          <Button
-            onClick={() => setShowSidebar(!showSidebar)}
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start hover:bg-green-50 text-green-700"
-          >
-            <MessageCircle className="h-4 w-4" />
-            {showSidebar && <span className="ml-2 font-medium">চ্যাট সেশন</span>}
-          </Button>
+      {/* Enhanced Sidebar with glassmorphism */}
+      <motion.div 
+        className={`${showSidebar ? 'w-80' : 'w-16'} bg-white/70 backdrop-blur-xl border-r border-green-200/50 transition-all duration-300 flex-shrink-0 shadow-2xl relative z-10`}
+        initial={false}
+        animate={{ width: showSidebar ? 320 : 64 }}
+      >
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-green-50/30 via-transparent to-emerald-50/30 pointer-events-none" />
+        
+        <div className="p-4 relative z-10">
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button
+              onClick={() => setShowSidebar(!showSidebar)}
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start hover:bg-green-100/80 text-green-700 rounded-xl transition-all duration-200"
+            >
+              <MessageCircle className="h-4 w-4" />
+              {showSidebar && <span className="ml-2 font-medium">চ্যাট সেশন</span>}
+            </Button>
+          </motion.div>
         </div>
 
         {showSidebar && (
-          <div className="px-4 pb-4">
-            <Button
-              onClick={createNewSession}
-              className="w-full mb-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all duration-200"
-              size="sm"
+          <div className="px-4 pb-4 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              নতুন চ্যাট
-            </Button>
+              <Button
+                onClick={createNewSession}
+                className="w-full mb-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl relative overflow-hidden group"
+                size="sm"
+              >
+                <span className="relative z-10 flex items-center">
+                  <Plus className="h-4 w-4 mr-2" />
+                  নতুন চ্যাট
+                </span>
+                {/* Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+              </Button>
+            </motion.div>
 
             <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
               {chatSessions.map((session) => (
@@ -895,57 +943,103 @@ const ChatInterface = () => {
             </div>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col relative z-10">
-        {/* Chat Header */}
+        {/* Enhanced Chat Header with glassmorphism */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/80 backdrop-blur-md shadow-sm p-4 border-b border-gray-100"
+          className="bg-white/70 backdrop-blur-xl shadow-lg p-5 border-b border-green-200/50 relative overflow-hidden"
         >
-          <div className="flex items-center justify-between">
+          {/* Header gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-green-50/50 via-emerald-50/30 to-teal-50/50 pointer-events-none" />
+          
+          <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
-                  <Leaf className="w-5 h-5 text-white" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+                <motion.div 
+                  className="w-12 h-12 bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl"
+                  animate={{
+                    boxShadow: [
+                      '0 10px 30px rgba(34, 197, 94, 0.3)',
+                      '0 10px 40px rgba(34, 197, 94, 0.5)',
+                      '0 10px 30px rgba(34, 197, 94, 0.3)',
+                    ],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Leaf className="w-6 h-6 text-white" />
+                </motion.div>
+                <motion.div 
+                  className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"
+                  animate={{
+                    scale: [1, 1.2, 1],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                  }}
+                />
               </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
                   কৃষি সহায়
                 </h1>
-                <p className="text-xs text-gray-500 flex items-center">
+                <p className="text-xs text-gray-600 flex items-center font-medium">
                   <Brain className="w-3 h-3 mr-1" />
+                  <span className="mr-1">🌾</span>
                   স্মার্ট কৃষি বিশেষজ্ঞ
                 </p>
               </div>
             </div>
             
             <div className="flex items-center space-x-3">
-              {/* TTS Status/Stop Button */}
+              {/* TTS Status/Stop Button with enhanced styling */}
               {(isSpeaking || isTTSLoading) && (
-                <Button
-                  onClick={stopSpeaking}
-                  variant="ghost"
-                  size="sm"
-                  className="text-green-600 hover:bg-green-50 p-2"
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
                 >
-                  {isTTSLoading ? (
-                    <RotateCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <VolumeX className="w-4 h-4" />
-                  )}
-                </Button>
+                  <Button
+                    onClick={stopSpeaking}
+                    variant="ghost"
+                    size="sm"
+                    className="text-green-600 hover:bg-green-100 p-2 rounded-xl"
+                  >
+                    {isTTSLoading ? (
+                      <RotateCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <VolumeX className="w-4 h-4" />
+                    )}
+                  </Button>
+                </motion.div>
               )}
               
-              {/* AI Status Indicator */}
-              <div className="flex items-center space-x-2 px-3 py-1 bg-green-50 rounded-full border border-green-200">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs text-green-700 font-medium">অনলাইন</span>
-              </div>
+              {/* Enhanced AI Status Indicator */}
+              <motion.div 
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200 shadow-sm"
+                whileHover={{ scale: 1.05 }}
+              >
+                <motion.div 
+                  className="w-2 h-2 bg-green-500 rounded-full"
+                  animate={{
+                    scale: [1, 1.5, 1],
+                    opacity: [1, 0.5, 1],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                  }}
+                />
+                <span className="text-xs text-green-700 font-semibold">অনলাইন</span>
+              </motion.div>
             </div>
           </div>
         </motion.div>
@@ -1057,20 +1151,24 @@ const ChatInterface = () => {
                       )}
                     </div>
                     
-                    {/* Message Content */}
+                    {/* Enhanced Message Content with glassmorphism */}
                     <div className={`relative group ${
                       message.role === 'user' ? 'text-right' : 'text-left'
                     }`}>
-                      <div className={`px-3 py-2 rounded-2xl shadow-sm transition-all duration-200 ${
+                      <div className={`px-4 py-3 rounded-2xl shadow-lg transition-all duration-300 relative overflow-hidden ${
                         message.role === 'user'
-                          ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-br-sm'
-                          : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm hover:shadow-md'
+                          ? 'bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 text-white rounded-br-sm'
+                          : 'bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-800 rounded-bl-sm hover:shadow-xl hover:bg-white/90'
                       }`}>
+                        {/* Shine effect on hover */}
+                        {message.role === 'user' && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                        )}
                         {message.role === 'user' ? (
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap relative z-10 font-medium">{message.content}</p>
                         ) : (
                           <>
-                            <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-green">
+                            <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-green relative z-10">
                               {message.isTyping && isTyping && typingMessageId === message.message_id ? (
                                 // Show typing effect
                                 <div className="space-y-2">
@@ -1102,38 +1200,45 @@ const ChatInterface = () => {
                         )}
                         
                         {message.message_type === 'voice' && (
-                          <div className="flex items-center mt-2 text-xs opacity-70">
-                            <div className="flex items-center bg-black/10 rounded-full px-2 py-1">
-                              <Smartphone className="w-3 h-3 mr-1" />
-                              <span>ভয়েস</span>
+                          <motion.div 
+                            className="flex items-center mt-2 text-xs"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                          >
+                            <div className="flex items-center bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-purple-300/30 rounded-full px-3 py-1.5 shadow-sm">
+                              <Smartphone className="w-3 h-3 mr-1.5" />
+                              <span className="font-medium">ভয়েস মেসেজ</span>
                             </div>
-                          </div>
+                          </motion.div>
                         )}
                       </div>
                       
-                      {/* Message actions for AI responses */}
+                      {/* Enhanced Message actions for AI responses */}
                       {message.role === 'assistant' && (
-                        <div className="mt-2">
+                        <div className="mt-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
-                              <Button
-                                onClick={() => speak(message.content)}
-                                disabled={isSpeaking || isTTSLoading}
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 px-2 text-xs text-gray-500 hover:text-green-600 hover:bg-green-50"
-                              >
-                                {isTTSLoading ? (
-                                  <RotateCw className="w-3 h-3 animate-spin" />
-                                ) : isSpeaking ? (
-                                  <VolumeX className="w-3 h-3" />
-                                ) : (
-                                  <Volume2 className="w-3 h-3" />
-                                )}
-                              </Button>
+                              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                                <Button
+                                  onClick={() => speak(message.content)}
+                                  disabled={isSpeaking || isTTSLoading}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-3 text-xs text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-xl border border-gray-200 transition-all duration-200"
+                                >
+                                  {isTTSLoading ? (
+                                    <RotateCw className="w-3 h-3 animate-spin mr-1" />
+                                  ) : isSpeaking ? (
+                                    <VolumeX className="w-3 h-3 mr-1" />
+                                  ) : (
+                                    <Volume2 className="w-3 h-3 mr-1" />
+                                  )}
+                                  <span className="font-medium">শুনুন</span>
+                                </Button>
+                              </motion.div>
                               
                               {message.processing_time && (
-                                <div className="flex items-center text-xs text-gray-400">
+                                <div className="flex items-center text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">
                                   <Clock className="w-3 h-3 mr-1" />
                                   {message.processing_time.toFixed(1)}s
                                 </div>
@@ -1258,71 +1363,117 @@ const ChatInterface = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
+        {/* Enhanced Input Area with glassmorphism */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/90 backdrop-blur-md shadow-xl p-4 border-t border-gray-100"
+          className="bg-white/70 backdrop-blur-xl shadow-2xl p-5 border-t border-green-200/50 relative overflow-hidden"
         >
-          <div className="w-full max-w-4xl mx-auto">
+          {/* Input area gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-green-50/30 via-transparent to-transparent pointer-events-none" />
+          
+          <div className="w-full max-w-4xl mx-auto relative z-10">
             <div className="relative">
-              <div className="flex items-end space-x-3 bg-gray-50/80 p-3 rounded-xl border border-gray-200">
+              <div className="flex items-end space-x-4 bg-white/80 backdrop-blur-sm p-4 rounded-2xl border border-gray-200 shadow-lg">
                 <div className="flex-1 relative">
                   <textarea
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="আপনার প্রশ্ন লিখুন..."
-                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none transition-all duration-200 shadow-sm text-sm"
+                    placeholder="আপনার প্রশ্ন লিখুন... 🌾"
+                    className="w-full px-5 py-4 bg-white/90 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none transition-all duration-200 shadow-sm text-sm font-medium placeholder:text-gray-400"
                     rows={2}
                     disabled={isLoading}
                   />
                   {inputText.length > 0 && (
-                    <div className="absolute bottom-3 right-3 text-xs text-gray-400 bg-white/80 px-2 py-1 rounded">
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="absolute bottom-4 right-4 text-xs text-gray-500 bg-green-50 px-3 py-1.5 rounded-lg font-medium border border-green-200"
+                    >
                       {inputText.length} অক্ষর
-                    </div>
+                    </motion.div>
                   )}
                 </div>
                 
                 <div className="flex space-x-3">
-                  <Button
-                    onClick={handleVoiceMessage}
-                    disabled={isLoading}
-                    variant={isListening ? "default" : "outline"}
-                    size="lg"
-                    className={`relative rounded-full ${isListening ? 
-                      "bg-red-500 hover:bg-red-600 text-white animate-pulse" : 
-                      "border-green-200 text-green-600 hover:bg-green-50"
-                    }`}
-                  >
-                    {isListening ? (
-                      <MicOff className="w-5 h-5" />
-                    ) : (
-                      <Mic className="w-5 h-5" />
-                    )}
-                    {isListening && (
-                      <span className="absolute -top-2 -right-2 w-3 h-3 bg-red-400 rounded-full animate-ping"></span>
-                    )}
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      onClick={handleVoiceMessage}
+                      disabled={isLoading}
+                      variant={isListening ? "default" : "outline"}
+                      size="lg"
+                      className={`relative rounded-2xl shadow-lg transition-all duration-300 ${isListening ? 
+                        "bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white animate-pulse shadow-red-500/50" : 
+                        "border-2 border-green-300 text-green-600 hover:bg-green-50 hover:border-green-400"
+                      }`}
+                    >
+                      {isListening ? (
+                        <MicOff className="w-5 h-5" />
+                      ) : (
+                        <Mic className="w-5 h-5" />
+                      )}
+                      {isListening && (
+                        <>
+                          <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-ping"></span>
+                          <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                        </>
+                      )}
+                    </Button>
+                  </motion.div>
                   
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!inputText.trim() || isLoading}
-                    size="lg"
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200 relative overflow-hidden"
-                    data-auto-send="true"
-                  >
-                    {isLoading ? (
-                      <RotateCw className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <>
-                        <Send className="w-5 h-5" />
-                        <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                      </>
-                    )}
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      onClick={handleSendMessage}
+                      disabled={!inputText.trim() || isLoading}
+                      size="lg"
+                      className="bg-gradient-to-r from-green-500 via-emerald-600 to-teal-600 hover:from-green-600 hover:via-emerald-700 hover:to-teal-700 shadow-xl hover:shadow-2xl transition-all duration-300 relative overflow-hidden rounded-2xl group disabled:opacity-50 disabled:cursor-not-allowed"
+                      data-auto-send="true"
+                    >
+                      {isLoading ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        >
+                          <RotateCw className="w-5 h-5" />
+                        </motion.div>
+                      ) : (
+                        <>
+                          <span className="relative z-10 flex items-center">
+                            <Send className="w-5 h-5" />
+                          </span>
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                        </>
+                      )}
+                    </Button>
+                  </motion.div>
                 </div>
               </div>
+              
+              {/* Quick suggestions */}
+              {messages.length === 0 && !inputText && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-3 flex flex-wrap gap-2"
+                >
+                  {['ধানের রোগ', 'আবহাওয়া', 'বাজার দাম', 'সেচ'].map((suggestion, index) => (
+                    <motion.button
+                      key={suggestion}
+                      onClick={() => setInputText(suggestion + ' সম্পর্কে জানতে চাই')}
+                      className="px-4 py-2 bg-white/60 backdrop-blur-sm hover:bg-white/80 border border-gray-200 hover:border-green-300 rounded-xl text-xs font-medium text-gray-700 hover:text-green-700 transition-all duration-200 shadow-sm hover:shadow-md"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 + index * 0.1 }}
+                    >
+                      {suggestion}
+                    </motion.button>
+                  ))}
+                </motion.div>
+              )}
             </div>
           </div>
         </motion.div>

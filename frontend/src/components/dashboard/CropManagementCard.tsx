@@ -242,70 +242,102 @@ export default function CropManagementCard() {
   const pendingAgendas = selectedDateAgendas.filter(a => a.status !== 'completed');
 
   return (
-    <Card className="relative bg-gradient-to-br from-green-50 via-white to-emerald-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
-      <CardHeader className="pb-3 pt-4">
+    <Card className="relative bg-white/70 backdrop-blur-xl border-0 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden rounded-3xl">
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 via-emerald-50/30 to-teal-50/50" />
+      
+      {/* Floating decorative elements */}
+      <motion.div
+        className="absolute top-0 right-0 w-40 h-40 bg-green-300/20 rounded-full blur-3xl"
+        animate={{
+          scale: [1, 1.2, 1],
+          x: [0, 20, 0],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      
+      <CardHeader className="pb-4 pt-5 relative z-10">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="p-1.5 bg-green-500 rounded-lg">
-              <Calendar className="w-5 h-5 text-white" />
-            </div>
+          <div className="flex items-center space-x-3">
+            <motion.div 
+              className="p-2.5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg"
+              whileHover={{ scale: 1.1, rotate: 360 }}
+              transition={{ duration: 0.6 }}
+            >
+              <Calendar className="w-6 h-6 text-white" />
+            </motion.div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-800">
+              <h3 className="text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                 {language === 'bn' ? 'ফসল ব্যবস্থাপনা ক্যালেন্ডার' : 'Crop Management Calendar'}
               </h3>
-              <p className="text-xs text-gray-600">
-                {language === 'bn' ? 'এজেন্ডা এবং কাজের তালিকা' : 'Agendas and Task List'}
+              <p className="text-xs text-gray-600 font-medium">
+                {language === 'bn' ? '📅 এজেন্ডা এবং কাজের তালিকা' : '📅 Agendas and Task List'}
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <button
+            <motion.button
               onClick={() => setLanguage(prev => prev === 'bn' ? 'en' : 'bn')}
-              className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              className="px-3 py-1.5 text-xs bg-white/80 hover:bg-white border border-gray-200 rounded-xl transition-all duration-200 font-medium"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               {language === 'bn' ? 'EN' : 'বাং'}
-            </button>
+            </motion.button>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* Calendar Header */}
-        <div className="flex items-center justify-between">
-          <h4 className="text-base font-semibold text-gray-800">
+      <CardContent className="space-y-5 relative z-10">
+        {/* Enhanced Calendar Header */}
+        <div className="flex items-center justify-between bg-white/60 backdrop-blur-sm p-3 rounded-2xl border border-gray-200">
+          <motion.h4 
+            className="text-base font-bold text-gray-800"
+            key={currentDate.getMonth()}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
             {currentDate.toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', { 
               month: 'long', 
               year: 'numeric' 
             })}
-          </h4>
-          <div className="flex space-x-1">
-            <button
+          </motion.h4>
+          <div className="flex space-x-2">
+            <motion.button
               onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
-              className="p-1 hover:bg-gray-100 rounded"
+              className="p-2 hover:bg-green-100 rounded-xl transition-colors border border-gray-200 bg-white/80"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
             >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
+              <ChevronLeft className="w-4 h-4 text-green-600" />
+            </motion.button>
+            <motion.button
               onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
-              className="p-1 hover:bg-gray-100 rounded"
+              className="p-2 hover:bg-green-100 rounded-xl transition-colors border border-gray-200 bg-white/80"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
             >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+              <ChevronRight className="w-4 h-4 text-green-600" />
+            </motion.button>
           </div>
         </div>
 
-        {/* Calendar Grid */}
-        <div className="bg-white rounded-lg border p-4">
-          <div className="grid grid-cols-7 gap-1 mb-2">
+        {/* Enhanced Calendar Grid */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 p-5 shadow-lg">
+          <div className="grid grid-cols-7 gap-2 mb-3">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="p-2 text-center text-xs font-medium text-gray-500">
+              <div key={day} className="p-2 text-center text-xs font-bold text-gray-600 bg-green-50 rounded-lg">
                 {language === 'bn' ? 
                   ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহ', 'শুক্র', 'শনি'][['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(day)] : 
                   day}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-2">
             {calendarDays.map((date, index) => {
               const isCurrentMonth = date.getMonth() === currentDate.getMonth();
               const isToday = date.toDateString() === new Date().toDateString();
@@ -316,22 +348,26 @@ export default function CropManagementCard() {
               return (
                 <motion.button
                   key={index}
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ scale: 1.1, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setSelectedDate(date)}
                   className={`
-                    relative p-2 text-sm rounded-lg transition-all duration-200 
-                    ${isSelected ? 'bg-green-500 text-white' : 
-                      isToday ? 'bg-blue-100 text-blue-800' :
-                      hasAgendas ? 'bg-yellow-50 text-yellow-800' :
-                      isCurrentMonth ? 'hover:bg-gray-100 text-gray-800' : 
-                      'text-gray-400 hover:bg-gray-50'}
+                    relative p-3 text-sm rounded-xl transition-all duration-200 font-medium shadow-sm
+                    ${isSelected ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/30' : 
+                      isToday ? 'bg-gradient-to-br from-blue-100 to-cyan-100 text-blue-800 border-2 border-blue-300' :
+                      hasAgendas ? 'bg-gradient-to-br from-yellow-50 to-amber-50 text-yellow-800 border border-yellow-200' :
+                      isCurrentMonth ? 'hover:bg-gradient-to-br hover:from-gray-50 hover:to-gray-100 text-gray-800 border border-transparent hover:border-gray-200' : 
+                      'text-gray-400 hover:bg-gray-50 border border-transparent'}
                   `}
                 >
                   <div>{date.getDate()}</div>
                   {hasAgendas && (
-                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
-                      <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-green-500'}`} />
+                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex space-x-0.5">
+                      <motion.div 
+                        className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-green-500'}`}
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
                     </div>
                   )}
                 </motion.button>

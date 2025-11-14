@@ -7,4 +7,5 @@ __pycache__/
 backend/uploads/
 backend/krishi_sahay.db
 *.pyc
+backend/.env
 
