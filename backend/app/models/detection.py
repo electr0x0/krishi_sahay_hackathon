@@ -13,12 +13,28 @@ class DetectionHistory(Base):
     original_image_path = Column(String, nullable=False)
     processed_image_path = Column(String, nullable=False)
     
-    # Detection results
-    detections = Column(JSON)  # Store detection results as JSON
+    # YOLO Detection results
+    detections = Column(JSON)  # Store YOLO detection results as JSON
     detection_count = Column(Integer, default=0)
     
+    # Gemini AI Analysis (NEW)
+    growth_stage = Column(String)  # বৃদ্ধির পর্যায়
+    growth_stage_en = Column(String)  # Growth stage in English
+    plant_health_score = Column(Float)  # 0-100 health score
+    ai_disease_analysis = Column(Text)  # Detailed disease analysis in Bengali
+    ai_disease_analysis_en = Column(Text)  # Detailed disease analysis in English
+    treatment_recommendations = Column(Text)  # Treatment suggestions in Bengali
+    treatment_recommendations_en = Column(Text)  # Treatment suggestions in English
+    preventive_measures = Column(Text)  # Preventive measures in Bengali
+    preventive_measures_en = Column(Text)  # Preventive measures in English
+    expected_recovery_time = Column(String)  # Expected recovery timeline
+    severity_assessment = Column(String)  # Overall severity from AI
+    additional_observations = Column(Text)  # Any additional AI observations
+    gemini_processing_time = Column(Float)  # Time taken for Gemini analysis
+    
     # Processing info
-    processing_time = Column(Float)
+    processing_time = Column(Float)  # Total processing time (YOLO + Gemini)
+    yolo_processing_time = Column(Float)  # Time taken for YOLO detection
     confidence_threshold = Column(Float, default=0.25)
     
     # Status

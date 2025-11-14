@@ -118,8 +118,21 @@ def _get_user_detection_history_impl(user_id: int, limit: int = 5) -> str:
                 "time": detection.created_at.strftime("%H:%M:%S"),
                 "detection_count": detection.detection_count,
                 "processing_time": detection.processing_time,
+                "yolo_processing_time": detection.yolo_processing_time,
+                "gemini_processing_time": detection.gemini_processing_time,
                 "confidence_threshold": detection.confidence_threshold,
-                "diseases_found": []
+                "diseases_found": [],
+                # AI Analysis (NEW)
+                "ai_analysis": {
+                    "growth_stage": detection.growth_stage,
+                    "plant_health_score": detection.plant_health_score,
+                    "disease_analysis": detection.ai_disease_analysis,
+                    "treatment_recommendations": detection.treatment_recommendations,
+                    "preventive_measures": detection.preventive_measures,
+                    "expected_recovery_time": detection.expected_recovery_time,
+                    "severity_assessment": detection.severity_assessment,
+                    "additional_observations": detection.additional_observations
+                } if detection.growth_stage else None
             }
             
             # Extract disease information from detections JSON

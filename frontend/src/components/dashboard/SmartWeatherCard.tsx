@@ -193,52 +193,95 @@ export default function SmartWeatherCard() {
   });
 
   return (
-    <Card className="relative bg-gradient-to-br from-blue-50 via-white to-cyan-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+    <Card className="relative bg-white/70 backdrop-blur-xl border-0 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden rounded-3xl">
+      {/* Animated weather background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 via-cyan-50/50 to-sky-100/50" />
       
-      <CardHeader className="pb-3 pt-4">
+      {/* Floating cloud decorations */}
+      <motion.div
+        className="absolute top-0 right-0 w-32 h-32 bg-white/30 rounded-full blur-2xl"
+        animate={{
+          x: [0, 20, 0],
+          y: [0, -10, 0],
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      <motion.div
+        className="absolute bottom-0 left-0 w-24 h-24 bg-blue-200/30 rounded-full blur-2xl"
+        animate={{
+          x: [0, -15, 0],
+          y: [0, 15, 0],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      
+      <CardHeader className="pb-3 pt-5 relative z-10">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="p-1.5 bg-blue-500 rounded-lg">
-              <Cloud className="w-4 h-4 text-white" />
-            </div>
+          <div className="flex items-center space-x-3">
+            <motion.div 
+              className="p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl shadow-lg"
+              whileHover={{ scale: 1.1, rotate: 360 }}
+              transition={{ duration: 0.6 }}
+            >
+              <Cloud className="w-5 h-5 text-white" />
+            </motion.div>
             <div>
-              <h3 className="text-base font-bold text-gray-800">
+              <h3 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                 {language === 'bn' ? 'আবহাওয়া ও কৃষি পরামর্শ' : 'Weather & Farm Advice'}
               </h3>
               <div className="flex items-center space-x-1">
                 <MapPin className="w-3 h-3 text-gray-500" />
                 <p className="text-xs text-gray-600">
-                  {currentWeather.name}, বাংলাদেশ
+                  {currentWeather.name}, বাংলাদেশ 🇧🇩
                 </p>
               </div>
             </div>
           </div>
-          <button
+          <motion.button
             onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
-            className="text-gray-500 hover:text-gray-700 transition-colors p-1.5 rounded-md text-xs font-medium bg-white/60 hover:bg-white/80"
+            className="text-gray-600 hover:text-gray-800 transition-colors p-2 rounded-xl text-xs font-medium bg-white/80 hover:bg-white border border-gray-200"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             {language === 'bn' ? 'EN' : 'বাং'}
-          </button>
+          </motion.button>
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0 px-4 pb-4">
-        <div className="flex space-x-1 mb-4 bg-white/60 p-1 rounded-lg border">
+      <CardContent className="pt-0 px-5 pb-5 relative z-10">
+        <div className="flex space-x-2 mb-5 bg-white/80 backdrop-blur-sm p-1.5 rounded-2xl border border-gray-200 shadow-sm">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
-              <button
+              <motion.button
                 key={tab.id}
                 onClick={() => setSelectedTab(tab.id as any)}
-                className={`flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-all duration-200 flex items-center justify-center space-x-1 ${
+                className={`relative flex-1 py-2 px-3 rounded-xl text-xs font-medium transition-all duration-200 flex items-center justify-center space-x-1.5 ${
                   selectedTab === tab.id
-                    ? 'bg-blue-500 text-white shadow-md'
+                    ? 'text-white'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                 }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <Icon className="w-3 h-3" />
-                <span>{tab.label}</span>
-              </button>
+                {selectedTab === tab.id && (
+                  <motion.div
+                    layoutId="activeWeatherTab"
+                    className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl shadow-lg"
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  />
+                )}
+                <Icon className="w-4 h-4 relative z-10" />
+                <span className="relative z-10">{tab.label}</span>
+              </motion.button>
             );
           })}
         </div>
@@ -250,82 +293,134 @@ export default function SmartWeatherCard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
               className="space-y-6"
             >
               <div className="text-center">
-                <div className="flex items-center justify-center space-x-4 mb-4">
+                <div className="flex items-center justify-center space-x-6 mb-6">
                   <motion.div
-                    className={`p-4 rounded-full bg-white/80 ${getConditionColor(condition)}`}
+                    className={`p-6 rounded-3xl bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-sm shadow-2xl ${getConditionColor(condition)}`}
+                    animate={{
+                      rotate: [0, 5, -5, 0],
+                    }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
                   >
-                    <IconComponent className="w-16 h-16" />
+                    <IconComponent className="w-20 h-20" />
                   </motion.div>
                   <div>
-                    <div className="text-6xl font-bold text-gray-800">
+                    <motion.div 
+                      className="text-7xl font-bold bg-gradient-to-br from-gray-800 to-gray-600 bg-clip-text text-transparent"
+                      initial={{ scale: 0.5 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 200 }}
+                    >
                       {Math.round(main.temp)}°
-                    </div>
-                    <p className="text-gray-600">
+                    </motion.div>
+                    <p className="text-gray-600 font-medium mt-1">
                       {language === 'bn' ? 'অনুভূত' : 'Feels like'} {Math.round(main.feels_like)}°
                     </p>
                   </div>
                 </div>
-                <p className="text-lg text-gray-700 font-medium capitalize">
+                <motion.p 
+                  className="text-lg text-gray-700 font-semibold capitalize bg-white/50 backdrop-blur-sm px-4 py-2 rounded-xl inline-block"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
                   {language === 'bn' && weatherTranslations && weatherTranslations[conditionText.toLowerCase()]
                     ? weatherTranslations[conditionText.toLowerCase()]
                     : conditionText
                   }
-                </p>
+                </motion.p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/80 p-4 rounded-lg">
+                <motion.div 
+                  className="bg-gradient-to-br from-blue-50 to-cyan-50 backdrop-blur-sm p-5 rounded-2xl border border-blue-200/50 shadow-lg hover:shadow-xl transition-all duration-300"
+                  whileHover={{ y: -5 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
                   <div className="flex items-center space-x-2 mb-2">
-                    <Droplets className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm text-gray-600">
+                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <Droplets className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-sm text-gray-600 font-medium">
                       {language === 'bn' ? 'আর্দ্রতা' : 'Humidity'}
                     </span>
                   </div>
-                  <div className="text-2xl font-bold text-gray-800">
+                  <div className="text-3xl font-bold text-gray-800">
                     {main.humidity}%
                   </div>
-                </div>
+                </motion.div>
                 
-                <div className="bg-white/80 p-4 rounded-lg">
+                <motion.div 
+                  className="bg-gradient-to-br from-green-50 to-emerald-50 backdrop-blur-sm p-5 rounded-2xl border border-green-200/50 shadow-lg hover:shadow-xl transition-all duration-300"
+                  whileHover={{ y: -5 }}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
                   <div className="flex items-center space-x-2 mb-2">
-                    <Wind className="w-4 h-4 text-green-500" />
-                    <span className="text-sm text-gray-600">
+                    <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                      <Wind className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-sm text-gray-600 font-medium">
                       {language === 'bn' ? 'বাতাস' : 'Wind'}
                     </span>
                   </div>
-                  <div className="text-2xl font-bold text-gray-800">
+                  <div className="text-3xl font-bold text-gray-800">
                     {Math.round(wind.speed * 3.6)}
-                    <span className="text-sm"> km/h</span>
+                    <span className="text-base ml-1">km/h</span>
                   </div>
-                </div>
+                </motion.div>
                 
-                <div className="bg-white/80 p-4 rounded-lg">
+                <motion.div 
+                  className="bg-gradient-to-br from-purple-50 to-violet-50 backdrop-blur-sm p-5 rounded-2xl border border-purple-200/50 shadow-lg hover:shadow-xl transition-all duration-300"
+                  whileHover={{ y: -5 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
                   <div className="flex items-center space-x-2 mb-2">
-                    <Eye className="w-4 h-4 text-purple-500" />
-                    <span className="text-sm text-gray-600">
+                    <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                      <Eye className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-sm text-gray-600 font-medium">
                       {language === 'bn' ? 'দৃশ্যমানতা' : 'Visibility'}
                     </span>
                   </div>
-                  <div className="text-2xl font-bold text-gray-800">
+                  <div className="text-3xl font-bold text-gray-800">
                     {visibility / 1000}
-                    <span className="text-sm"> km</span>
+                    <span className="text-base ml-1">km</span>
                   </div>
-                </div>
+                </motion.div>
                 
-                <div className="bg-white/80 p-4 rounded-lg">
+                <motion.div 
+                  className="bg-gradient-to-br from-orange-50 to-amber-50 backdrop-blur-sm p-5 rounded-2xl border border-orange-200/50 shadow-lg hover:shadow-xl transition-all duration-300"
+                  whileHover={{ y: -5 }}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
                   <div className="flex items-center space-x-2 mb-2">
-                    <Sun className="w-4 h-4 text-orange-500" />
-                    <span className="text-sm text-gray-600">
-                      {language === 'bn' ? 'UV সূচক' : 'UV Index'}
+                    <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                      <Sun className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-sm text-gray-600 font-medium">
+                      {language === 'bn' ? 'চাপ' : 'Pressure'}
                     </span>
                   </div>
-                  <div className="text-2xl font-bold text-gray-800">
-                    N/A
+                  <div className="text-3xl font-bold text-gray-800">
+                    {main.pressure}
+                    <span className="text-base ml-1">hPa</span>
                   </div>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           )}

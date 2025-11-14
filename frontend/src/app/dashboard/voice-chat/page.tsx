@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import dynamic from 'next/dynamic';
 import { 
   Mic, 
   MicOff, 
@@ -19,7 +20,9 @@ import {
   MessageSquare,
   Cpu,
   StopCircle,
-  Timer
+  Timer,
+  Maximize2,
+  Radio
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import api from '@/lib/api.js';
@@ -27,6 +30,24 @@ import { Button } from '@/components/ui/button';
 
 // Import highlight.js styles
 import 'highlight.js/styles/github-dark.css';
+
+// Dynamically import 3D components (client-side only)
+const Scene3DCanvas = dynamic(() => import('@/components/dashboard/voice-chat/Scene3DCanvas'), { 
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-gray-900 to-black">
+      <motion.div
+        className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+      />
+    </div>
+  )
+});
+
+const RiceFieldScene = dynamic(() => import('@/components/dashboard/voice-chat/RiceFieldScene'), { 
+  ssr: false 
+});
 
 // Custom markdown components for better styling
 const MarkdownComponents: any = {
@@ -479,29 +500,7 @@ const useSpeechSynthesis = () => {
   };
 };
 
-// Animated Voice Visualizer Component
-const VoiceVisualizer = ({ isActive, amplitude = 0.5 }) => {
-  return (
-    <div className="flex items-center justify-center space-x-1">
-      {[...Array(7)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="w-1 bg-gradient-to-t from-green-400 to-emerald-500 rounded-full"
-          animate={{
-            height: isActive ? [8, 24, 8] : 8,
-            opacity: isActive ? [0.6, 1, 0.6] : 0.3,
-          }}
-          transition={{
-            duration: 0.8,
-            repeat: isActive ? Infinity : 0,
-            delay: i * 0.1,
-            ease: "easeInOut"
-          }}
-        />
-      ))}
-    </div>
-  );
-};
+// Old 2D visualizer removed - now using 3D rice field scene with visualizer
 
 interface Message {
   role: 'user' | 'assistant';
@@ -842,29 +841,33 @@ const VoiceChatInterface = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden flex flex-col">
-      {/* Animated Background */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-green-500/5 to-transparent rounded-full animate-pulse delay-500"></div>
+      {/* 3D Rice Field Scene Background */}
+      <div className="absolute inset-0 z-0">
+        <Scene3DCanvas enableControls={false}>
+          <RiceFieldScene isListening={isListening} isSpeaking={isSpeaking} />
+        </Scene3DCanvas>
+        
+        {/* Overlay gradient for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70 pointer-events-none" />
       </div>
 
-      {/* Floating particles */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
+      {/* Subtle particle overlay */}
+      <div className="absolute inset-0 overflow-hidden z-[1] pointer-events-none">
+        {[...Array(15)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-green-400/30 rounded-full"
+            className="absolute w-1 h-1 bg-green-400/20 rounded-full"
             initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
+              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1920),
+              y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1080),
             }}
             animate={{
-              y: [null, Math.random() * window.innerHeight],
-              x: [null, Math.random() * window.innerWidth],
+              y: [null, Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1080)],
+              x: [null, Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1920)],
+              opacity: [0.2, 0.5, 0.2],
             }}
             transition={{
-              duration: Math.random() * 10 + 10,
+              duration: Math.random() * 10 + 15,
               repeat: Infinity,
               repeatType: "reverse",
             }}
@@ -878,16 +881,35 @@ const VoiceChatInterface = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 flex-shrink-0"
+          className="p-6 flex-shrink-0 bg-gradient-to-b from-black/40 to-transparent backdrop-blur-sm border-b border-green-500/20"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
-                <Brain className="w-6 h-6 text-white" />
-              </div>
+              <motion.div 
+                className="w-14 h-14 bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center shadow-2xl"
+                animate={{
+                  boxShadow: [
+                    '0 0 30px rgba(34, 197, 94, 0.3)',
+                    '0 0 50px rgba(34, 197, 94, 0.6)',
+                    '0 0 30px rgba(34, 197, 94, 0.3)',
+                  ],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <Brain className="w-7 h-7 text-white" />
+              </motion.div>
               <div>
-                <h1 className="text-2xl font-bold text-white">AI এর সাথে কথা বলুন</h1>
-                <p className="text-gray-400 text-sm">কৃষি বিষয়ে ভয়েস কথোপকথন</p>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                  AI এর সাথে কথা বলুন
+                </h1>
+                <p className="text-gray-400 text-sm font-medium">
+                  <span className="mr-1">🌾</span>
+                  কৃষি বিষয়ে ভয়েস কথোপকথন
+                </p>
               </div>
             </div>
             
@@ -911,12 +933,35 @@ const VoiceChatInterface = () => {
                 </Button>
               )}
               
-              <div className="flex items-center space-x-2 px-3 py-1 bg-white/10 rounded-full backdrop-blur-md">
-                <div className={`w-2 h-2 rounded-full ${uiState === 'idle' ? 'bg-green-400' : 'bg-yellow-400'} animate-pulse`}></div>
-                <span className="text-white text-sm font-medium">
+              <motion.div 
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl backdrop-blur-md border border-green-400/30"
+                animate={{
+                  boxShadow: [
+                    '0 0 10px rgba(34, 197, 94, 0.2)',
+                    '0 0 20px rgba(34, 197, 94, 0.4)',
+                    '0 0 10px rgba(34, 197, 94, 0.2)',
+                  ],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                }}
+              >
+                <motion.div 
+                  className={`w-2.5 h-2.5 rounded-full ${uiState === 'idle' ? 'bg-green-400' : 'bg-yellow-400'}`}
+                  animate={{
+                    scale: [1, 1.5, 1],
+                    opacity: [1, 0.5, 1],
+                  }}
+                  transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                  }}
+                />
+                <span className="text-white text-sm font-bold">
                   {uiState === 'idle' ? 'প্রস্তুত' : 'সক্রিয়'}
                 </span>
-              </div>
+              </motion.div>
             </div>
           </div>
           
@@ -944,108 +989,203 @@ const VoiceChatInterface = () => {
           )}
         </motion.div>
 
-        {/* Main Voice Interface */}
+        {/* Main Voice Interface - Integrated with 3D Scene */}
         <div className="flex-1 flex items-center justify-center px-4 py-2 min-h-0">
           <div className="text-center w-full max-w-4xl">
-            {/* AI Avatar with Dynamic States */}
+            {/* 3D Scene Info Badge */}
             <motion.div
-              className="relative mb-6"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6"
+            >
+              <div className="inline-flex items-center space-x-2 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl border border-green-500/30">
+                <Maximize2 className="w-4 h-4 text-green-400" />
+                <span className="text-white text-sm font-medium">🌾 3D ধান ক্ষেত দৃশ্য</span>
+                <Radio className="w-4 h-4 text-green-400 animate-pulse" />
+              </div>
+            </motion.div>
+
+            {/* Main Control Panel */}
+            <motion.div
+              className="relative"
               animate={{
-                scale: uiState === 'listening' ? 1.1 : uiState === 'speaking' ? 1.05 : 1,
+                scale: uiState === 'listening' ? 1.05 : uiState === 'speaking' ? 1.03 : 1,
               }}
               transition={{ duration: 0.3 }}
             >
-              {/* Outer Ring - Pulse Effect */}
-              <div className="absolute inset-0 rounded-full">
+              {/* Glass panel */}
+              <div className="bg-black/30 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+                {/* Status indicator with better visibility */}
                 <motion.div
-                  className={`w-64 h-64 sm:w-80 sm:h-80 rounded-full bg-gradient-to-r ${getMainButtonColor()} opacity-20`}
+                  className="mb-6"
                   animate={{
-                    scale: uiState !== 'idle' ? [1, 1.2, 1] : 1,
+                    opacity: [0.7, 1, 0.7],
                   }}
                   transition={{
                     duration: 2,
-                    repeat: uiState !== 'idle' ? Infinity : 0,
-                  }}
-                />
-              </div>
-              
-              {/* Middle Ring - Voice Visualizer */}
-              <div className="absolute inset-4 rounded-full bg-white/5 backdrop-blur-md flex items-center justify-center">
-                <AnimatePresence>
-                  {(uiState === 'listening' || uiState === 'speaking') && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0 flex items-center justify-center"
-                    >
-                      <VoiceVisualizer isActive={true} />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-              
-              {/* Main Button */}
-              <motion.button
-                onClick={uiState === 'speaking' ? handleSpeechToggle : handleVoiceToggle}
-                disabled={uiState === 'processing'}
-                className={`w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-gradient-to-r ${getMainButtonColor()} text-white shadow-2xl flex items-center justify-center transition-all duration-300 hover:shadow-3xl disabled:opacity-70`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <motion.div
-                  animate={{
-                    rotate: uiState === 'processing' ? 360 : 0,
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: uiState === 'processing' ? Infinity : 0,
-                    ease: "linear"
+                    repeat: Infinity,
                   }}
                 >
-                  {getMainButtonIcon()}
+                  <div className={`inline-flex items-center space-x-3 px-6 py-3 rounded-2xl ${
+                    uiState === 'listening' ? 'bg-red-500/20 border-2 border-red-400' :
+                    uiState === 'speaking' ? 'bg-purple-500/20 border-2 border-purple-400' :
+                    uiState === 'processing' ? 'bg-blue-500/20 border-2 border-blue-400' :
+                    'bg-green-500/20 border-2 border-green-400'
+                  }`}>
+                    <motion.div
+                      className={`w-3 h-3 rounded-full ${
+                        uiState === 'listening' ? 'bg-red-400' :
+                        uiState === 'speaking' ? 'bg-purple-400' :
+                        uiState === 'processing' ? 'bg-blue-400' :
+                        'bg-green-400'
+                      }`}
+                      animate={{
+                        scale: [1, 1.5, 1],
+                        opacity: [1, 0.5, 1],
+                      }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                      }}
+                    />
+                    <span className="text-white font-bold text-lg">{getStatusText()}</span>
+                  </div>
                 </motion.div>
-              </motion.button>
-              
-              {/* Status Indicator */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute -bottom-12 left-1/2 transform -translate-x-1/2"
-              >
-                <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-full">
-                  <span className="text-white font-medium text-sm sm:text-base">{getStatusText()}</span>
-                </div>
-              </motion.div>
+
+                {/* Enhanced Main Button */}
+                <motion.button
+                  onClick={uiState === 'speaking' ? handleSpeechToggle : handleVoiceToggle}
+                  disabled={uiState === 'processing'}
+                  className={`relative w-40 h-40 sm:w-48 sm:h-48 rounded-full bg-gradient-to-br ${getMainButtonColor()} text-white flex items-center justify-center transition-all duration-300 disabled:opacity-70 overflow-hidden shadow-2xl mb-6 mx-auto`}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.92 }}
+                  animate={{
+                    boxShadow: [
+                      '0 0 40px rgba(34, 197, 94, 0.5)',
+                      '0 0 80px rgba(34, 197, 94, 0.8)',
+                      '0 0 40px rgba(34, 197, 94, 0.5)',
+                    ],
+                  }}
+                  transition={{
+                    boxShadow: {
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }
+                  }}
+                >
+                  {/* Multiple animated rings */}
+                  {[1, 2, 3].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute inset-0 rounded-full border-2 border-white/30"
+                      animate={{
+                        scale: uiState !== 'idle' ? [1, 1.5 + i * 0.2, 1] : 1,
+                        opacity: uiState !== 'idle' ? [0.5, 0, 0.5] : 0,
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: uiState !== 'idle' ? Infinity : 0,
+                        delay: i * 0.3,
+                      }}
+                    />
+                  ))}
+                  
+                  {/* Inner glow */}
+                  <div className="absolute inset-4 rounded-full bg-white/10 backdrop-blur-sm" />
+                  
+                  {/* Icon */}
+                  <motion.div
+                    className="relative z-10"
+                    animate={{
+                      rotate: uiState === 'processing' ? 360 : 0,
+                      scale: uiState !== 'idle' ? [1, 1.2, 1] : 1,
+                    }}
+                    transition={{
+                      rotate: {
+                        duration: 2,
+                        repeat: uiState === 'processing' ? Infinity : 0,
+                        ease: "linear"
+                      },
+                      scale: {
+                        duration: 1,
+                        repeat: Infinity,
+                      }
+                    }}
+                  >
+                    {getMainButtonIcon()}
+                  </motion.div>
+                </motion.button>
+
+                {/* Instructions */}
+                <p className="text-gray-300 text-sm">
+                  {uiState === 'idle' && '🎤 বোতামে ক্লিক করে কথা বলা শুরু করুন'}
+                  {uiState === 'listening' && '🎙️ শুনছি... আপনার প্রশ্ন বলুন'}
+                  {uiState === 'processing' && '🤖 AI চিন্তা করছে...'}
+                  {uiState === 'speaking' && '🔊 AI উত্তর দিচ্ছে...'}
+                  {uiState === 'waiting' && `⏳ ${waitingCountdown} সেকেন্ড...`}
+                </p>
+              </div>
             </motion.div>
           </div>
         </div>
 
-        {/* Bottom Instructions */}
+        {/* Bottom Instructions - Enhanced */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 flex-shrink-0"
+          className="p-6 flex-shrink-0 bg-gradient-to-t from-black/60 to-transparent backdrop-blur-sm"
         >
-          <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-center mb-4">
-              <div className="bg-white/5 backdrop-blur-md rounded-xl p-3">
-                <Mic className="w-6 h-6 text-green-400 mx-auto mb-1" />
-                <h3 className="text-white font-medium mb-1 text-sm">কথা বলুন</h3>
-                <p className="text-gray-400 text-xs">বোতামে ক্লিক করে আপনার প্রশ্ন বলুন</p>
+          <div className="max-w-5xl mx-auto">
+            {/* Feature badges */}
+            <div className="flex justify-center gap-3 mb-4 flex-wrap">
+              <div className="inline-flex items-center space-x-2 bg-green-500/20 backdrop-blur-md px-4 py-2 rounded-full border border-green-400/30">
+                <Leaf className="w-4 h-4 text-green-400" />
+                <span className="text-green-300 text-xs font-semibold">3D Rice Field</span>
               </div>
+              <div className="inline-flex items-center space-x-2 bg-blue-500/20 backdrop-blur-md px-4 py-2 rounded-full border border-blue-400/30">
+                <Cpu className="w-4 h-4 text-blue-400" />
+                <span className="text-blue-300 text-xs font-semibold">AI Powered</span>
+              </div>
+              <div className="inline-flex items-center space-x-2 bg-purple-500/20 backdrop-blur-md px-4 py-2 rounded-full border border-purple-400/30">
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className="text-purple-300 text-xs font-semibold">Real-time Voice</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-4">
+              <motion.div 
+                className="bg-black/40 backdrop-blur-xl rounded-2xl p-4 border border-white/10 hover:border-green-400/50 transition-all duration-300"
+                whileHover={{ y: -5, scale: 1.02 }}
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                  <Mic className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-white font-bold mb-2 text-base">কথা বলুন</h3>
+                <p className="text-gray-300 text-xs leading-relaxed">বোতামে ক্লিক করে আপনার কৃষি সম্পর্কিত প্রশ্ন বলুন</p>
+              </motion.div>
               
-              <div className="bg-white/5 backdrop-blur-md rounded-xl p-3">
-                <Brain className="w-6 h-6 text-blue-400 mx-auto mb-1" />
-                <h3 className="text-white font-medium mb-1 text-sm">AI চিন্তা করে</h3>
-                <p className="text-gray-400 text-xs">কৃষি বিশেষজ্ঞের মতো উত্তর প্রস্তুত করে</p>
-              </div>
+              <motion.div 
+                className="bg-black/40 backdrop-blur-xl rounded-2xl p-4 border border-white/10 hover:border-blue-400/50 transition-all duration-300"
+                whileHover={{ y: -5, scale: 1.02 }}
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                  <Brain className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-white font-bold mb-2 text-base">AI চিন্তা করে</h3>
+                <p className="text-gray-300 text-xs leading-relaxed">কৃষি বিশেষজ্ঞের মতো উত্তর প্রস্তুত করে</p>
+              </motion.div>
               
-              <div className="bg-white/5 backdrop-blur-md rounded-xl p-3">
-                <Volume2 className="w-6 h-6 text-purple-400 mx-auto mb-1" />
-                <h3 className="text-white font-medium mb-1 text-sm">উত্তর শুনুন</h3>
-                <p className="text-gray-400 text-xs">স্বয়ংক্রিয়ভাবে উত্তর বলা হবে</p>
-              </div>
+              <motion.div 
+                className="bg-black/40 backdrop-blur-xl rounded-2xl p-4 border border-white/10 hover:border-purple-400/50 transition-all duration-300"
+                whileHover={{ y: -5, scale: 1.02 }}
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                  <Volume2 className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-white font-bold mb-2 text-base">উত্তর শুনুন</h3>
+                <p className="text-gray-300 text-xs leading-relaxed">স্বয়ংক্রিয়ভাবে বাংলায় উত্তর বলা হবে</p>
+              </motion.div>
             </div>
             
             {/* Manual Test Buttons */}

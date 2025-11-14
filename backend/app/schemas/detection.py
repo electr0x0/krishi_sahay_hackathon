@@ -23,6 +23,37 @@ class DetectionResponse(BaseModel):
     original_image_url: str
     processed_image_url: str
     processing_time: float
+    yolo_processing_time: Optional[float] = None
+    gemini_processing_time: Optional[float] = None
+    # AI Analysis fields
+    growth_stage: Optional[str] = None
+    growth_stage_en: Optional[str] = None
+    plant_health_score: Optional[float] = None
+    ai_disease_analysis: Optional[str] = None
+    ai_disease_analysis_en: Optional[str] = None
+    treatment_recommendations: Optional[str] = None
+    treatment_recommendations_en: Optional[str] = None
+    preventive_measures: Optional[str] = None
+    preventive_measures_en: Optional[str] = None
+    expected_recovery_time: Optional[str] = None
+    severity_assessment: Optional[str] = None
+    additional_observations: Optional[str] = None
+
+class AIAnalysis(BaseModel):
+    """AI-powered comprehensive analysis from Gemini"""
+    growth_stage: Optional[str] = None
+    growth_stage_en: Optional[str] = None
+    plant_health_score: Optional[float] = None
+    ai_disease_analysis: Optional[str] = None
+    ai_disease_analysis_en: Optional[str] = None
+    treatment_recommendations: Optional[str] = None
+    treatment_recommendations_en: Optional[str] = None
+    preventive_measures: Optional[str] = None
+    preventive_measures_en: Optional[str] = None
+    expected_recovery_time: Optional[str] = None
+    severity_assessment: Optional[str] = None
+    additional_observations: Optional[str] = None
+    gemini_processing_time: Optional[float] = None
 
 class DetectionHistoryItem(BaseModel):
     id: int
@@ -31,10 +62,25 @@ class DetectionHistoryItem(BaseModel):
     detections: List[DetectionItem]
     detection_count: int
     processing_time: float
+    yolo_processing_time: Optional[float] = None
+    gemini_processing_time: Optional[float] = None
     confidence_threshold: float
     success: bool
-    error_message: Optional[str]
+    error_message: Optional[str] = None
     created_at: datetime
+    # AI Analysis fields
+    growth_stage: Optional[str] = None
+    growth_stage_en: Optional[str] = None
+    plant_health_score: Optional[float] = None
+    ai_disease_analysis: Optional[str] = None
+    ai_disease_analysis_en: Optional[str] = None
+    treatment_recommendations: Optional[str] = None
+    treatment_recommendations_en: Optional[str] = None
+    preventive_measures: Optional[str] = None
+    preventive_measures_en: Optional[str] = None
+    expected_recovery_time: Optional[str] = None
+    severity_assessment: Optional[str] = None
+    additional_observations: Optional[str] = None
 
     class Config:
         from_attributes = True

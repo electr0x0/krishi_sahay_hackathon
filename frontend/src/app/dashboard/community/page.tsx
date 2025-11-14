@@ -355,6 +355,11 @@ const CommunityPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">সম্প্রদায়</h1>
           <p className="text-gray-600 mt-2">কৃষি সম্প্রদায়ে যোগ দিন, সাহায্য করুন এবং সাহায্য নিন</p>
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>💡 কীভাবে ব্যবহার করবেন:</strong> সম্প্রদায় হলো কৃষকদের একটি দল যেখানে আপনি একে অপরের সাথে কথা বলতে পারেন, সাহায্য চাইতে পারেন, এবং একসাথে কাজ করতে পারেন। একটি সম্প্রদায়ে যোগ দিন বা নতুন একটি তৈরি করুন!
+            </p>
+          </div>
         </div>
         <div className="flex gap-3">
           {!userCommunity && (
@@ -486,6 +491,7 @@ const CommunityPage = () => {
                   <CardContent>
                     <p className="text-2xl font-bold text-blue-600">{userCommunity.helpRequests?.length || 0}</p>
                     <p className="text-sm text-gray-600">সক্রিয় অনুরোধ</p>
+                    <p className="text-xs text-gray-500 mt-1">যেখানে কৃষকরা সাহায্য চায় বা দেয়</p>
                     <Button variant="ghost" size="sm" className="mt-2 w-full text-blue-600">
                       বিস্তারিত দেখুন →
                     </Button>

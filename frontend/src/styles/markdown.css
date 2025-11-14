@@ -1,0 +1,97 @@
+/* Custom markdown styles for detection cards */
+.detection-markdown {
+  @apply text-sm text-gray-700;
+}
+
+.detection-markdown p {
+  @apply mb-2 last:mb-0;
+}
+
+.detection-markdown ul,
+.detection-markdown ol {
+  @apply mb-3 pl-5 space-y-1;
+}
+
+.detection-markdown ul {
+  @apply list-disc;
+}
+
+.detection-markdown ol {
+  @apply list-decimal;
+}
+
+.detection-markdown li {
+  @apply text-sm leading-relaxed;
+}
+
+.detection-markdown strong {
+  @apply font-semibold text-gray-900;
+}
+
+.detection-markdown em {
+  @apply italic;
+}
+
+.detection-markdown code {
+  @apply bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono;
+}
+
+.detection-markdown pre {
+  @apply bg-gray-100 p-3 rounded-lg overflow-x-auto mb-3;
+}
+
+.detection-markdown pre code {
+  @apply bg-transparent p-0;
+}
+
+.detection-markdown h1,
+.detection-markdown h2,
+.detection-markdown h3,
+.detection-markdown h4 {
+  @apply font-semibold text-gray-900 mb-2 mt-3 first:mt-0;
+}
+
+.detection-markdown h1 {
+  @apply text-base;
+}
+
+.detection-markdown h2 {
+  @apply text-sm;
+}
+
+.detection-markdown h3,
+.detection-markdown h4 {
+  @apply text-sm;
+}
+
+.detection-markdown blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic my-3;
+}
+
+.detection-markdown a {
+  @apply text-blue-600 hover:text-blue-800 underline;
+}
+
+.detection-markdown hr {
+  @apply my-3 border-gray-300;
+}
+
+/* Nested list styling */
+.detection-markdown li ul,
+.detection-markdown li ol {
+  @apply mt-1 mb-1;
+}
+
+/* Table styling if needed */
+.detection-markdown table {
+  @apply w-full border-collapse my-3;
+}
+
+.detection-markdown th {
+  @apply bg-gray-100 font-semibold text-left px-3 py-2 border border-gray-300;
+}
+
+.detection-markdown td {
+  @apply px-3 py-2 border border-gray-300;
+}
+

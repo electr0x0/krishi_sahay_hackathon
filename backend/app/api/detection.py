@@ -20,6 +20,7 @@ from app.schemas.detection import (
 )
 from app.services.detection_service import PlantDiseaseDetector
 from app.services.video_detection_service import VideoPlantDiseaseDetector
+from app.services.gemini_detection_service import gemini_analyzer
 from app.auth.dependencies import get_current_active_user
 
 router = APIRouter()
@@ -170,24 +171,55 @@ async def detect_plant_disease(
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
         
-        # Process image for detection
-        start_time = datetime.now()
+        # Process image for YOLO detection
+        yolo_start_time = datetime.now()
         processed_image, detections = detector.predict(original_path)
-        processing_time = (datetime.now() - start_time).total_seconds()
+        yolo_processing_time = (datetime.now() - yolo_start_time).total_seconds()
         
         # Save processed image
         cv2.imwrite(processed_path, processed_image)
         
-        # Save detection history to database
+        # Perform Gemini AI analysis
+        gemini_analysis = {}
+        gemini_processing_time = 0
+        try:
+            gemini_start_time = datetime.now()
+            gemini_analysis = await gemini_analyzer.analyze_with_gemini(
+                yolo_detections=detections,
+                image_path=original_path
+            )
+            gemini_processing_time = (datetime.now() - gemini_start_time).total_seconds()
+        except Exception as e:
+            print(f"Error during Gemini analysis: {e}")
+            # Continue even if Gemini fails - YOLO results are still valid
+        
+        total_processing_time = yolo_processing_time + gemini_processing_time
+        
+        # Save detection history to database with AI analysis
         detection_history = DetectionHistory(
             user_id=current_user.id,
             original_image_path=original_path,
             processed_image_path=processed_path,
             detections=detections,
             detection_count=len(detections),
-            processing_time=processing_time,
+            processing_time=total_processing_time,
+            yolo_processing_time=yolo_processing_time,
+            gemini_processing_time=gemini_processing_time,
             confidence_threshold=confidence_threshold,
-            success=True
+            success=True,
+            # AI Analysis fields
+            growth_stage=gemini_analysis.get("growth_stage"),
+            growth_stage_en=gemini_analysis.get("growth_stage_en"),
+            plant_health_score=gemini_analysis.get("plant_health_score"),
+            ai_disease_analysis=gemini_analysis.get("ai_disease_analysis"),
+            ai_disease_analysis_en=gemini_analysis.get("ai_disease_analysis_en"),
+            treatment_recommendations=gemini_analysis.get("treatment_recommendations"),
+            treatment_recommendations_en=gemini_analysis.get("treatment_recommendations_en"),
+            preventive_measures=gemini_analysis.get("preventive_measures"),
+            preventive_measures_en=gemini_analysis.get("preventive_measures_en"),
+            expected_recovery_time=gemini_analysis.get("expected_recovery_time"),
+            severity_assessment=gemini_analysis.get("severity_assessment"),
+            additional_observations=gemini_analysis.get("additional_observations")
         )
         
         db.add(detection_history)
@@ -211,13 +243,28 @@ async def detect_plant_disease(
         
         return DetectionResponse(
             success=True,
-            message="Plant disease detection completed successfully",
+            message="উদ্ভিদ রোগ সনাক্তকরণ সফলভাবে সম্পন্ন হয়েছে",
             detection_id=detection_history.id,
             detections=detections,
             detection_count=len(detections),
             original_image_url=f"/uploads/images/detection/{original_filename}",
             processed_image_url=f"/uploads/images/detection/{processed_filename}",
-            processing_time=processing_time
+            processing_time=total_processing_time,
+            yolo_processing_time=yolo_processing_time,
+            gemini_processing_time=gemini_processing_time,
+            # AI Analysis fields
+            growth_stage=gemini_analysis.get("growth_stage"),
+            growth_stage_en=gemini_analysis.get("growth_stage_en"),
+            plant_health_score=gemini_analysis.get("plant_health_score"),
+            ai_disease_analysis=gemini_analysis.get("ai_disease_analysis"),
+            ai_disease_analysis_en=gemini_analysis.get("ai_disease_analysis_en"),
+            treatment_recommendations=gemini_analysis.get("treatment_recommendations"),
+            treatment_recommendations_en=gemini_analysis.get("treatment_recommendations_en"),
+            preventive_measures=gemini_analysis.get("preventive_measures"),
+            preventive_measures_en=gemini_analysis.get("preventive_measures_en"),
+            expected_recovery_time=gemini_analysis.get("expected_recovery_time"),
+            severity_assessment=gemini_analysis.get("severity_assessment"),
+            additional_observations=gemini_analysis.get("additional_observations")
         )
         
     except HTTPException:
@@ -276,10 +323,25 @@ async def get_detection_history(
                 detections=record.detections or [],
                 detection_count=record.detection_count,
                 processing_time=record.processing_time or 0.0,
+                yolo_processing_time=record.yolo_processing_time,
+                gemini_processing_time=record.gemini_processing_time,
                 confidence_threshold=record.confidence_threshold,
                 success=record.success,
                 error_message=record.error_message,
-                created_at=record.created_at
+                created_at=record.created_at,
+                # Gemini AI Analysis fields
+                growth_stage=record.growth_stage,
+                growth_stage_en=record.growth_stage_en,
+                plant_health_score=record.plant_health_score,
+                ai_disease_analysis=record.ai_disease_analysis,
+                ai_disease_analysis_en=record.ai_disease_analysis_en,
+                treatment_recommendations=record.treatment_recommendations,
+                treatment_recommendations_en=record.treatment_recommendations_en,
+                preventive_measures=record.preventive_measures,
+                preventive_measures_en=record.preventive_measures_en,
+                expected_recovery_time=record.expected_recovery_time,
+                severity_assessment=record.severity_assessment,
+                additional_observations=record.additional_observations
             )
             history_items.append(history_item)
         

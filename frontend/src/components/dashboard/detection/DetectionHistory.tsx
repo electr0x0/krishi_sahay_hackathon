@@ -1,8 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { History, Eye, X, MapPin, Clock, Target, AlertTriangle, CheckCircle, ImageIcon } from 'lucide-react';
+import { History, Eye, X, MapPin, Clock, Target, AlertTriangle, CheckCircle, ImageIcon, Sparkles, Activity, TrendingUp } from 'lucide-react';
 import Image from 'next/image';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import '@/styles/markdown.css';
 
 interface DetectionHistoryProps {
   getAuthHeaders: () => Record<string, string>;
@@ -23,10 +26,25 @@ interface HistoryItem {
   detections: Detection[];
   detection_count: number;
   processing_time: number;
+  yolo_processing_time?: number;
+  gemini_processing_time?: number;
   confidence_threshold: number;
   success: boolean;
   error_message?: string;
   created_at: string;
+  // AI Analysis fields
+  growth_stage?: string;
+  growth_stage_en?: string;
+  plant_health_score?: number;
+  ai_disease_analysis?: string;
+  ai_disease_analysis_en?: string;
+  treatment_recommendations?: string;
+  treatment_recommendations_en?: string;
+  preventive_measures?: string;
+  preventive_measures_en?: string;
+  expected_recovery_time?: string;
+  severity_assessment?: string;
+  additional_observations?: string;
 }
 
 const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
@@ -241,7 +259,7 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
 
       {/* Modal for detailed view */}
       {showModal && selectedItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               {/* Header */}
@@ -359,10 +377,113 @@ const DetectionHistory = ({ getAuthHeaders }: DetectionHistoryProps) => {
                 </div>
               )}
 
+              {/* AI Comprehensive Analysis Section */}
+              {selectedItem.growth_stage && (
+                <div className="mb-6">
+                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-600" />
+                    AI বিস্তারিত বিশ্লেষণ
+                  </h3>
+                  <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 rounded-xl p-5 border border-purple-200 space-y-4">
+                    {/* Growth Stage & Health Score */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedItem.growth_stage && (
+                        <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-purple-200">
+                          <div className="flex items-start gap-2">
+                            <TrendingUp className="w-4 h-4 text-purple-600 mt-1 flex-shrink-0" />
+                            <div className="flex-1">
+                              <h5 className="font-semibold text-gray-900 text-sm mb-1">বৃদ্ধির পর্যায়</h5>
+                              <p className="text-sm text-gray-700">{selectedItem.growth_stage}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {selectedItem.plant_health_score !== undefined && (
+                        <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-purple-200">
+                          <div className="flex items-start gap-2">
+                            <Activity className="w-4 h-4 text-green-600 mt-1 flex-shrink-0" />
+                            <div className="flex-1">
+                              <h5 className="font-semibold text-gray-900 text-sm mb-2">স্বাস্থ্য স্কোর</h5>
+                              <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${
+                                    selectedItem.plant_health_score >= 75 ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                                    selectedItem.plant_health_score >= 50 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' :
+                                    'bg-gradient-to-r from-red-500 to-rose-500'
+                                  }`}
+                                  style={{ width: `${selectedItem.plant_health_score}%` }}
+                                />
+                              </div>
+                              <p className="text-right text-xs font-semibold mt-1 text-gray-700">
+                                {selectedItem.plant_health_score.toFixed(0)}/100
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Disease Analysis */}
+                    {selectedItem.ai_disease_analysis && (
+                      <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-purple-200">
+                        <h5 className="font-semibold text-gray-900 text-sm mb-2">রোগের বিশ্লেষণ</h5>
+                        <div className="detection-markdown">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {selectedItem.ai_disease_analysis}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Treatment Recommendations */}
+                    {selectedItem.treatment_recommendations && (
+                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-300">
+                        <h5 className="font-semibold text-gray-900 text-sm mb-2">চিকিৎসার সুপারিশ</h5>
+                        <div className="detection-markdown">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {selectedItem.treatment_recommendations}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Preventive Measures */}
+                    {selectedItem.preventive_measures && (
+                      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-4 border border-blue-300">
+                        <h5 className="font-semibold text-gray-900 text-sm mb-2">প্রতিরোধমূলক ব্যবস্থা</h5>
+                        <div className="detection-markdown">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {selectedItem.preventive_measures}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Expected Recovery & Additional Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedItem.expected_recovery_time && (
+                        <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-purple-200">
+                          <h5 className="font-semibold text-gray-900 text-sm mb-1">প্রত্যাশিত সুস্থ হওয়ার সময়</h5>
+                          <p className="text-sm text-gray-700">{selectedItem.expected_recovery_time}</p>
+                        </div>
+                      )}
+                      
+                      {selectedItem.severity_assessment && (
+                        <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-purple-200">
+                          <h5 className="font-semibold text-gray-900 text-sm mb-1">তীব্রতা মূল্যায়ন</h5>
+                          <p className="text-sm text-gray-700">{selectedItem.severity_assessment}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Detections Details */}
               {selectedItem.success && selectedItem.detections && selectedItem.detections.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-lg mb-4">পাওয়া রোগের সম্পূর্ণ তথ্য</h3>
+                  <h3 className="font-semibold text-lg mb-4">পাওয়া রোগের সম্পূর্ণ তথ্য (YOLO সনাক্তকরণ)</h3>
                   <div className="space-y-4">
                     {selectedItem.detections.map((detection, index) => (
                       <div key={index} className="bg-gray-50 rounded-lg p-4 border">

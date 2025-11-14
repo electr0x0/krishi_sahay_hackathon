@@ -1,12 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import api from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Camera, Package, TrendingUp, ShoppingCart, Plus, Upload, Image as ImageIcon, Calendar, Award, Leaf } from 'lucide-react'
+import { 
+  Camera, Package, TrendingUp, ShoppingCart, Plus, Upload, 
+  Image as ImageIcon, Calendar, Award, Leaf, Store, 
+  MapPin, Tag, Star, CheckCircle2, Clock, TruckIcon,
+  Filter, Search, X, Sparkles, BarChart3, DollarSign
+} from 'lucide-react'
 
 export default function DashboardStorePage() {
   const [products, setProducts] = useState<any[]>([])
@@ -182,63 +188,215 @@ export default function DashboardStorePage() {
     }
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50" />
+        <div className="relative z-10 flex items-center justify-center h-screen">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full"
+          />
+        </div>
       </div>
     )
   }
 
+  const totalRevenue = orders.reduce((sum, order) => sum + (order.payment?.amount || 0), 0);
+  const activeProducts = products.filter(p => p.is_active).length;
+  const pendingOrders = orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length;
+  const completedOrders = orders.filter(o => o.status === 'completed').length;
+
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-                  <h1 className="text-3xl font-bold text-gray-900">আমার কৃষি দোকান</h1>
-        <p className="text-gray-600 mt-1">আপনার পণ্য, তালিকা এবং অর্ডার পরিচালনা করুন</p>
-        </div>
-        <div className="flex gap-4">
-          <Card className="p-4">
-            <div className="flex items-center gap-2">
-              <Package className="w-5 h-5 text-blue-600" />
-              <div>
-                <div className="text-lg font-semibold">{myListings.length}</div>
-                <div className="text-sm text-gray-600">সক্রিয় লিস্টিং</div>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-green-600" />
-              <div>
-                <div className="text-lg font-semibold">{orders.filter(o => o.status !== 'completed').length}</div>
-                <div className="text-sm text-gray-600">মুলতুবি অর্ডার</div>
-              </div>
-            </div>
-          </Card>
-        </div>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Enhanced Animated Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+        <motion.div 
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-green-400/10 to-emerald-400/5 rounded-full blur-2xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [0, 30, 0],
+            y: [0, -20, 0],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div 
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-cyan-400/5 rounded-full blur-2xl"
+          animate={{
+            scale: [1, 1.3, 1],
+            x: [0, -30, 0],
+            y: [0, 30, 0],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1
+          }}
+        />
       </div>
 
-      <Tabs defaultValue="create" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="create" className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            পণ্য তৈরি করুন
-          </TabsTrigger>
-          <TabsTrigger value="listings" className="flex items-center gap-2">
-            <Package className="w-4 h-4" />
-            আমার লিস্টিং
-          </TabsTrigger>
-          <TabsTrigger value="orders" className="flex items-center gap-2">
-            <ShoppingCart className="w-4 h-4" />
-            অর্ডার
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
-            বিশ্লেষণ
-          </TabsTrigger>
-        </TabsList>
+      <div className="relative z-10 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Enhanced Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center space-y-4"
+          >
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+              className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 rounded-3xl shadow-2xl mb-4"
+            >
+              <Store className="w-10 h-10 text-white" />
+            </motion.div>
+
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-3">
+                আমার কৃষি দোকান
+              </h1>
+              <p className="text-lg text-gray-600">
+                🌾 <span className="font-semibold">পণ্য বিক্রয়</span> এবং অর্ডার পরিচালনা করুন
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Stats Cards Grid */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+          >
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative bg-white/70 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-2xl p-6"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 opacity-50" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Package className="w-6 h-6 text-white" />
+                  </div>
+                  <Badge className="bg-green-100 text-green-700 border-green-200">সক্রিয়</Badge>
+                </div>
+                <div className="text-3xl font-bold text-gray-800 mb-1">{myListings.length}</div>
+                <div className="text-sm text-gray-600">সক্রিয় লিস্টিং</div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative bg-white/70 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-2xl p-6"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-cyan-50 opacity-50" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <ShoppingCart className="w-6 h-6 text-white" />
+                  </div>
+                  <Badge className="bg-blue-100 text-blue-700 border-blue-200">মুলতুবি</Badge>
+                </div>
+                <div className="text-3xl font-bold text-gray-800 mb-1">{pendingOrders}</div>
+                <div className="text-sm text-gray-600">মুলতুবি অর্ডার</div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative bg-white/70 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-2xl p-6"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-pink-50 opacity-50" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <CheckCircle2 className="w-6 h-6 text-white" />
+                  </div>
+                  <Badge className="bg-purple-100 text-purple-700 border-purple-200">সম্পন্ন</Badge>
+                </div>
+                <div className="text-3xl font-bold text-gray-800 mb-1">{completedOrders}</div>
+                <div className="text-sm text-gray-600">সম্পন্ন অর্ডার</div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative bg-white/70 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-2xl p-6"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-amber-50 opacity-50" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <DollarSign className="w-6 h-6 text-white" />
+                  </div>
+                  <Badge className="bg-orange-100 text-orange-700 border-orange-200">আয়</Badge>
+                </div>
+                <div className="text-3xl font-bold text-gray-800 mb-1">৳{totalRevenue.toFixed(0)}</div>
+                <div className="text-sm text-gray-600">মোট আয়</div>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Enhanced Tabs */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <Tabs defaultValue="listings" className="space-y-6">
+              <div className="bg-white/70 backdrop-blur-xl rounded-2xl border-0 shadow-xl p-2">
+                <TabsList className="grid w-full grid-cols-4 bg-transparent gap-2">
+                  <TabsTrigger 
+                    value="listings" 
+                    className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white rounded-xl transition-all duration-200"
+                  >
+                    <Package className="w-4 h-4" />
+                    <span className="hidden sm:inline">আমার লিস্টিং</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="create" 
+                    className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white rounded-xl transition-all duration-200"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline">পণ্য তৈরি</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="orders" 
+                    className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl transition-all duration-200"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    <span className="hidden sm:inline">অর্ডার</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="analytics" 
+                    className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-amber-600 data-[state=active]:text-white rounded-xl transition-all duration-200"
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                    <span className="hidden sm:inline">বিশ্লেষণ</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
         {/* Create Product Tab */}
         <TabsContent value="create" className="space-y-6">
@@ -468,69 +626,132 @@ export default function DashboardStorePage() {
           </div>
         </TabsContent>
 
-        {/* My Listings Tab */}
-        <TabsContent value="listings">
-          <Card>
-            <CardHeader>
-              <CardTitle>আমার সক্রিয় লিস্টিং</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {myListings.map(listing => (
-                  <Card key={listing.id} className="overflow-hidden">
-                    {listing.product_image_url ? (
-                      <img 
-                        src={`${process.env.NEXT_PUBLIC_API_URL}${listing.product_image_url}`} 
-                        alt={listing.product_name}
-                        className="w-full h-48 object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-                        <div className="text-center text-gray-400">
-                          <ImageIcon className="w-12 h-12 mx-auto mb-2" />
-                          <span className="text-sm">No Image</span>
+              {/* My Listings Tab - Enhanced Product Cards */}
+              <TabsContent value="listings">
+                {myListings.length === 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="relative bg-white/70 backdrop-blur-xl border-0 shadow-xl rounded-3xl p-12 text-center"
+                  >
+                    <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Package className="w-10 h-10 text-gray-500" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">কোনো লিস্টিং নেই</h3>
+                    <p className="text-gray-600 mb-6">আপনার প্রথম পণ্য তৈরি করে বিক্রয় শুরু করুন</p>
+                    <Button className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+                      <Plus className="w-4 h-4 mr-2" />
+                      পণ্য তৈরি করুন
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {myListings.map((listing, index) => (
+                      <motion.div
+                        key={listing.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={{ y: -8, scale: 1.02 }}
+                        className="group relative bg-white/70 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-2xl"
+                      >
+                        {/* Product Image */}
+                        <div className="relative h-48 overflow-hidden">
+                          {listing.product_image_url ? (
+                            <>
+                              <img 
+                                src={`${process.env.NEXT_PUBLIC_API_URL}${listing.product_image_url}`} 
+                                alt={listing.product_name}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            </>
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                              <div className="text-center text-gray-400">
+                                <ImageIcon className="w-12 h-12 mx-auto mb-2" />
+                                <span className="text-sm">কোনো ছবি নেই</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Category Badge */}
+                          <div className="absolute top-3 right-3">
+                            <Badge className="bg-white/90 backdrop-blur-sm text-gray-800 border-0 shadow-lg">
+                              {listing.product_category}
+                            </Badge>
+                          </div>
+
+                          {/* Organic Badge */}
+                          {listing.organic_certified && (
+                            <div className="absolute top-3 left-3">
+                              <Badge className="bg-green-500 text-white border-0 shadow-lg flex items-center gap-1">
+                                <Leaf className="w-3 h-3" />
+                                জৈব
+                              </Badge>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    )}
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-lg">{listing.product_name}</h3>
-                        <Badge variant="outline">{listing.product_category}</Badge>
-                      </div>
-                      
-                                              <div className="space-y-2 text-sm text-gray-600">
-                          <div className="flex justify-between">
-                            <span>দাম:</span>
-                            <span className="font-semibold text-green-600">৳{Number(listing.price).toFixed(2)}/{listing.unit}</span>
+
+                        {/* Product Info */}
+                        <div className="p-5">
+                          {/* Product Name */}
+                          <h3 className="font-bold text-lg text-gray-800 mb-3 line-clamp-2">
+                            {listing.product_name}
+                          </h3>
+
+                          {/* Price */}
+                          <div className="flex items-baseline justify-between mb-4">
+                            <div>
+                              <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                                ৳{Number(listing.price).toFixed(2)}
+                              </span>
+                              <span className="text-sm text-gray-600 ml-1">/{listing.unit}</span>
+                            </div>
+                            {listing.quality_grade && (
+                              <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-md flex items-center gap-1">
+                                <Star className="w-3 h-3" />
+                                গ্রেড {listing.quality_grade}
+                              </Badge>
+                            )}
                           </div>
-                          <div className="flex justify-between">
-                            <span>মজুদ:</span>
-                            <span>{Number(listing.stock_qty).toFixed(1)} {listing.unit}</span>
+
+                          {/* Details */}
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center gap-2 text-gray-600">
+                                <Package className="w-4 h-4" />
+                                <span>মজুদ</span>
+                              </div>
+                              <span className="font-semibold text-gray-800">
+                                {Number(listing.stock_qty).toFixed(1)} {listing.unit}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center gap-2 text-gray-600">
+                                <MapPin className="w-4 h-4" />
+                                <span>অবস্থান</span>
+                              </div>
+                              <span className="font-semibold text-gray-800">{listing.location}</span>
+                            </div>
                           </div>
-                        <div className="flex justify-between">
-                          <span>অবস্থান:</span>
-                          <span>{listing.location}</span>
+
+                          {/* Action Button */}
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-2.5 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                          >
+                            <Tag className="w-4 h-4" />
+                            বিস্তারিত দেখুন
+                          </motion.button>
                         </div>
-                        {listing.organic_certified && (
-                          <div className="flex items-center gap-1 text-green-600">
-                            <Leaf className="w-4 h-4" />
-                            <span>জৈব সার্টিফাইড</span>
-                          </div>
-                        )}
-                        {listing.quality_grade && (
-                          <div className="flex items-center gap-1">
-                            <Award className="w-4 h-4" />
-                            <span>গ্রেড {listing.quality_grade}</span>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
 
         {/* Orders Tab */}
         <TabsContent value="orders">
@@ -628,8 +849,11 @@ export default function DashboardStorePage() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-      </Tabs>
+              </TabsContent>
+            </Tabs>
+          </motion.div>
+        </div>
+      </div>
     </div>
   )
 }
