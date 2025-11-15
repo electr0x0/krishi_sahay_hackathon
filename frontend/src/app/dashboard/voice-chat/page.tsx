@@ -1000,7 +1000,7 @@ const VoiceChatInterface = () => {
             >
               <div className="inline-flex items-center space-x-2 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl border border-green-500/30">
                 <Maximize2 className="w-4 h-4 text-green-400" />
-                <span className="text-white text-sm font-medium">🌾 3D ধান ক্ষেত দৃশ্য</span>
+                <span className="text-white text-sm font-medium">🌾 AI এর সাথে কথা বলুন</span>
                 <Radio className="w-4 h-4 text-green-400 animate-pulse" />
               </div>
             </motion.div>
@@ -1141,7 +1141,7 @@ const VoiceChatInterface = () => {
             <div className="flex justify-center gap-3 mb-4 flex-wrap">
               <div className="inline-flex items-center space-x-2 bg-green-500/20 backdrop-blur-md px-4 py-2 rounded-full border border-green-400/30">
                 <Leaf className="w-4 h-4 text-green-400" />
-                <span className="text-green-300 text-xs font-semibold">3D Rice Field</span>
+                <span className="text-green-300 text-xs font-semibold">Bangla Voice</span>
               </div>
               <div className="inline-flex items-center space-x-2 bg-blue-500/20 backdrop-blur-md px-4 py-2 rounded-full border border-blue-400/30">
                 <Cpu className="w-4 h-4 text-blue-400" />

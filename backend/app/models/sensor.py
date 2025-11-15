@@ -63,6 +63,7 @@ class SensorData(Base):
     # Environmental Data
     atmospheric_pressure = Column(Float)  # hPa
     uv_index = Column(Float)
+    heat_index = Column(Float)  # Heat index calculated from temp + humidity
     
     # Device Status
     battery_level = Column(Float)  # Percentage

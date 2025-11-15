@@ -48,6 +48,7 @@ class User(Base):
     community_memberships = relationship("CommunityMember", back_populates="user")
     detection_history = relationship("DetectionHistory", back_populates="user")
     agendas = relationship("Agenda", back_populates="user")
+    sensor_thresholds = relationship("SensorThreshold", back_populates="user")
 
 
 class UserPreferences(Base):

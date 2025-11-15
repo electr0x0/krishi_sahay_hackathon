@@ -21,6 +21,7 @@ from app.schemas.detection import (
 from app.services.detection_service import PlantDiseaseDetector
 from app.services.video_detection_service import VideoPlantDiseaseDetector
 from app.services.gemini_detection_service import gemini_analyzer
+from app.services.twilio_service import twilio_service
 from app.auth.dependencies import get_current_active_user
 
 router = APIRouter()
@@ -240,6 +241,20 @@ async def detect_plant_disease(
                 detection_history_id=detection_history.id,
                 detections=detections
             )
+            
+            # Send WhatsApp notification if diseases detected
+            if detections and len(detections) > 0:
+                try:
+                    twilio_service.send_disease_detection_alert(
+                        detection_id=detection_history.id,
+                        diseases=detections,
+                        plant_health_score=gemini_analysis.get("plant_health_score"),
+                        growth_stage=gemini_analysis.get("growth_stage"),
+                        severity=gemini_analysis.get("severity_assessment")
+                    )
+                except Exception as e:
+                    # Don't fail the entire detection if WhatsApp fails
+                    print(f"⚠️ WhatsApp notification failed: {e}")
         
         return DetectionResponse(
             success=True,

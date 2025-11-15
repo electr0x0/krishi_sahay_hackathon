@@ -14,6 +14,7 @@ from app.schemas.sensor import (
     SensorAlert, SensorSummary
 )
 from app.auth.dependencies import get_current_user
+from app.services.threshold_monitor_service import get_threshold_monitor
 
 router = APIRouter()
 
@@ -453,12 +454,20 @@ async def receive_esp32_sensor_data(data: ESP32SensorData, db: Session = Depends
     except:
         recorded_at = datetime.now()
     
+    # Calculate heat index if temperature and humidity are available
+    # Use the heat index from ESP32 or calculate if not provided
+    heat_index = data.heat_index_c
+    if heat_index is None and data.temperature_c and data.humidity_percent:
+        # Simplified heat index calculation (approximation)
+        heat_index = data.temperature_c + (0.348 * data.humidity_percent) - 4.25
+    
     # Create sensor data entry (using a default sensor_config_id = 1 for now)
     # In production, you might want to create a sensor config first or use device ID
     new_data = SensorData(
         sensor_config_id=1,  # You may need to create a default sensor config
         temperature=data.temperature_c,
         humidity=data.humidity_percent,
+        heat_index=heat_index,
         soil_moisture=data.soil_moisture_percent,
         water_level=data.water_level_percent,
         device_status="online",
@@ -470,6 +479,36 @@ async def receive_esp32_sensor_data(data: ESP32SensorData, db: Session = Depends
     db.add(new_data)
     db.commit()
     db.refresh(new_data)
+    
+    # Check thresholds for all users (ESP32 doesn't have user context)
+    # In production, you might want to link ESP32 device to specific user
+    try:
+        # Format sensor data for threshold checking
+        sensor_values = {
+            "temperature_c": data.temperature_c,
+            "humidity_percent": data.humidity_percent,
+            "soil_moisture_percent": data.soil_moisture_percent,
+            "water_level_percent": data.water_level_percent,
+            "heat_index_c": data.heat_index_c
+        }
+        
+        # Check thresholds for default user (user_id=1)
+        # TODO: In production, map device to user or check all users
+        monitor = get_threshold_monitor(db)
+        threshold_results = monitor.check_thresholds_for_user(
+            user_id=1,  # Default user - change to your user ID or map device to user
+            sensor_data=sensor_values,
+            sensor_data_id=new_data.id
+        )
+        
+        print(f"✅ Checked {len(threshold_results)} thresholds")
+        for result in threshold_results:
+            if result['notification_sent']:
+                print(f"   📱 Notification sent: {result['alert_name']}")
+    
+    except Exception as e:
+        print(f"⚠️ Error checking thresholds: {e}")
+        # Don't fail sensor data submission if threshold check fails
     
     return {"status": "success", "message": "Data received", "id": new_data.id}
 

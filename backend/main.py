@@ -20,6 +20,7 @@ from app.api import (
     language,
     market,
     store as store_api,
+    threshold,
     tts,
     user,
     weather,
@@ -132,6 +133,7 @@ app.include_router(tts.router, prefix="/api", tags=["Text-to-Speech"])
 app.include_router(user.router, prefix="/api", tags=["Users"])
 app.include_router(weather.router, prefix="/api", tags=["Weather"])
 app.include_router(weather_recommendations.router, prefix="/api/weather", tags=["Weather Recommendations"])
+app.include_router(threshold.router, prefix="/api/threshold", tags=["Thresholds"])
 app.include_router(form_data_router.router, prefix="/api/form-data", tags=["Form Data"])
 app.include_router(agenda.router, prefix="/api", tags=["Agendas"])
 

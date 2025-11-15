@@ -967,6 +967,55 @@ class ApiService {
       }
     );
   };
+
+  // Threshold Notification APIs
+  createThreshold = async (data) => {
+    return this.request("/api/threshold/thresholds", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  };
+
+  getThresholds = async (sensorType = null, enabled = null) => {
+    const params = new URLSearchParams();
+    if (sensorType) params.append("sensor_type", sensorType);
+    if (enabled !== null) params.append("enabled", enabled);
+    const query = params.toString();
+    return this.request(`/api/threshold/thresholds${query ? `?${query}` : ""}`);
+  };
+
+  getThreshold = async (thresholdId) => {
+    return this.request(`/api/threshold/thresholds/${thresholdId}`);
+  };
+
+  updateThreshold = async (thresholdId, data) => {
+    return this.request(`/api/threshold/thresholds/${thresholdId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  };
+
+  deleteThreshold = async (thresholdId) => {
+    return this.request(`/api/threshold/thresholds/${thresholdId}`, {
+      method: "DELETE",
+    });
+  };
+
+  getNotificationHistory = async (limit = 20, skip = 0) => {
+    return this.request(`/api/threshold/notifications/history?limit=${limit}&skip=${skip}`);
+  };
+
+  getThresholdHistory = async (thresholdId, limit = 20, skip = 0) => {
+    return this.request(`/api/threshold/thresholds/${thresholdId}/history?limit=${limit}&skip=${skip}`);
+  };
+
+  getThresholdSummary = async () => {
+    return this.request("/api/threshold/summary");
+  };
+
+  getCurrentSensorReadings = async () => {
+    return this.request("/api/threshold/current-readings");
+  };
 }
 
 // Create singleton instance

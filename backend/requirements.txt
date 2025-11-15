@@ -39,3 +39,6 @@ numpy
 # Utilities
 aiofiles
 jinja2
+
+# Notifications
+twilio
