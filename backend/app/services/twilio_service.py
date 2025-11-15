@@ -15,7 +15,7 @@ class TwilioWhatsAppService:
     
     def __init__(self):
         # Get credentials from environment variables
-        self.account_sid = os.getenv("TWILIO_ACCOUNT_SID", "ACdfc83a4b0b853dc0093b666993ae1c28")
+        self.account_sid = os.getenv("TWILIO_ACCOUNT_SID")
         self.auth_token = os.getenv("TWILIO_AUTH_TOKEN")
         self.from_number = os.getenv("TWILIO_WHATSAPP_FROM", "whatsapp:+14155238886")
         self.default_to_number = os.getenv("TWILIO_WHATSAPP_TO", "whatsapp:+8801773666439")
